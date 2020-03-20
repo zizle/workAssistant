@@ -1,7 +1,7 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
 from flask import Blueprint
-from .views import RegisterView, OrganizationGroupView
+from .views import RegisterView, OrganizationGroupView, LoginView
 
 user_blp = Blueprint(name='user', import_name=__name__, url_prefix='')
 
@@ -9,6 +9,8 @@ user_blp = Blueprint(name='user', import_name=__name__, url_prefix='')
 user_blp.add_url_rule('org/', view_func=OrganizationGroupView.as_view(name="org"))
 # 用户注册
 user_blp.add_url_rule('register/', view_func=RegisterView.as_view(name="reg"))
+# 用户登录
+user_blp.add_url_rule('login/', view_func=LoginView.as_view(name="login"))
 
 
 

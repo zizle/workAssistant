@@ -43,7 +43,8 @@ def create_tables():
                    "`id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
                    "`user_id` INTEGER NOT NULL,"
                    "`module_id` INTEGER NOT NULL,"
-                   "`is_active` BIT NOT NULL DEFAULT 1"
+                   "`is_active` BIT NOT NULL DEFAULT 1,"
+                   "UNIQUE KEY `user_id`(`user_id`,`module_id`)"
                    ")")
 
 

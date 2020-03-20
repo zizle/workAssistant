@@ -1,6 +1,10 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
+import os
+import logging
 
+SECRET_KEY = "c7jgb1k2xzfq*3odq5my-vts^+cv+p7suw+(_5#va%f0=tt5mp"
+BASE_DIR= os.path.dirname(os.path.abspath(__file__))
 
 # 数据库配置
 DATABASES = {
@@ -15,3 +19,8 @@ DATABASES = {
         'NAME': 'test.db'
     }
 }
+# DEBUG,INFO,WARNING,ERROR,CRITICAL
+
+LOGGER_LEVEL = logging.DEBUG
+# jwt的有效时间
+JSON_WEB_TOKEN_EXPIRE = 3600
