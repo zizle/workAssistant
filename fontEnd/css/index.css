@@ -8,6 +8,7 @@
 	background: -webkit-linear-gradient(top, #006096, #fff);   
 	background: -o-linear-gradient(top, #006096, #fff); 
 } */
+
 html,body{
 	width: 100%;
 	height: 100%;
@@ -16,12 +17,67 @@ html,body{
 	height: 100%;
 }
 .left-menu{
-	width:16%;
-	height: 100%;
+	width: 16%;
 	display: inline-block;
 	vertical-align: top;
-	background-color: beige;
+	border: none;
 }
+.left-menu .menu-group{
+	width: 100%;
+	user-select: none;
+}
+/* 菜单标题头设置 */
+.left-menu .menu-group summary{
+	height: 40px;
+	line-height: 40px;
+	text-indent: 10px;
+	outline: none;
+	font-size: 16px;
+	font-weight: 700;
+	
+	/* border: 1px solid #ddd; */
+	background: -webkit-gradient(linear,left top, left bottom, color-stop(0, #EFEFEF),color-stop(1, #CCCCCC));
+	cursor: pointer;
+}
+/* 去掉默认的小三角 */
+.left-menu .menu-group summary::-webkit-details-marker{display: none;}
+/* 设置自定义图标 */
+.left-menu .menu-group summary::before{
+	content: "+";
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	margin-right: 10px;
+	font-size: 20px;
+	font-weight: bold;
+}
+.left-menu .menu-group[open] summary:before{content:"-";background-color: none;}
+.left-menu .menu-group ul{
+	
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: 16px;
+	height: 32px;
+	line-height: 32px;
+	
+}
+.left-menu .menu-group ul li{
+	/* width: 100%; */
+	background-color: #F4F4F4;
+	padding-left: 30px;
+}
+.left-menu .menu-group ul li:hover{
+	background-color: aquamarine;
+}
+/* 菜单点击的样式 */
+.menuli-active{
+	border-left: 5px solid darkgreen;
+	background-color: rgb(255,255,255);
+}
+
+
+
 .left-menu .menu-list{
 	margin: 0;
 	padding:0;
@@ -34,14 +90,27 @@ html,body{
 .left-menu .menu-list li{
 	height: 40px;
 	line-height: 40px;
-	padding-left: 10px;
 }
 .left-menu .menu-list li:hover{
 	cursor: pointer;
 	background-color: aquamarine;
 }
-#right-frame{
+.right-content{
 	display: inline-block;
 	width: 84%;
 	height: 100%;
+}
+#rightframe{
+	width: 99%;
+	min-height: 100%;
+	margin-left: 5px;
+	overflow: scroll;
+}
+.cover-div{
+	position: absolute;
+	z-index: 1;
+	width: calc(16% + 5px);
+	height: 100%;
+	background-color: #111111;
+	opacity: 0.5;
 }

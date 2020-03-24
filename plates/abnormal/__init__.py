@@ -1,14 +1,22 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
 from flask import Blueprint
-from .views import testView
+from .views import AbnormalWorkView
 
 """
 非常态工作任务功能模块
 """
 
-abnormal_blp = Blueprint(name='abnormal', import_name=__name__, url_prefix='/abnormal/')
-abnormal_blp.add_url_rule('', view_func=testView.as_view(name=""))
+abnormal_blp = Blueprint(name='abnormal', import_name=__name__, url_prefix='/')
+abnormal_blp.add_url_rule('abnormal-work/', view_func=AbnormalWorkView.as_view(name="push"))
+
+
+
+
+
+
+
+
 
 
 # @abnormal_blp.before_app_first_request

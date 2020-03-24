@@ -5,10 +5,15 @@
 
 # _*_ coding:utf-8 _*_
 # Author: zizle
-
-from pymysql import connect
+import sys
+from pymysql import connect, converters, FIELD_TYPE
 from pymysql.cursors import DictCursor
 import settings
+
+
+converions = converters.conversions
+ #全局配置了
+converions[FIELD_TYPE.BIT] = lambda x: 1 if int.from_bytes(x, byteorder=sys.byteorder, signed=False) else 0 # 转换BIT类型为0或1
 
 
 class MySQLConnection(object):
@@ -20,6 +25,8 @@ class MySQLConnection(object):
             password=db_params['PASSWORD'],
             database=db_params['NAME'],
             port=db_params['PORT'],
+            charset='utf8',
+            conv=converions,
         )
         self.cursor = self._db.cursor(DictCursor)  # 传入字典形式的cursor返回的是字典
 
@@ -43,3 +50,7 @@ class MySQLConnection(object):
     # 提交事务
     def commit(self):
         self._db.commit()
+
+    # 插入返回id
+    def insert_id(self):
+        return self._db.insert_id()

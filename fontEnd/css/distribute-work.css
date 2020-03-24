@@ -1,0 +1,129 @@
+body{
+	margin: 0px;
+	opacity: 0;
+	animation: page-fade-in 1s forwards;
+}
+
+@keyframes page-fade-in{
+	from{
+		opacity: 0;
+	}
+	to{
+		opacity: 1;
+	}
+}
+
+.open-close-check{
+	-webkit-appearance: none;
+	cursor: pointer;
+	position: relative;
+	width: 55px;
+	height: 26px;
+	line-height: 25px;
+	background: #F9F9F9;
+	border-radius: 25px;
+	outline: none;
+	vertical-align: middle;
+}
+
+/* 设置关闭时滑块的样式 */
+.open-close-check:before{
+	position: absolute;
+	left: 0;
+	content: '关';
+	color:#000000;
+	font-size: 13px;
+	background-color: #FAFAFA;
+	text-align: center;
+	width: 30px;
+	height: 25px;
+	border-radius: 50%;
+	box-shadow: 0 0 5px #ddd;
+	transition: all 0.2s linear;
+}
+/* 滑槽和滑块的样式 */
+.open-close-check:checked{
+	background: #18ff0a;
+}
+/* 设置开启时滑块的样式 */
+.open-close-check:checked::before{
+	content: '开';
+	left: 29px;
+	color:#666666;
+	background-color: #7FFFD4;
+	transition: all 0.2s linear;
+}
+
+.user-info{
+	font-size: 18px;
+}
+.user-info span{
+	font-size: 14px;
+	color: #006096;
+}
+
+
+.table-show summary{
+	height: 45px;
+	line-height: 45px;
+	text-indent: 10px;
+	outline: none;
+	font-size: 16px;
+	font-weight: 700;
+	color: #ffffff;
+	border-bottom: 1px solid #CCCCCC;
+	background: -webkit-gradient(linear,left top, left bottom, color-stop(0, #69cfc9),color-stop(1, #6adfc1));
+	user-select: none;
+}
+.table-show summary::-webkit-details-marker{display: none;}
+/* 设置自定义图标 */
+.table-show summary::after{
+	content: "+";
+	display: inline-block;
+	float: right;
+	width: 16px;
+	height: 16px;
+	margin-right: 10px;
+	font-size: 20px;
+	font-weight: bold;
+	cursor: pointer;
+}
+.module-group[open] summary:after{content:"-";background-color: none;}
+
+
+.table-show{
+	width: 90%;
+	margin: 10px;
+}
+.table-show table{
+	width: 100%;
+	text-align: center;
+	border-collapse: collapse;
+	border: 1px solid #787878;
+	background-color: #F4F4F4;
+	
+}
+.table-show td{
+	border: 1px solid #787878;
+	font-size: 15px;
+	height: 28px;
+}
+.table-show table .index-td{
+	width: 6%;
+}
+.table-show table .name-td{
+	width: 38%;
+}
+.table-show table .page-url-td{
+	width: 38%;
+}
+
+.table-show .tile{
+	/* color: #FFFFFF; */
+	/* background-color: #65bad4; */
+	font-size: 18px;
+	font-weight: bold;
+	line-height: 40px;
+	height: 40px;
+	border-bottom: 1px solid #787878;
+}

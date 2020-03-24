@@ -1,0 +1,38 @@
+
+.edit-table{
+	width: 80%;
+	margin: 0 auto;
+}
+.edit-table table{
+	margin: 0 auto;
+	border-collapse: collapse;
+	width: 100%;
+}
+.edit-table table td{
+	height: 50px;
+}
+
+.edit-table .label-td{
+	width: 10%;
+	height: 40px;
+	line-height: 25px;
+	text-align: center;
+	text-align: justify;
+	text-justify: distribute-all-lines;
+	text-align-last: justify;
+}
+.edit-table .input-td input,.edit-table .input-td textarea,.edit-table .input-td input,.edit-table .input-td select{
+	width: 90%;
+	height: 40px;
+	margin-left: 10px;
+	outline: none;
+}
+.edit-table .submit-td{
+	width: 90%;
+	height: 45px;
+}
+.edit-table .submit-btn{
+	width: 60%;
+	height: 45px;
+	margin-left: 15%;
+}

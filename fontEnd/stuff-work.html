@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>人员设置</title>
+	<link rel="stylesheet" type="text/css" href="css/stuff-wrok.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<!-- 遮罩层 -->
+	<div class="cover-div" v-show="ShowcoverDiv"></div>
+	<!-- 工作设置弹窗 -->
+	<!-- <div class="work-distribute" :class="workDistributeActive? 'active': ''">
+		<div class="popup-title"><img src="img/edit_ico.png" ><button type="button" @click="closeNewModulePopup">关闭</button></div>
+		<div class="work-distribute-table">
+			<table border="0" cellpadding="0" cellspacing="0">
+				<tr class="title">
+					<td class="td-label">序号</td>
+					<td class="td-label">工作名称</td>
+					<td class="td-label">是否提交</td>
+				</tr>
+				<tr v-for="(item,index) in userWorkModuleArray">
+					<td>{{index + 1}}</td>
+					<td>{{item.name}}</td>
+					<td><input type="checkbox" class="open-close-check" :value="item.id" @change="workNecessaryChanged" :checked="item.is_working"></td>
+				</tr>
+				
+			</table>
+		</div>
+	</div> -->
+	
+	<!-- 用户信息表 -->
+	<div class="table-show">
+		<table>
+			<tr class="title">
+				<td>序号</td>
+				<td>人员名称</td>
+				<td>用户号</td>
+				<td>加入时间</td>
+				<td>最近登录</td>
+				<td>有效状态</td>
+				<td></td>
+			</tr>
+			<tr v-for="(item,index) in stuffsArray">
+				<td>{{index + 1}}</td>
+				<td>{{ item.name }}</td>
+				<td>{{ item.fixed_code }}</td>
+				<td>{{ item.join_time }}</td>
+				<td>{{ item.update_time }}</td>
+				<td><input v-if="item.id != 1" type="checkbox" class="open-close-check" :value="item.id" @change="userActiveChanged" :checked="item.is_active"></td>
+				<!-- <td><input v-if="item.id != 1" type="checkbox" class="open-close-check" :value="item.id" data-action="is_active" @change="checkBoxChanged" :checked="item.is_active"></td> -->
+				<td><button v-if="item.id != 1" type="button" :value="item.id" @click="workDistribute">工作设置</button></td>
+			</tr>
+		</table>
+	</div>
+</div>
+</body>
+<script src="js/stuff-work.js" type="text/javascript" charset="utf-8"></script>
+</html>

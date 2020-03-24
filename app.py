@@ -5,6 +5,7 @@
 from flask import Flask
 from plates.abnormal import abnormal_blp
 from plates.users import user_blp
+from plates.basic import basic_blp
 from flask_cors import CORS
 from utils.log_handler import config_logger_handler
 
@@ -24,6 +25,8 @@ def index():
 app.register_blueprint(user_blp)
 # 非常态工作板块
 app.register_blueprint(abnormal_blp)
+# 系统基础信息支持板块
+app.register_blueprint(basic_blp)
 
 
 if __name__ == '__main__':

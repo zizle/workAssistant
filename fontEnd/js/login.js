@@ -144,8 +144,8 @@ var vm = new Vue({
 				window.location.href = "index.html";
 			})
 			.catch(function(error){
-				//console.log(error);
-				localThis.loginErrorMsg = '用户名或密码错误';
+				// console.log(error);
+				localThis.loginErrorMsg = error.response.data;
 			})
 		},
 		// 点击注册

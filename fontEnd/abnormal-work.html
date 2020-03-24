@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>工作记录提交</title>
+	<link rel="stylesheet" type="text/css" href="css/abormal-work.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div>非常态工作任务记录</div>
+	<div class="edit-table">
+		<table border="0" cellspacing="" cellpadding="">
+			<tr>
+				<td class="label-td">日期</td>
+				<td class="input-td"><input type="date" format="%yyyy-%MM-%dd" v-model="currentDate"></td>
+			</tr>
+			<tr>
+				<td class="label-td">部门小组</td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.orgName"></td>
+			</tr>
+			<tr>
+				<td class="label-td">姓名</td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.name"></td>
+			</tr>
+			<tr>
+				<td class="label-td">任务类型</td>
+				<td class="input-td">
+					<select v-model="selectedTaskType">
+						<option value ="0">请选择</option>
+						<option v-for="(key,value) in taskTypes" :value ="value">{{key}}</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td class="label-td">主题/标题</td>
+				<td class="input-td"><input type="text" v-model="workTitle"></input></td>
+			</tr>
+			<tr>
+				<td class="label-td">主办方</td>
+				<td class="input-td"><input type="text" v-model="sponser"></td>
+			</tr>
+			<tr>
+				<td class="label-td">申请部门/受用单位</td>
+				<td class="input-td"><input type="text" v-model="applicantOrg"></td>
+			</tr>
+			<tr>
+				<td class="label-td">申请者</td>
+				<td class="input-td"><input type="text" v-model="applicationPerson"></td>
+			</tr>
+			<tr>
+				<td class="label-td">联系电话</td>
+				<td class="input-td"><input type="text" v-model="linkNumber"></td>
+			</tr>
+			<tr>
+				<td class="label-td">瑞币情况</td>
+				<td class="input-td"><input type="number" v-model="ruiBiCount"></td>
+				
+			</tr>
+			<tr>
+				<td class="label-td">收入补贴</td>
+				<td class="input-td"><input type="number" v-model="incomeAllowance"></td>
+			</tr>
+			<tr>
+				<td class="label-td">协作者</td>
+				<td class="input-td">
+					<select v-model="isPartner" style="width: 40%;">
+						<option value ="0">个人完成</option>
+						<option value="1">合作人</option>
+					</select>
+					<input v-show="showPartner" placeholder="在这里键入合作者的姓名" type="text" style="display: inline-block; width: 45%;" v-model="partnerName">
+				</td>
+			</tr>
+			<tr>
+				<td class="label-td">备注</td>
+				<td class="input-td"><input type="text" v-model="workNote"></input></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="submit-td"><button type="submit" class="submit-btn" @click="submitWorkRecord">确认提交</button></td>
+			</tr>
+		
+		</table>
+		
+	</div>
+</div>
+</body>
+<script src="js/abnormal-work.js" type="text/javascript" charset="utf-8"></script>
+</html>

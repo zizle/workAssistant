@@ -51,10 +51,21 @@ def verify_json_web_token(token):
             SECRET_KEY,
             algorithms=['HS256']
         )
-    except Exception:
+    except Exception as e:
+        print(e)
         return {}
     else:
         return data
+
+# 管理员用户验证
+def user_is_admin(token):
+    if not token:
+        return False
+    user_info = verify_json_web_token(token)
+    if user_info.get('is_admin'):
+        return True
+    else:
+        return False
 
 
 if __name__ == '__main__':

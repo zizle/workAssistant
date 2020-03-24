@@ -3,7 +3,8 @@
 import sys
 import jwt
 import time
-from flask import request, jsonify, url_for
+import datetime
+from flask import request, jsonify
 from flask.views import MethodView
 from flask import current_app
 from settings import SECRET_KEY, JSON_WEB_TOKEN_EXPIRE
@@ -73,35 +74,52 @@ class LoginView(MethodView):
         if not user_info:  # 状态保持错误
             return jsonify('登录已过期.'), 400
         # 查询系统模块
-        print(user_info)
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         uid = user_info['uid']
         # 查询用户无需填报的模块
-        no_work_statement = "SELECT module_id FROM user_ndo_module WHERE user_id=%s;"
+        no_work_statement = "SELECT module_id FROM user_ndo_module WHERE user_id=%s AND is_active=1;"
         cursor.execute(no_work_statement, uid)
         no_work_module = cursor.fetchall()
-        print(no_work_module, type(no_work_module))
+        no_work_module = [item['module_id'] for item in no_work_module] if no_work_module else []
+        print('no_work_module', no_work_module)
         # 查询系统模块
         if user_info['is_admin']:
-            modules_statement = "SELECT id,name,page_url FROM work_module WHERE is_active=1;"
+            print('管理员')
+            # 查询主功能
+            modules_statement = "SELECT `id`,`name` FROM `work_module` WHERE `is_active`=1 AND `parent_id` is NULL ORDER BY `sort`;"
+            # 查询子集的语句
+            sub_modules_statement = "SELECT `id`,`name`,`page_url` FROM `work_module` WHERE `is_active`=1 AND `parent_id`=%s ORDER BY `sort`;"
+
         else:
-            modules_statement = "SELECT id,name,page_url FROM work_module WHERE is_active=1 AND is_private=0;"
+            print('非管理员')
+            # 查询主功能
+            modules_statement = "SELECT `id`,`name`,`page_url` FROM `work_module` WHERE `is_active`=1 AND `is_private`=0 AND `parent_id` is NULL ORDER BY `sort`;"
+            # 查询子集的语句
+            sub_modules_statement = "SELECT `id`,`name`,`page_url` FROM `work_module` WHERE `is_active`=1 AND `is_private`=0 AND `parent_id`=%s ORDER BY `sort`;"
         cursor.execute(modules_statement)
-        all_modules = cursor.fetchall()
-        print('所有模块', all_modules, type(all_modules))
         # 剔除无需处理的模块
         response_modules = list()
-        for module_item in all_modules:
+        for module_item in cursor.fetchall():  # 注意 cursor.fetchall()只能用一次
             if module_item['id'] in no_work_module:
                 continue
-            response_modules.append(module_item)
-        if user_info['is_admin']:
-            response_modules += [
-                {'id': 0, 'name': '人员设置', 'page_url': 'stuff-maintain.html'},
-                {'id': 0, 'name': '部门统计', 'page_url': 'org-statistics.html'},
-                {'id': 0, 'name': '系统设置', 'page_url': 'sys-manager.html'},
-            ]
+            # 查询模块的子集
+            cursor.execute(sub_modules_statement, module_item['id'])
+            # print('子集',cursor.fetchall(),type(cursor.fetchall()))
+            sub_fetchall = cursor.fetchall()
+            print('sub_fetchall',sub_fetchall)
+            if not sub_fetchall:  # 没有需工作的子集
+                continue
+            # 遍历子集
+            module_item['subs'] = list()
+            for sub_module_item in sub_fetchall:
+                print(sub_module_item)
+                if sub_module_item['id'] in no_work_module:
+                    continue
+                module_item['subs'].append(sub_module_item)
+            if len(module_item['subs']) > 0:
+                response_modules.append(module_item)
+        print(response_modules)
         return jsonify(response_modules), 200
 
     def post(self):
@@ -113,25 +131,31 @@ class LoginView(MethodView):
         # 查询数据库
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        select_statement = "SELECT id,name,fixed_code,password,is_admin,org_id FROM user_info WHERE name=%s OR fixed_code=%s;"
+        select_statement = "SELECT id,name,fixed_code,password,is_admin,org_id FROM user_info WHERE (name=%s OR fixed_code=%s) AND is_active=1;"
         cursor.execute(select_statement, [name, name])
         user_obj = cursor.fetchone()
+        if not user_obj:
+            return jsonify("无效用户"), 400
         real_password = user_obj['password']
         # 检查密码
         login_successful = psd_handler.check_user_password(password, real_password)
         if login_successful:  # 登录成功
-            is_admin = int.from_bytes(user_obj['is_admin'], byteorder=sys.byteorder, signed=False)
+            # is_admin = int.from_bytes(user_obj['is_admin'], byteorder=sys.byteorder, signed=False) 全局配置了
             # 签发token
             token = self.generate_json_web_token(
                 uid=user_obj['id'],
                 name=user_obj['name'],
                 fixed_code=user_obj['fixed_code'],
                 org_id=user_obj['org_id'],
-                is_admin=is_admin
+                is_admin=user_obj['is_admin']
             )
+            # 修改update_time
+            modify_statement = "UPDATE user_info SET update_time=%s WHERE id=%s;"
+            cursor.execute(modify_statement, (datetime.datetime.now(), user_obj['id']))
+            db_connection.commit()
             status_code = 200
         else:
-            token = ''
+            token = '用户名或密码错误'
             status_code = 400
         db_connection.close()  # 关闭数据库连接
         return jsonify(token), status_code
@@ -160,3 +184,170 @@ class LoginView(MethodView):
             headers=headers
         ).decode('utf-8')
         return jwt_token
+
+
+class UserView(MethodView):
+    def get(self):
+        token = request.args.get("utoken")
+        print(token)
+        if not psd_handler.user_is_admin(token):
+            return jsonify("登录已过期或没有权限进行这个操作"), 400
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        # 查询所有部门信息
+        org_select_statement = "SELECT id,name FROM organization_group;"
+        cursor.execute(org_select_statement)
+        # 组织部门数据为字典
+        org_dict = {0: ""}
+        for org_item in cursor.fetchall():
+            if org_item['id'] not in org_dict:
+                org_dict[org_item['id']] = org_item['name']
+        # 查询所有用户信息
+        select_statement = "SELECT id,name,fixed_code,join_time,update_time,is_active,is_admin,org_id FROM user_info;"
+        cursor.execute(select_statement)
+        # 重新组织用户数据
+        user_data = list()
+        for user_item in cursor.fetchall():
+            user_dict = dict()
+            user_dict['id'] = user_item['id']
+            user_dict['name'] = user_item['name']
+            user_dict['fixed_code'] = user_item['fixed_code']
+            user_dict['join_time'] = user_item['join_time'].strftime('%Y-%m-%d %H:%M:%S')
+            user_dict['update_time'] = user_item['update_time'].strftime('%Y-%m-%d %H:%M:%S')
+            user_dict['is_active'] = user_item['is_active']
+            user_dict['is_admin'] = user_item['is_admin']
+            user_dict['organization'] = org_dict.get(user_item['org_id'])
+            user_data.append(user_dict)
+        return jsonify(user_data)
+
+
+# 单用户视图
+class RetrieveUserView(MethodView):
+    def put(self,user_id):
+        utoken = request.json.get('utoken')
+        is_active = 1 if request.json.get('is_checked', False) else 0
+
+        if not psd_handler.user_is_admin(utoken):
+            return jsonify("登录已过期或没有权限进行这个操作"), 400
+        try:
+            # 进行修改
+            modify_statement = "UPDATE user_info SET is_active=%d WHERE id=%d;" % (is_active, user_id)
+            db_connection = MySQLConnection()
+            cursor = db_connection.get_cursor()
+            cursor.execute(modify_statement)
+            db_connection.commit()
+            db_connection.close()
+        except Exception as e:
+            logger = current_app.logger
+            logger.error('修改用户有效错误:' + str(e))
+            return jsonify('参数错误 require int'), 400
+        else:
+            return jsonify("修改成功。")
+
+
+# 单个用户的工作模块信息
+class RetrieveUserModuleView(MethodView):
+    def get(self, user_id):
+        try:
+            response_data = dict()
+            response_data['modules'] = list()
+            db_connection = MySQLConnection()
+            cursor = db_connection.get_cursor()
+            # 查询用户信息
+            user_select_statement = "SELECT `id`,`name`,`fixed_code` FROM `user_info` WHERE id=%s;"
+            cursor.execute(user_select_statement, user_id)
+            user_info = cursor.fetchone()
+            if not user_info:
+                return jsonify("该人员不存在"), 400
+            response_data['user_id'] = user_info['id']
+            response_data['username'] = user_info['name']
+            response_data['fixed_code'] = user_info['fixed_code']
+
+            # 查询用户无需工作的模块
+            nowork_statement = "SELECT `module_id`,`is_active` FROM `user_ndo_module` WHERE `user_id`=%s;"
+            cursor.execute(nowork_statement, user_id)
+            nowork_module_info = {no_work_item['module_id']:no_work_item['is_active'] for no_work_item in cursor.fetchall()}
+
+            # 查询系统主模块,去除id=1与私有
+            module_select_statement = "SELECT `id`,`name` FROM `work_module` WHERE `is_private`=0 AND `parent_id` is NULL;"
+            cursor.execute(module_select_statement)
+            # 遍历查询子模块语句
+            sub_module_statement = "SELECT `id`,`name`,`page_url` FROM `work_module` WHERE `is_private`=0 AND `parent_id`=%s;"
+
+            for module_item in cursor.fetchall():
+                module_item['is_working'] = True
+                cursor.execute(sub_module_statement, module_item['id'])
+                # 遍历子模块，获取工作状态
+                module_item['subs'] = list()
+                for sub_module in cursor.fetchall():
+                    if sub_module['id'] in nowork_module_info:
+                        sub_module['is_working'] = not nowork_module_info.get(sub_module['id'])
+                    else:
+                        sub_module['is_working'] = True
+                    module_item['subs'].append(sub_module)
+
+                response_data['modules'].append(module_item)
+
+            print('最终结果:', response_data)
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            logger = current_app.logger
+            logger.error("分配用户需工作模块查询时错误:" + str(e))
+            return jsonify("查询数据错误"), 500
+        else:
+            return jsonify(response_data)
+
+
+class RetrieveUMView(MethodView):
+    def post(self, user_id, module_id):
+
+        token = request.json.get('utoken', None)
+        is_active = True if request.json.get('is_checked', False) else False
+        print(user_id, module_id, is_active)
+        if not psd_handler.user_is_admin(token):
+            return jsonify('登录已过期或没有权限进行这个操作'), 400
+        try:
+            db_connection = MySQLConnection()
+            cursor = db_connection.get_cursor()
+            nowork_select_statement = "SELECT `user_id`,`module_id`,`is_active` FROM `user_ndo_module` WHERE `user_id`=%s AND `module_id`=%s;"
+            cursor.execute(nowork_select_statement,(user_id,module_id))
+            nowork_module = cursor.fetchone()
+            print(nowork_module)
+            if not nowork_module:  # 数据库不存在记录增加一条
+                add_statement = "INSERT INTO `user_ndo_module` (user_id,module_id,is_active) VALUES (%s,%s,%s);"
+                cursor.execute(add_statement,(user_id, module_id, not is_active))
+            else:  # 存在记录就更新
+                update_statement = "UPDATE `user_ndo_module` SET `is_active`=%s WHERE `user_id`=%s AND `module_id`=%s;"
+                cursor.execute(update_statement,(not is_active, user_id, module_id))
+            db_connection.commit()
+            db_connection.close()
+        except Exception as e:
+            logger = current_app.logger
+            logger.error("修改用户需要工作的模块失败:" + str(e))
+            return jsonify('操作错误,500 SERVER ERROR'), 400
+        else:
+            return jsonify("操作成功")
+
+
+class ParserUserTokenView(MethodView):
+    def get(self):
+        token = request.args.get('utoken')
+        user_info = psd_handler.verify_json_web_token(token)
+        if not user_info:  # 状态保持错误
+            return jsonify('登录已过期.'), 400
+        org_id = user_info.get('org_id', None)
+        if org_id:
+            # 查询用户的部门信息
+            org_select_statement = "SELECT `id`,`name` FROM `organization_group` WHERE `id`=%s;"
+            db_connection = MySQLConnection()
+            cursor = db_connection.get_cursor()
+            cursor.execute(org_select_statement, org_id)
+            org_obj = cursor.fetchone()
+            user_info['orgName'] = org_obj.get('name')
+        else:
+            user_info['orgName'] = '无'
+        return jsonify(user_info)
+
+

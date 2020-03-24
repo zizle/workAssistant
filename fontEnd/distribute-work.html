@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>工作分配</title>
+	<link rel="stylesheet" type="text/css" href="css/distribute-work.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="user-info">职员名: {{ currentUserName }}  <span>识别码:{{ currentUserFixedCode }}</span> </div>
+	
+	<div class="table-show">
+		<details v-for="(moduleItem,index) in worksToDistrubute" class="module-group" open> <!-- 一级模块名称 -->
+			<summary>
+				{{moduleItem.name}}
+			</summary>
+			<!-- 子级模块表 -->
+			<table border="" cellspacing="" cellpadding="">
+				<tr class="tile">
+					<td class="index-td">序号</td>
+					<td class="name-td">模块名称</td>
+					<td class="page-url-td">页面路径</td>
+					<td class="active-td">开启任务</td>
+				</tr>
+				<tr v-for="(subItem,index) in moduleItem.subs">
+					<td class="index-td">{{index + 1}}</td>
+					<td class="name-td">{{ subItem.name }}</td>
+					<td class="page-url-td">{{ subItem.page_url}}</td>
+					<td><input type="checkbox" class="open-close-check" :value="subItem.id" data-action="is_working" @change="workStateChanged" :checked="subItem.is_working"></td>
+				</tr>
+			</table>
+		</details>
+	</div>
+</div>
+</body>
+<script src="js/distribute-work.js" type="text/javascript" charset="utf-8"></script>
+</html>
