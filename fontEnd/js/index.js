@@ -10,7 +10,15 @@ var vm = new Vue({
 			'stuff-work.html',
 			'sys-modules.html',
 			'abnormal-work.html',
-			'abw-query.html'
+			'abw-query.html',
+			'monographic.html',
+			'mogp-query.html',
+			'investment.html',
+			'invest-query.html',
+			'investrategy.html',
+			'instrategy-query.html',
+			'contribute-article.html',
+			'contart-query.html'
 		],
 		showCover:false,
 		accessModules:[],

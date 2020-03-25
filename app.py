@@ -6,6 +6,10 @@ from flask import Flask
 from plates.abnormal import abnormal_blp
 from plates.users import user_blp
 from plates.basic import basic_blp
+from plates.monographic import monograohic_blp
+from plates.investment import investment_blp
+from plates.investrategy import investrategy_blp
+from plates.article_publish import article_publish_blp
 from flask_cors import CORS
 from utils.log_handler import config_logger_handler
 
@@ -19,14 +23,15 @@ app.logger.addHandler(config_logger_handler())  # 配置日志
 # 主页
 @app.route('/')
 def index():
-    return "hello work Assistant!"
+    return "HELLO WORK ASSISTANT!"
 
-# 用户板块
 app.register_blueprint(user_blp)
-# 非常态工作板块
 app.register_blueprint(abnormal_blp)
-# 系统基础信息支持板块
 app.register_blueprint(basic_blp)
+app.register_blueprint(monograohic_blp)
+app.register_blueprint(investment_blp)
+app.register_blueprint(investrategy_blp)
+app.register_blueprint(article_publish_blp)
 
 
 if __name__ == '__main__':

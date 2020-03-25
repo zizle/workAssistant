@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>投资方案记录查询</title>
+	<link rel="stylesheet" type="text/css" href="css/invest-query.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
+	<div class="paginator"><button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button></div>
+	<div class="record-table">
+		<table border="" cellspacing="" cellpadding="">
+			<tr class="title">
+				<td>日期</td>
+				<td>姓名</td>
+				<td>部门小组</td>
+				<td>标题</td>
+				<td>品种</td>
+				<td>方向</td>
+				<td>实建日期</td>
+				<td>实建均价</td>
+				<td>实建手数</td>
+				<td>实出均价</td>
+				<td>止损均价</td>
+				<td>有效期</td>
+				<td>外发情况</td>
+				<td>方案结果</td>
+			</tr>
+			<tr v-for="(recordItem,index) in currentRecords">
+				<td>{{ recordItem.custom_time }}</td>
+				<td>{{ recordItem.name }}</td>
+				<td>{{ recordItem.org_name }}</td>
+				<td>{{ recordItem.title }}</td>
+				<td>{{ recordItem.variety }}</td>
+				<td>{{ recordItem.direction }}</td>
+				<td>{{ recordItem.build_time }}</td>
+				<td>{{ recordItem.build_price }}</td>
+				<td>{{ recordItem.build_hands }}</td>
+				<td>{{ recordItem.out_price }}</td>
+				<td>{{ recordItem.cutloss_price }}</td>
+				<td>{{ recordItem.expire_time }}</td>
+				<td>{{ recordItem.is_publish }}</td>
+				<td>{{ recordItem.profit }}</td>
+			</tr>
+		</table>
+	</div>
+</div>
+</body>
+<script src="js/invest-query.js" type="text/javascript" charset="utf-8"></script>
+</html>

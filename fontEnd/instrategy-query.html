@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>投顾策略记录查询</title>
+	<link rel="stylesheet" type="text/css" href="css/instrategy-query.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
+	<div class="paginator"><button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button></div>
+	<div class="record-table">
+		<table border="" cellspacing="" cellpadding="">
+			<tr class="title">
+				<td>日期</td>
+				<td>姓名</td>
+				<td>部门小组</td>
+				<td class="content-td">策略内容</td>
+				<td>品种</td>
+				<td>方向</td>
+				<td>手数</td>
+				<td>策略开仓</td>
+				<td>策略平仓</td>
+				<td>策略结果</td>
+			</tr>
+			<tr v-for="(recordItem,index) in currentRecords">
+				<td>{{ recordItem.custom_time }}</td>
+				<td>{{ recordItem.name }}</td>
+				<td>{{ recordItem.org_name }}</td>
+				<td class="content-td">{{ recordItem.content }}</td>
+				<td>{{ recordItem.variety }}</td>
+				<td>{{ recordItem.direction }}</td>
+				<td>{{ recordItem.hands }}</td>
+				<td>{{ recordItem.open_position }}</td>
+				<td>{{ recordItem.close_position }}</td>
+				<td>{{ recordItem.profit }}</td>
+			</tr>
+		</table>
+	</div>
+</div>
+</body>
+<script src="js/instrategy-query.js" type="text/javascript" charset="utf-8"></script>
+</html>

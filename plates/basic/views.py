@@ -4,9 +4,12 @@ from flask import request,jsonify, current_app
 from flask.views import MethodView
 from utils.psd_handler import verify_json_web_token, user_is_admin
 from db import MySQLConnection
-from vlibs import ABNORMAL_WORK
+from vlibs import ABNORMAL_WORK, VARIETY_LIB
 
+class VarietyView(MethodView):
 
+    def get(self):
+        return jsonify(VARIETY_LIB)
 
 # 系统基本模块数据
 class BasicModuleView(MethodView):
@@ -25,7 +28,7 @@ class BasicModuleView(MethodView):
             module_item['subs'] = cursor.fetchall()
             response_data.append(module_item)
         db_connection.close()
-        print('basic.views-27:模块页查询功能模块：',response_data)
+        # print('basic.views-27:模块页查询功能模块：',response_data)
         return jsonify(response_data)
 
     def post(self):

@@ -8,16 +8,18 @@
 	background: -webkit-linear-gradient(top, #006096, #fff);   
 	background: -o-linear-gradient(top, #006096, #fff); 
 } */
-
 html,body{
 	width: 100%;
 	height: 100%;
+	min-height: max-content;
 }
 #app{
 	height: 100%;
 }
 .left-menu{
 	width: 16%;
+	height: 100%;
+	min-height: max-content;
 	display: inline-block;
 	vertical-align: top;
 	border: none;
@@ -34,7 +36,6 @@ html,body{
 	outline: none;
 	font-size: 16px;
 	font-weight: 700;
-	
 	/* border: 1px solid #ddd; */
 	background: -webkit-gradient(linear,left top, left bottom, color-stop(0, #EFEFEF),color-stop(1, #CCCCCC));
 	cursor: pointer;
@@ -53,14 +54,11 @@ html,body{
 }
 .left-menu .menu-group[open] summary:before{content:"-";background-color: none;}
 .left-menu .menu-group ul{
-	
 	margin: 0;
 	padding: 0;
 	list-style: none;
 	font-size: 16px;
-	height: 32px;
 	line-height: 32px;
-	
 }
 .left-menu .menu-group ul li{
 	/* width: 100%; */
@@ -68,33 +66,10 @@ html,body{
 	padding-left: 30px;
 }
 .left-menu .menu-group ul li:hover{
-	background-color: aquamarine;
-}
-/* 菜单点击的样式 */
-.menuli-active{
-	border-left: 5px solid darkgreen;
-	background-color: rgb(255,255,255);
+	background-color: #787878;
+	color: #FFFFFF;
 }
 
-
-
-.left-menu .menu-list{
-	margin: 0;
-	padding:0;
-}
-/* 点击后的样式 */
-.left-menu .active{
-	border-left: 5px solid darkgreen;
-	background-color: rgb(255,255,255);
-}
-.left-menu .menu-list li{
-	height: 40px;
-	line-height: 40px;
-}
-.left-menu .menu-list li:hover{
-	cursor: pointer;
-	background-color: aquamarine;
-}
 .right-content{
 	display: inline-block;
 	width: 84%;

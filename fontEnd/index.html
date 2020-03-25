@@ -20,10 +20,8 @@
 			<summary>{{moduleItem.name}}</summary>
 			<ul>
 				<li v-for="(subItem,index) in moduleItem.subs" :data-pageUrl="subItem.page_url" @click="selectMenu">{{subItem.name}}</li>
-				<!-- <li :class="isMenuActive == index ? 'menuli-active':''" v-for="(item,index) in accessModules" :data-pageUrl="item.page_url" @click="selectMenu($event,index)">{{item.name}}</li> -->
 			</ul>
 		</details>
-		
 	</div><!-- 
 	右侧iframe,要这样注释防止换行之间产生空隙
 	 --><div class="right-content">

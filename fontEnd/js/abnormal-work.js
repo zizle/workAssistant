@@ -69,6 +69,7 @@ var vm = new Vue({
 			!this.workTitle
 			){
 				alert("请填写完整信息");
+				return;
 			}
 			var workMsg = {
 				work_date:this.currentDate,
@@ -95,7 +96,7 @@ var vm = new Vue({
 				alert(e.response.data);
 			})
 			
-		}
+		},
 		
 	}
 })

@@ -2,18 +2,18 @@ var vm = new Vue({
 	el:'#app',
 	data:{
 		showDoloading: true,
-		currentWorks:[],
+		currentRecords:[],
 		currentPage:1,
 		totalPage:1,
 	},
 	mounted:function(){
 		// 请求当前用户的工作情况,以分页的形式
 		var localThis = this;
-		var hostServer = host + 'abnormal-work/?page=1&pagesize=30&utoken=' + token; 
+		var hostServer = host + 'investment/?page=1&pagesize=30&utoken=' + token; 
 		axios.get(hostServer)
 		.then(function(resp){
 			// console.log(resp)
-			localThis.currentWorks = resp.data.abworks;
+			localThis.currentRecords = resp.data.records;
 			localThis.currentPage = resp.data.current_page;
 			localThis.totalPage = resp.data.total_page;
 			localThis.showDoloading = false;
@@ -45,11 +45,11 @@ var vm = new Vue({
 			// 发起请求数据
 			this.showDoloading = true;
 			var localThis = this;
-			var hostServer = host + 'abnormal-work/?page='+ requirePage+'&pagesize=30&utoken=' + token; 
+			var hostServer = host + 'investment/?page='+ requirePage+'&pagesize=30&utoken=' + token; 
 			axios.get(hostServer)
 			.then(function(resp){
 				console.log(resp)
-				localThis.currentWorks = resp.data.abworks;
+				localThis.currentRecords = resp.data.records;
 				localThis.currentPage = resp.data.current_page;
 				localThis.totalPage = resp.data.total_page;
 				localThis.showDoloading = false;

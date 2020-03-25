@@ -20,7 +20,7 @@ class OrganizationGroupView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # 执行查询
-        query_sql = "SELECT id, name FROM organization_group;"
+        query_sql = "SELECT id, name FROM organization_group WHERE id>1;"
         cursor.execute(query_sql)
         result = cursor.fetchall()
         db_connection.close()
@@ -82,7 +82,7 @@ class LoginView(MethodView):
         cursor.execute(no_work_statement, uid)
         no_work_module = cursor.fetchall()
         no_work_module = [item['module_id'] for item in no_work_module] if no_work_module else []
-        print('no_work_module', no_work_module)
+        # print('no_work_module', no_work_module)
         # 查询系统模块
         if user_info['is_admin']:
             print('管理员')
@@ -107,19 +107,17 @@ class LoginView(MethodView):
             cursor.execute(sub_modules_statement, module_item['id'])
             # print('子集',cursor.fetchall(),type(cursor.fetchall()))
             sub_fetchall = cursor.fetchall()
-            print('sub_fetchall',sub_fetchall)
             if not sub_fetchall:  # 没有需工作的子集
                 continue
             # 遍历子集
             module_item['subs'] = list()
             for sub_module_item in sub_fetchall:
-                print(sub_module_item)
                 if sub_module_item['id'] in no_work_module:
                     continue
                 module_item['subs'].append(sub_module_item)
             if len(module_item['subs']) > 0:
                 response_modules.append(module_item)
-        print(response_modules)
+        # print(response_modules)
         return jsonify(response_modules), 200
 
     def post(self):
@@ -189,7 +187,6 @@ class LoginView(MethodView):
 class UserView(MethodView):
     def get(self):
         token = request.args.get("utoken")
-        print(token)
         if not psd_handler.user_is_admin(token):
             return jsonify("登录已过期或没有权限进行这个操作"), 400
         db_connection = MySQLConnection()
@@ -288,11 +285,9 @@ class RetrieveUserModuleView(MethodView):
 
                 response_data['modules'].append(module_item)
 
-            print('最终结果:', response_data)
+            # print('最终结果:', response_data)
 
         except Exception as e:
-            import traceback
-            traceback.print_exc()
             logger = current_app.logger
             logger.error("分配用户需工作模块查询时错误:" + str(e))
             return jsonify("查询数据错误"), 500
@@ -305,7 +300,6 @@ class RetrieveUMView(MethodView):
 
         token = request.json.get('utoken', None)
         is_active = True if request.json.get('is_checked', False) else False
-        print(user_id, module_id, is_active)
         if not psd_handler.user_is_admin(token):
             return jsonify('登录已过期或没有权限进行这个操作'), 400
         try:
@@ -314,7 +308,7 @@ class RetrieveUMView(MethodView):
             nowork_select_statement = "SELECT `user_id`,`module_id`,`is_active` FROM `user_ndo_module` WHERE `user_id`=%s AND `module_id`=%s;"
             cursor.execute(nowork_select_statement,(user_id,module_id))
             nowork_module = cursor.fetchone()
-            print(nowork_module)
+            # print(nowork_module)
             if not nowork_module:  # 数据库不存在记录增加一条
                 add_statement = "INSERT INTO `user_ndo_module` (user_id,module_id,is_active) VALUES (%s,%s,%s);"
                 cursor.execute(add_statement,(user_id, module_id, not is_active))

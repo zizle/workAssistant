@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>非常态工作记录查询</title>
+	<link rel="stylesheet" type="text/css" href="css/mogp-query.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
+	<div class="paginator"><button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button></div>
+	<div class="record-table">
+		<table border="" cellspacing="" cellpadding="">
+			<tr class="title">
+				<td>日期</td>
+				<td>姓名</td>
+				<td>部门小组</td>
+				<td>专题题目</td>
+				<td>字数</td>
+				<td>外发情况</td>
+				<td>等级</td>
+				<td>得分</td>
+				<td>备注</td>
+			</tr>
+			<tr v-for="(recordItem,index) in currentRecords">
+				<td>{{ recordItem.upload_time }}</td>
+				<td>{{ recordItem.name }}</td>
+				<td>{{ recordItem.org_name }}</td>
+				<td>{{ recordItem.title }}</td>
+				<td>{{ recordItem.words }}</td>
+				<td v-if="recordItem.is_publish">是</td>
+				<td v-else>否</td>
+				<!-- <td v-pre>{{ recordItem.is_publish ? "是" : "否" }}</td> -->
+				<td>{{ recordItem.level }}</td>
+				<td>{{ recordItem.score }}</td>
+				<td>{{ recordItem.note }}</td>
+			</tr>
+		</table>
+	</div>
+</div>
+</body>
+<script src="js/mogp-query.js" type="text/javascript" charset="utf-8"></script>
+</html>

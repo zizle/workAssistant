@@ -64,7 +64,7 @@ class AbnormalWorkView(MethodView):
         total_count = cursor.fetchone()['total']
         total_page = int((total_count + page_size - 1) / page_size)
 
-        print('total_page',total_page)
+        # print('total_page',total_page)
         # 组织数据返回
         response_data = dict()
         response_data['abworks'] = list()
@@ -73,17 +73,13 @@ class AbnormalWorkView(MethodView):
             work_item['task_type'] = ABNORMAL_WORK.get(work_item['task_type'],'')
             response_data['abworks'].append(work_item)
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
-        response_data['total_page'] = total_count
+        response_data['total_page'] = total_page
         response_data['current_count'] = len(abworks)
 
         return jsonify(response_data)
 
-
-
-
     def post(self):
         body_data = request.json
-        print(body_data)
         worker_id = body_data.get('worker_id', None)
         if not worker_id:
             return jsonify("参数错误，HAS NO WORKERID.")
@@ -94,12 +90,9 @@ class AbnormalWorkView(MethodView):
         cursor.execute(select_user_statement, worker_id)
         user_obj = cursor.fetchone()
         # 不为空的信息判断
-        print(body_data.get('task_type'), type(body_data.get('task_type')))
-        print(body_data.get('work_title', False))
         task_type = body_data.get('task_type', 0)
         task_type_text = ABNORMAL_WORK.get(int(task_type), 0)
         title = body_data.get('work_title', False)
-        print(task_type_text, title)
         if not task_type_text or not title:
             return jsonify("参数错误,NOT FOUND TASKTYPE AND TITLE"), 400
         # 组织信息
