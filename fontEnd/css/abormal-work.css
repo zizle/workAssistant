@@ -1,0 +1,81 @@
+html,body{
+	width: 100%;
+	min-height: max-content;
+	margin: 0px;
+	opacity: 0;
+	animation: page-fade-in 0.7s forwards;
+	background-color: #EBEBE4;
+	/* background:-webkit-gradient(linear, 0% 0%, 0% 100%,from(#EBEBE4), to(#fff));/*谷歌*/
+}
+
+@keyframes page-fade-in{
+	from{
+		opacity: 0;
+	}
+	to{
+		opacity: 1;
+	}
+}
+
+.page-title{
+	font-size: 18px;
+	height: 32px;
+	line-height: 32px;
+	padding-left: 60px;
+	background: linear-gradient(to right,#7FFFD4,#F0F8FF);
+	color: #444444;
+	box-shadow: 1px 1px 3px #008B8B;
+	margin-bottom: 10px;
+}
+.page-title span{
+	font-size: 19px;
+	color: #EFEFEF;
+	text-shadow: #000 0 0 3px;
+}
+.edit-table{
+	width: 80%;
+	margin: 0 auto;
+	margin-bottom: 50px;
+}
+.edit-table table{
+	margin: 0 auto;
+	border-collapse: collapse;
+	width: 100%;
+}
+.edit-table table td{
+	height: 50px;
+}
+
+.edit-table .label-td{
+	width: 10%;
+	height: 40px;
+	font-size: 18px;
+	text-align: center;
+	text-align: justify;
+	text-justify: distribute-all-lines;
+	text-align-last: justify;
+}
+.edit-table .input-td input,.edit-table .input-td select{
+	width: 90%;
+	height: 40px;
+	margin-left: 10px;
+	outline: none;
+	font-size: 15px;
+}
+.edit-table .submit-td{
+	width: 90%;
+	height: 45px;
+}
+.edit-table .submit-btn{
+	width: 60%;
+	height: 45px;
+	margin-left: 15%;
+	background-color: #008B8B;
+	border: none;
+	border-radius: 5px;
+	color: #EFEFEF;
+	font-size: 18px;
+	margin-top: 20px;
+}
+
+

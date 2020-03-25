@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<link rel="stylesheet" type="text/css" href="css/sys-modules.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body onload="parent.window.document.all.rightframe.style.height=document.body.scrollHeight">
+<div id="app">
+	<!-- 左遮罩层 -->
+	<div class="cover-div" v-show="showCover"></div>
+	<!-- 点击新增信息弹窗 -->
+	<div class="add-module-button" @click="addNewModule"><span>+</span>新增</div>
+	<!-- 新增弹窗 -->
+	<div class="new-module" :class="addModuleActive? 'active': ''">
+		<div class="popup-title"><img src="img/edit_ico.png" ><button type="button" @click="closeNewModulePopup">关闭</button></div>
+		<table border="0" cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="td-label">名称</td>
+				<td><input type="text" class="td-input" v-model="newModuleName"></td>
+			</tr>
+			<tr>
+				<td class="td-label">页面路径</td>
+				<td><input type="text" class="td-input" v-model="newModulePageUrl"></td>
+			</tr>
+			<tr>
+				<td class="td-label">父级名称</td>
+				<td>
+					<select class="module-select" v-model="newModuleParentId">
+						<option value ="0">默认不选</option>
+						<option v-for="(moduelItem,index) in modulesArray" :value="moduelItem.id">{{moduelItem.name}}</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input type="submit" value="确定提交" class="submit-input" @click="submitNewModule">
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div class="table-show">
+		<details v-for="(moduleItem,index) in modulesArray" class="module-group" open> <!-- 一级模块名称 -->
+			<summary>
+				{{moduleItem.name}}
+			</summary>
+			<!-- 子级模块表 -->
+			<table border="" cellspacing="" cellpadding="">
+				<tr class="tile">
+					<td class="index-td">序号</td>
+					<td class="name-td">模块名称</td>
+					<td class="page-url-td">页面路径</td>
+					<td >私有化</td>
+					<td class="active-td">状态</td>
+				</tr>
+				<tr v-for="(subItem,index) in moduleItem.subs">
+					<td class="index-td">{{index + 1}}</td>
+					<td class="name-td">{{ subItem.name }}</td>
+					<td class="page-url-td">{{ subItem.page_url}}</td>
+					<td><input type="checkbox" class="open-close-check" :value="subItem.id" data-action="is_private" @change="checkBoxChanged" :checked="subItem.is_private"></td>
+					<td class="active-td"><input v-if="moduleItem.id != 1" type="checkbox" class="open-close-check" :value="subItem.id" data-action="is_active" @change="checkBoxChanged" :checked="subItem.is_active"></td>
+				</tr>
+			</table>
+		</details>
+	</div>
+</div>
+</body>
+<script src="js/sys-modules.js" type="text/javascript" charset="utf-8"></script>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>文章审核记录</title>
+	<link rel="stylesheet" type="text/css" href="css/contribute-article.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="page-title"><span>文章审核</span>记录填报</div>
+	<div class="edit-table">
+		<table border="0" cellspacing="" cellpadding="">
+			<tr>
+				<td class="label-td">日期</td>
+				<td class="input-td"><input type="date" format="%yyyy-%MM-%dd" v-model="currentDate"></td>
+			</tr>
+			<tr>
+				<td class="label-td">部门小组</td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.orgName"></td>
+			</tr>
+			<tr>
+				<td class="label-td">作者</td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.name"></td>
+			</tr>
+			
+			<tr>
+				<td class="label-td">题目</td>
+				<td class="input-td"><input type="text" v-model="title"></td>
+			</tr>
+			<tr>
+				<td class="label-td">发表/采访媒体</td>
+				<td class="input-td"><input type="text" v-model="mediaOrg"></td>
+			</tr>
+			<tr>
+				<td class="label-td">稿件形式</td>
+				<td class="input-td">
+					<select v-model="publishType">
+						<option value="投稿">投稿</option>
+						<option value="约稿">约稿</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td class="label-td">字数</td>
+				<td class="input-td"><input type="number" v-model="words"></td>
+			</tr>
+			
+			<tr>
+				<td class="label-td">审核人</td>
+				<td class="input-td"><input type="text" v-model="checker"></td>
+			</tr>
+			<tr>
+				<td class="label-td">收入奖励</td>
+				<td class="input-td"><input type="number" v-model="allowance"></td>
+			</tr>
+			
+			
+			<tr>
+				<td class="label-td">备注</td>
+				<td class="input-td"><input type="text" v-model="note"></input></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="submit-td"><button type="submit" class="submit-btn" @click="submitRecord">确认提交</button></td>
+			</tr>
+		
+		</table>
+		
+	</div>
+</div>
+</body>
+<script src="js/contribute-article.js" type="text/javascript" charset="utf-8"></script>
+</html>

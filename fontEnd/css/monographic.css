@@ -1,0 +1,132 @@
+html,body{
+	width: 100%;
+	min-height: max-content;
+	margin: 0px;
+	opacity: 0;
+	animation: page-fade-in 0.7s forwards;
+	background-color: #EBEBE4;
+	/* background:-webkit-gradient(linear, 0% 0%, 0% 100%,from(#EBEBE4), to(#fff));/*谷歌*/
+}
+
+@keyframes page-fade-in{
+	from{
+		opacity: 0;
+	}
+	to{
+		opacity: 1;
+	}
+}
+
+.open-close-check{
+	-webkit-appearance: none;
+	cursor: pointer;
+	position: relative;
+	width: 55px;
+	height: 26px;
+	line-height: 25px;
+	background: #F9F9F9;
+	border-radius: 25px;
+	outline: none;
+	vertical-align: middle;
+	margin-left: 10px;
+}
+
+/* 设置关闭时滑块的样式 */
+.open-close-check:before{
+	position: absolute;
+	left: 0;
+	content: '否';
+	color:#000000;
+	font-size: 13px;
+	background-color: #FAFAFA;
+	text-align: center;
+	width: 30px;
+	height: 25px;
+	border-radius: 50%;
+	box-shadow: 0 0 5px #ddd;
+	transition: all 0.2s linear;
+}
+/* 滑槽和滑块的样式 */
+.open-close-check:checked{
+	background: #18ff0a;
+}
+/* 设置开启时滑块的样式 */
+.open-close-check:checked::before{
+	content: '是';
+	left: 29px;
+	color:#666666;
+	background-color: #7FFFD4;
+	transition: all 0.2s linear;
+}
+
+.page-title{
+	font-size: 18px;
+	height: 32px;
+	line-height: 32px;
+	padding-left: 60px;
+	background: linear-gradient(to right,#7FFFD4,#F0F8FF);
+	/* color: #EFEFEF; */
+	color: #444444;
+	/* text-shadow: #000 0 0 3px; */
+	box-shadow: 1px 1px 3px #008B8B;
+	margin-bottom: 10px;
+}
+.page-title span{
+	font-size: 19px;
+	color: #EFEFEF;
+	text-shadow: #000 0 0 3px;
+}
+.edit-table{
+	width: 80%;
+	margin: 0 auto;
+	margin-bottom: 50px;
+}
+.edit-table table{
+	margin: 0 auto;
+	border-collapse: collapse;
+	width: 100%;
+}
+.edit-table table td{
+	height: 50px;
+}
+
+.edit-table .label-td{
+	width: 10%;
+	height: 40px;
+	font-size: 18px;
+	text-align: center;
+	text-align: justify;
+	text-justify: distribute-all-lines;
+	text-align-last: justify;
+}
+.edit-table .input-partner .partner-edit{
+	height: 40px;
+	outline: none;
+	font-size: 15px;
+	width: calc(90% - 65px) !important;
+}
+
+.edit-table .input-td input,.edit-table .input-td select{
+	width: 90%;
+	height: 40px;
+	margin-left: 10px;
+	outline: none;
+	font-size: 15px;
+}
+.edit-table .submit-td{
+	width: 90%;
+	height: 45px;
+}
+.edit-table .submit-btn{
+	width: 60%;
+	height: 45px;
+	margin-left: 15%;
+	background-color: #008B8B;
+	border: none;
+	border-radius: 5px;
+	color: #EFEFEF;
+	font-size: 18px;
+	margin-top: 20px;
+}
+
+

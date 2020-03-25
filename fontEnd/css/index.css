@@ -1,0 +1,91 @@
+/* html,body{
+	width: 100%;
+	height: 100%;
+	background: -ms-linear-gradient(top, #006096,  #fff);       
+	background:-moz-linear-gradient(top,#006096,#fff);
+	background:-webkit-gradient(linear, 0% 0%, 0% 100%,from(#006096), to(#fff));
+	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#006096), to(#fff)); 
+	background: -webkit-linear-gradient(top, #006096, #fff);   
+	background: -o-linear-gradient(top, #006096, #fff); 
+} */
+html,body{
+	width: 100%;
+	height: 100%;
+	min-height: max-content;
+}
+#app{
+	height: 100%;
+}
+.left-menu{
+	width: 16%;
+	height: 100%;
+	min-height: max-content;
+	display: inline-block;
+	vertical-align: top;
+	border: none;
+}
+.left-menu .menu-group{
+	width: 100%;
+	user-select: none;
+}
+/* 菜单标题头设置 */
+.left-menu .menu-group summary{
+	height: 40px;
+	line-height: 40px;
+	text-indent: 10px;
+	outline: none;
+	font-size: 16px;
+	font-weight: 700;
+	/* border: 1px solid #ddd; */
+	background: -webkit-gradient(linear,left top, left bottom, color-stop(0, #EFEFEF),color-stop(1, #CCCCCC));
+	cursor: pointer;
+}
+/* 去掉默认的小三角 */
+.left-menu .menu-group summary::-webkit-details-marker{display: none;}
+/* 设置自定义图标 */
+.left-menu .menu-group summary::before{
+	content: "+";
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	margin-right: 10px;
+	font-size: 20px;
+	font-weight: bold;
+}
+.left-menu .menu-group[open] summary:before{content:"-";background-color: none;}
+.left-menu .menu-group ul{
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: 16px;
+	line-height: 32px;
+}
+.left-menu .menu-group ul li{
+	/* width: 100%; */
+	background-color: #F4F4F4;
+	padding-left: 30px;
+}
+.left-menu .menu-group ul li:hover{
+	background-color: #787878;
+	color: #FFFFFF;
+}
+
+.right-content{
+	display: inline-block;
+	width: 84%;
+	height: 100%;
+}
+#rightframe{
+	width: 99%;
+	min-height: 100%;
+	margin-left: 5px;
+	overflow: scroll;
+}
+.cover-div{
+	position: absolute;
+	z-index: 1;
+	width: calc(16% + 5px);
+	height: 100%;
+	background-color: #111111;
+	opacity: 0.5;
+}

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>研究院工作管理系统</title>
+	<link rel="stylesheet" type="text/css" href="css/index.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<!-- 左侧菜单栏 -->
+	<div class="left-menu">
+		<!-- 左遮罩层 -->
+		<div class="cover-div" v-show="showCover"></div>
+		<!-- 一个details是一组 -->
+		<details class="menu-group" close v-for="(moduleItem,index) in accessModules">
+			<!-- summary为detail提供内容标题文字定义 -->
+			<summary>{{moduleItem.name}}</summary>
+			<ul>
+				<li v-for="(subItem,index) in moduleItem.subs" :data-pageUrl="subItem.page_url" @click="selectMenu">{{subItem.name}}</li>
+			</ul>
+		</details>
+	</div><!-- 
+	右侧iframe,要这样注释防止换行之间产生空隙
+	 --><div class="right-content">
+		 <iframe :src="framePage" id="rightframe" frameborder="no" border="0" marginwidth="0" marginheight="0" scrolling="yes" allowtransparency="yes"></iframe>
+		</div>
+</div>
+</body>
+<script src="js/index.js" type="text/javascript" charset="utf-8"></script>
+</html>

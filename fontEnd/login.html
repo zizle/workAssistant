@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>研究院工作管理系统</title>
+	<link rel="stylesheet" type="text/css" href="css/login.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/md5.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<transition name="lrfade">
+	<!-- 登录表单 -->
+	<div v-if="showLogin" class="login-div">
+		<table>
+			<tr><th colspan="2">用户登录</th></tr>
+			<tr>
+				<td class="login-label">用户名</td>
+				<td><input type="text" class="login-input" @focus="loginUsernameFocus" @blur="loginUsernameBlur" v-model="loginUsername"></td>
+			</tr>
+			<tr><td colspan="2" class="error-msg">{{ loginUsernameError }}</td></tr>
+			<tr>
+				<td class="login-label">密码</td>
+				<td><input type="password" class="login-input" @focus="loginPsdFocus" @blur="loginPsdBlur" v-model="loginPsd"></td>
+			</tr>
+			<tr><td colspan="2" class="error-msg">{{ loginPsdError }}</td></tr>
+			<tr>
+				<td class="remember-login"><label><input type="checkbox" v-model="rememberToken" value="1" title="有效期为15天">记住我</label><td>
+			</tr>
+			<tr><td colspan="2" class="error-msg">{{ loginErrorMsg }}</td></tr>
+			<tr>
+				<th colspan="2"><input type="submit" value="登录" class="submit-btn" @click="userToLogin"></th>
+			</tr>
+		</table>
+		<div class="to-register">还没用户名?<span @click="toggleLoginRegister">立即注册-></span></div>
+	</div>
+	<!-- 注册表单 -->
+	<div v-else class="register-div">
+		<table>
+			<tr><th colspan="2">用户注册</th></tr>
+			<tr>
+				<td class="register-label">用户名</td>
+				<td ><input type="text" class="register-input" @focus="registerNameFocus" @blur="registerNameBlur" v-model="registerName"></td>
+			</tr>
+			<tr><td colspan="2" class="error-msg">{{ registerNameError }}</td></tr>
+			<tr>
+				<td class="register-label">密码</td>
+				<td><input type="password" class="register-input" @focus="registerPsd1Focus" @blur="registerPsd1Blur" v-model="registerPsd1"></td>
+			</tr>
+			<tr><td colspan="2" class="error-msg">{{ registerPsd1Error }}</td></tr>
+			<tr>
+				<td class="register-label">确认密码</td>
+				<td><input type="password" class="register-input" @focus="registerPsd2Focus" @blur="registerPsd2Blur" v-model="registerPsd2"></td>
+			</tr>
+			<tr><td colspan="2" class="error-msg">{{ registerPsd2Error }}</td></tr>
+			<tr>
+				<td class="register-label">部门小组</td>
+				<td >
+					<select name="" class="register-select" v-model="orginazationId">
+						<option value="0">请选择</option>
+						<!-- 绑定数据对象，循环产生标签 -->
+						<option v-for="(item, i) in organizationGroups" :value ="item.id">{{item.name}}</option>
+					</select>
+				</td>
+			</tr>
+			<tr><td colspan="2" class="error-msg">{{ orginazationIdError }}</td></tr>
+			<tr>
+				<th colspan="2"><input type="submit" value="马上注册" class="register-btn" @click="userToRegister"></th>
+			</tr>
+		</table>
+		<div class="to-register">已有用户名?<span @click="toggleLoginRegister">立即登录-></span></div>
+	</div>
+	</transition>
+</div>
+</body>
+<script src="js/login.js" type="text/javascript" charset="utf-8"></script>
+</html>

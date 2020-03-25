@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>投资方案撰写</title>
+	<link rel="stylesheet" type="text/css" href="css/investment.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="page-title"><span>投资方案</span>记录填报</div>
+	<div class="edit-table">
+		<table border="0" cellspacing="" cellpadding="">
+			<tr>
+				<td class="label-td">日期</td>
+				<td class="input-td"><input type="date" format="%yyyy-%MM-%dd" v-model="currentDate"></td>
+			</tr>
+			<tr>
+				<td class="label-td">部门小组</td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.orgName"></td>
+			</tr>
+			<tr>
+				<td class="label-td">姓名</td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.name"></td>
+			</tr>
+			<tr>
+				<td class="label-td">方案标题</td>
+				<td class="input-td"><input type="text" v-model="articleTitle"></td>
+			</tr>
+			<tr>
+				<td class="label-td">品种</td>
+				<td class="input-td">
+					<select v-model="variety" class="variety-select">
+						<option v-for="(value, key) in varietyInfoDict" :value ="key">{{value}}</option>
+					</select>
+					<label v-show="showContactInput">合约</label>
+					<input v-show="showContactInput" type="text" class="contract-input" v-model="contract">
+				</td>
+			</tr>
+			<tr>
+				<td class="label-td">方向</td>
+				<td class="input-td">
+					<select v-model="direction">
+						<option value="多头">多头</option>
+						<option value="空头">空头</option>
+						<option value="套利">套利</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td class="label-td">实建日期</td>
+				<td class="input-td"><input type="datetime-local" v-model="buildDateTime"></td>
+			</tr>
+			<tr>
+				<td class="label-td">实建均价</td>
+				<td class="input-td"><input type="number" v-model="buildAvgPrice"></td>
+			</tr>
+			<tr>
+				<td class="label-td">实建手数</td>
+				<td class="input-td"><input type="number" v-model="buildHands"></td>
+			</tr>
+			<tr>
+				<td class="label-td">实出均价</td>
+				<td class="input-td"><input type="number" v-model="outAvgPrice"></td>
+			</tr>
+			<tr>
+				<td class="label-td">止损均价</td>
+				<td class="input-td"><input type="number" v-model="cutLossAvgPrice"></td>
+			</tr>
+			<tr>
+				<td class="label-td">有效期止</td>
+				<td class="input-td"><input type="datetime-local" v-model="expireDateTime"></td>
+			</tr>
+			<tr>
+				<td class="label-td">是否外发</td>
+				<td class="input-td-checked"><input class="open-close-check" type="checkbox" v-model="isPublish"></td>
+			</tr>
+			<tr>
+				<td class="label-td">方案结果</td>
+				<td class="input-td"><input type="number" v-model="profit"></td>
+			</tr>
+			<tr>
+				<td class="label-td">备注</td>
+				<td class="input-td"><input type="text" v-model="note"></input></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="submit-td"><button type="submit" class="submit-btn" @click="submitRecord">确认提交</button></td>
+			</tr>
+		
+		</table>
+		
+	</div>
+</div>
+</body>
+<script src="js/investment.js" type="text/javascript" charset="utf-8"></script>
+</html>

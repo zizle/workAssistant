@@ -1,0 +1,238 @@
+html,body{
+	width: 100%;
+	height: 100%;
+	min-height: max-content;
+	margin: 0px;
+	opacity: 0;
+	animation: page-fade-in 0.7s forwards;
+	background-color: #EBEBE4;
+	/* background:-webkit-gradient(linear, 0% 0%, 0% 100%,from(#EBEBE4), to(#fff));/*谷歌*/
+}
+
+@keyframes page-fade-in{
+	from{
+		opacity: 0;
+	}
+	to{
+		opacity: 1;
+	}
+}
+.cover-div{
+	position: absolute;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	background-color: #111111;
+	opacity: 0.5;
+}
+.add-module-button{
+	text-align: center;
+	width: 50px;
+	cursor: pointer;
+	color: #333;
+	background-color: #ececec;
+	border: 1px solid #d4d4d4;
+	border-radius: 2px;
+	cursor: pointer;
+	font-size: 14px;
+	line-height: 26px;
+	margin-left: 5px;
+}
+.add-module-button span{
+	font-size: 20px;
+	font-weight: bold;
+	margin-right: 3px;
+}
+
+.open-close-check{
+	-webkit-appearance: none;
+	cursor: pointer;
+	position: relative;
+	width: 55px;
+	height: 26px;
+	line-height: 25px;
+	background: #F9F9F9;
+	border-radius: 25px;
+	outline: none;
+	vertical-align: middle;
+}
+
+/* 设置关闭时滑块的样式 */
+.open-close-check:before{
+	position: absolute;
+	left: 0;
+	content: '关';
+	color:#000000;
+	font-size: 13px;
+	background-color: #FAFAFA;
+	text-align: center;
+	width: 30px;
+	height: 25px;
+	border-radius: 50%;
+	box-shadow: 0 0 5px #ddd;
+	transition: all 0.2s linear;
+}
+/* 滑槽和滑块的样式 */
+.open-close-check:checked{
+	background: #18ff0a;
+}
+/* 设置开启时滑块的样式 */
+.open-close-check:checked::before{
+	content: '开';
+	left: 29px;
+	color:#666666;
+	background-color: #7FFFD4;
+	transition: all 0.2s linear;
+}
+
+.new-module{
+	z-index: 9;
+	display: none;
+	position: absolute;
+	top: calc(40% - 150px);
+	left: calc(42% - 180px);
+	width: 360px;
+	height: 280px;
+	margin: auto;
+	background: #FFFFFF;
+	border-radius: 15px;
+	box-shadow: 4px 4px 4px rgb(230,230,230);
+}
+.new-module .popup-title{
+	width: 100%;
+	height: 40px;
+	border-bottom: 1px dotted rgb(200,200,200);
+}
+.new-module .popup-title img{
+	position: relative;
+	width: 50px;
+	height: 50px;
+	bottom: 20px;
+	left: calc(50% - 25px);
+}
+.new-module .popup-title button{
+	float: right;
+	margin: 10px 20px;
+	border:none;
+	background: none;
+	font-size: 15px;
+	color: #666666;
+	outline: none;
+	cursor: pointer;
+	
+}
+.new-module table{
+	margin: 20px auto;
+}
+
+.new-module .td-label{
+	height: 45px;
+	line-height: 45px;
+	text-align: center;
+	text-align: justify;
+	text-justify: distribute-all-lines;
+	text-align-last: justify;
+}
+
+.new-module .td-input{
+	width: 200px;
+	height: 20px;
+	margin-left: 8px;
+	outline: none;
+}
+.new-module .module-select{
+	margin-left: 8px;
+}
+
+.new-module .submit-input{
+	display: block;
+	border: none;
+	background-color: rgb(40, 200, 220);
+	color: rgb(245,245,245);
+	font-size:18px;
+	width: 64%;
+	margin-top: 20px;
+	margin-left: 25%;
+	height: 38px;
+	text-align: center;
+	border-radius: 5px;
+	box-shadow: rgba(42,100,150,0.8) -2px -2px inset;
+	cursor: pointer;
+	outline: none;
+}
+.new-module .submit-input:active{
+	box-shadow: none;
+}
+/* 显示新增弹窗 */
+.active{
+	display: block !important;
+}
+
+.table-show summary{
+	height: 45px;
+	line-height: 45px;
+	text-indent: 10px;
+	outline: none;
+	font-size: 16px;
+	font-weight: 700;
+	color: #ffffff;
+	/* border: 1px solid #ddd; */
+	background: -webkit-gradient(linear,left top, left bottom, color-stop(0, #65badd),color-stop(1, #65bac1));
+	user-select: none;
+}
+.table-show summary::-webkit-details-marker{display: none;}
+/* 设置自定义图标 */
+.table-show summary::after{
+	content: "+";
+	display: inline-block;
+	float: right;
+	width: 16px;
+	height: 16px;
+	margin-right: 10px;
+	font-size: 20px;
+	font-weight: bold;
+	cursor: pointer;
+}
+.module-group[open] summary:after{content:"-";background-color: none;}
+
+
+.table-show{
+	width: 90%;
+	margin: 10px;
+}
+.table-show table{
+	width: 100%;
+	text-align: center;
+	border-collapse: collapse;
+	border: 1px solid #787878;
+	background-color: #F4F4F4;
+	
+}
+.table-show td{
+	border: 1px solid #787878;
+	font-size: 15px;
+	height: 28px;
+}
+.table-show table .index-td{
+	width: 6%;
+}
+.table-show table .name-td{
+	width: 35%;
+}
+.table-show table .page-url-td{
+	width: 35%;
+}
+.table-show table .active-td{
+	width: 12%;
+}
+
+.table-show .tile{
+	/* color: #FFFFFF; */
+	/* background-color: #65bad4; */
+	font-size: 18px;
+	font-weight: bold;
+	line-height: 40px;
+	height: 40px;
+	border-bottom: 1px solid #787878;
+}
+

@@ -1,0 +1,92 @@
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>投顾策略记录</title>
+	<link rel="stylesheet" type="text/css" href="css/investrategy.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="page-title"><span>投顾策略</span>记录填报</div>
+	<div class="edit-table">
+		<table border="0" cellspacing="" cellpadding="">
+			<tr>
+				<td class="label-td">日期</td>
+				<td class="input-td"><input type="date" format="%yyyy-%MM-%dd" v-model="currentDate"></td>
+			</tr>
+			<tr>
+				<td class="label-td">部门小组</td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.orgName"></td>
+			</tr>
+			<tr>
+				<td class="label-td">姓名</td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.name"></td>
+			</tr>
+			
+			<tr>
+				<td class="label-td">品种</td>
+				<td class="input-td">
+					<select v-model="variety" class="variety-select">
+						<option v-for="(value, key) in varietyInfoDict" :value ="key">{{value}}</option>
+					</select>
+					<label v-show="showContactInput">合约</label>
+					<input v-show="showContactInput" type="text" class="contract-input" v-model="contract">
+				</td>
+			</tr>
+			<tr>
+				<td class="label-td">策略内容</td>
+				<td class="input-td"><input type="text" v-model="content"></td>
+			</tr>
+			<tr>
+				<td class="label-td">方向</td>
+				<td class="input-td">
+					<select v-model="direction">
+						<option value="多头">多头</option>
+						<option value="空头">空头</option>
+						<option value="套利">套利</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td class="label-td">手数</td>
+				<td class="input-td"><input type="number" v-model="hands"></td>
+			</tr>
+			
+			<tr>
+				<td class="label-td">策略开仓</td>
+				<td class="input-td"><input type="number" v-model="openPosition"></td>
+			</tr>
+			<tr>
+				<td class="label-td">策略平仓</td>
+				<td class="input-td"><input type="number" v-model="closePosition"></td>
+			</tr>
+			
+			<tr>
+				<td class="label-td">策略结果</td>
+				<td class="input-td"><input type="number" v-model="profit"></td>
+			</tr>
+			<tr>
+				<td class="label-td">备注</td>
+				<td class="input-td"><input type="text" v-model="note"></input></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="submit-td"><button type="submit" class="submit-btn" @click="submitRecord">确认提交</button></td>
+			</tr>
+		
+		</table>
+		
+	</div>
+</div>
+</body>
+<script src="js/investrategy.js" type="text/javascript" charset="utf-8"></script>
+</html>
+
