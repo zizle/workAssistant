@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>短讯通记录</title>
+	<link rel="stylesheet" href="css/short-message.css">
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="page-title"><span>短讯通</span>填报</div>
+	<div class="edit-table">
+		<table border="0" cellspacing="" cellpadding="">
+			<tr>
+				<td class="label-td">发送日期</td>
+				<td class="input-td"><input type="date" format="%yyyy-%MM-%dd" v-model="currentDate"></td>
+			</tr>
+			<tr>
+				<td class="label-td">部门小组</td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.orgName"></td>
+			</tr>
+			<tr>
+				<td class="label-td">作者</td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.name"></td>
+			</tr>
+			
+			<tr>
+				<td class="label-td">信息内容</td>
+				<td class="input-td"><input type="text" v-model="content"></td>
+			</tr>
+			<tr>
+				<td class="label-td">类别</td>
+				<td class="input-td"><input type="text" v-model="messageType"></td>
+			</tr>
+			<tr>
+				<td class="label-td">影响品种</td>
+				<td class="input-td">
+					<input type="text" readonly="true" @click="selectVariety" v-model="effectVariety">
+					<div class="choose-variety-div" v-show="showVarietyChecks">
+						
+						<span class="check-item" v-for="(value,key) in varietyInfoDict"><input type="checkbox" :id="'v' + key" :value="value" v-model="effectVariety"><label :for="'v' + key">{{value}}</label></span>
+						<div class="confirm-variety"><button type="button" @click="slideUpVairetyDiv">确定</button></div>
+					</div>
+				</td>
+			</tr>
+			
+			<tr>
+				<td class="label-td">备注</td>
+				<td class="input-td"><input type="text" v-model="note"></input></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="submit-td"><button type="submit" class="submit-btn" @click="submitRecord">确认提交</button></td>
+			</tr>
+		
+		</table>
+		
+	</div>
+</div>
+</body>
+<script src="js/short-message.js" type="text/javascript" charset="utf-8"></script>
+</html>

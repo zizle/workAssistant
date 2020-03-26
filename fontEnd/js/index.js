@@ -18,7 +18,9 @@ var vm = new Vue({
 			'investrategy.html',
 			'instrategy-query.html',
 			'contribute-article.html',
-			'contart-query.html'
+			'contart-query.html',
+			'short-message.html',
+			'shortmsg-query.html'
 		],
 		showCover:false,
 		accessModules:[],
@@ -58,9 +60,8 @@ var vm = new Vue({
 			};
 			
 			if (receiveMsg.name == "modifyModules"){
-				// 改变可显模块信息
+				// 改变可显示模块信息的数组pageUrlArray
 				localThis.accessModules = receiveMsg.modifyModules;
-				
 			};
 			// 改变frame显示的页面
 			if (receiveMsg.name == "changeFramePage"){
@@ -76,7 +77,8 @@ var vm = new Vue({
 		selectMenu(e){
 			// 处理没有页面的问题
 			var page = e.target.dataset.pageurl;
-			if (this.pageUrlIsExist(page))
+			var flag = this.pageUrlIsExist(page);
+			if (flag)
 			{
 				this.framePage = page;
 			}else{
@@ -86,14 +88,12 @@ var vm = new Vue({
 		},
 		// 判断数组中是否存在
 		pageUrlIsExist(pageUrl){
-			var flag = false;
-			this.pageUrlArray.forEach(function(item){
-				if (item == pageUrl){
-					flag = true;
-					//break;
+			for (var i = 0; i < this.pageUrlArray.length; i++) {
+				if(this.pageUrlArray[i] == pageUrl){
+					return true;
 				}
-			});
-			return flag;
+			}
+			return false;
 		}
 	},
 })

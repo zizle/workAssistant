@@ -5,10 +5,10 @@ from flask import jsonify,request,current_app
 from flask.views import MethodView
 from db import MySQLConnection
 from utils.psd_handler import verify_json_web_token
-from vlibs import VARIETY_LIB,ORGANIZATIONS
+from vlibs import ORGANIZATIONS
 
 
-class InvestrategyView(MethodView):
+class ShortMessageView(MethodView):
     def get(self):
         params = request.args
         # 解析用户信息
@@ -27,17 +27,16 @@ class InvestrategyView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
-        inner_join_statement = "SELECT usertb.name,usertb.org_id,invstb.custom_time,invstb.content,invstb.variety_id,invstb.contract,invstb.direction,invstb.hands,invstb.open_position," \
-                               "invstb.close_position,invstb.profit " \
-                               "FROM `user_info` AS usertb INNER JOIN `investrategy` AS invstb ON " \
-                               "usertb.id=%d AND usertb.id=invstb.author_id " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,smsgtb.custom_time,smsgtb.content,smsgtb.msg_type,smsgtb.effect_variety,smsgtb.note " \
+                               "FROM `user_info` AS usertb INNER JOIN `short_message` AS smsgtb ON " \
+                               "usertb.id=%d AND usertb.id=smsgtb.author_id " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
-        print("内连接查投顾策略自方案结果", result_records)
+        print("内连接查短讯通结果", result_records)
 
         # 查询总条数
-        count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `investrategy`AS invstb ON usertb.id=%s AND usertb.id=invstb.author_id;"
+        count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `short_message`AS smsgtb ON usertb.id=%s AND usertb.id=smsgtb.author_id;"
         cursor.execute(count_statement, user_id)
         # print("条目记录：", cursor.fetchone()) 打开注释下行将无法解释编译
 
@@ -51,8 +50,7 @@ class InvestrategyView(MethodView):
         response_data['records'] = list()
         for record_item in result_records:
             record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
-            record_item['variety'] = VARIETY_LIB.get(int(record_item['variety_id']), '未知') + str(record_item['contract'])
-            record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
+            record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), "未知")
             response_data['records'].append(record_item)
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
@@ -76,42 +74,31 @@ class InvestrategyView(MethodView):
             return jsonify("系统没有查到您的信息,无法操作."), 400
         # 不为空的信息判断
         content = body_data.get('content', False)
-        variety = body_data.get('variety', False)
-        direction = body_data.get('direction', False)
-        if not content or not variety or not direction:
-            return jsonify("参数错误,NOT FOUND CONTENT,VARIETY,DIRECTION."), 400
+        if not content:
+            return jsonify("参数错误,NOT FOUND CONTENT."), 400
 
         # 组织信息
         custom_time = body_data.get('custom_time')
         custom_time = datetime.datetime.strptime(custom_time, '%Y-%m-%d') if custom_time else datetime.datetime.now()
 
         author_id = user_obj['id']
-        contract = body_data.get('contract', '')
-        hands = body_data.get('hands', 0)
-        open_position = body_data.get('open_position', 0)
-        close_position = body_data.get('close_position', 0)
-        profit = body_data.get('profit')
+        msg_type = body_data.get('msg_type', '')
+        effect_variety = body_data.get('effect_variety', '')
         note = body_data.get('work_note', '')
-
         # 存入数据库
-        save_invest_statement = "INSERT INTO `investrategy`" \
-                              "(`custom_time`,`author_id`,`content`,`variety_id`,`contract`,`direction`,`hands`," \
-                              "`open_position`,`close_position`,`profit`)" \
-                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+        save_invest_statement = "INSERT INTO `short_message`" \
+                              "(`custom_time`,`author_id`,`content`,`msg_type`,`effect_variety`,`note`)" \
+                              "VALUES (%s,%s,%s,%s,%s,%s);"
         try:
-            # 转换类型
-            variety_id = int(variety)
-            hands = int(hands)
-            open_position = int(open_position)
-            close_position = int(close_position)
+            # 转换类型执行语句
+            effect_variety = ','.join(effect_variety)
             cursor.execute(save_invest_statement,
-                           (custom_time, author_id, content, variety_id, contract, direction,hands,
-                            open_position, close_position, profit)
+                           (custom_time, author_id, content, msg_type, effect_variety, note)
                            )
             db_connection.commit()
             db_connection.close()
         except Exception as e:
-            current_app.logger.error("写入投顾策略记录错误:" + str(e))
+            current_app.logger.error("写入短讯通记录错误:" + str(e))
             return jsonify("参数错误!无法保存。"), 400
         else:
             return jsonify("保存成功!"), 201

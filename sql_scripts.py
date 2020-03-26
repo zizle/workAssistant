@@ -22,13 +22,6 @@ def initial_tables_and_data():
                    "`is_private` BIT NOT NULL DEFAULT 0"
                    ")")
 
-    # 创建部门信息表
-    cursor.execute("CREATE TABLE IF NOT EXISTS `organization_group` ("
-                   "`id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
-                   "`name` VARCHAR(255) NOT NULL UNIQUE,"
-                   "`is_active` BIT NOT NULL DEFAULT 1"
-                   ");")
-
     # 创建用户信息表
     cursor.execute("CREATE TABLE IF NOT EXISTS `user_info` ("
                    "`id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
@@ -67,13 +60,9 @@ def initial_tables_and_data():
     update_sort_statement = "UPDATE `work_module` SET `sort`=%s WHERE `id`=%s;"
     cursor.execute(update_sort_statement,(new_mid,new_mid))
 
-    """添加系统默认部门小组的信息"""
-    # 加入部门小组信息数据
-    save_org = "INSERT INTO `organization_group` (`name`) VALUES %s;" % ("('办公室'),('宏观金融'),('化工小组'),('农产品组'),('金属小组'),('创新部门')")
-    cursor.execute(save_org)
     """添加一个默认管理员信息"""
     # 新增一个管理员信息
-    save_admin = "INSERT INTO `user_info` (`name`,`fixed_code`,`password`,`is_admin`) VALUES ('管理员','abc123','bbe7977cef5fcf80a39b801fcfdda5e0', 1);"
+    save_admin = "INSERT INTO `user_info` (`name`,`fixed_code`,`password`,`is_admin`) VALUES ('管理员','rdyj321','bbe7977cef5fcf80a39b801fcfdda5e0', 1);"
     cursor.execute(save_admin)
 
     # 提交数据
@@ -90,8 +79,8 @@ def create_others_table():
     cursor.execute("CREATE TABLE IF NOT EXISTS `abnormal_work` ("
                    "`id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
                    "`create_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-                   "`work_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-                   "`worker` INT(11) NOT NULL,"
+                   "`custom_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                   "`author_id` INT(11) NOT NULL,"
                    "`task_type` INT (11) NOT NULL,"
                    "`title` VARCHAR(128) NOT NULL,"
                    "`sponsor` VARCHAR(64) DEFAULT '',"
@@ -171,6 +160,19 @@ def create_others_table():
                    "`allowance` INT(11) DEFAULT 0,"
                    "`note` VARCHAR(512) DEFAULT ''"
                    ")")
+
+    # 创建短讯通记录表
+    cursor.execute("CREATE TABLE IF NOT EXISTS `short_message` ("
+                   "`id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+                   "`create_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                   "`custom_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                   "`author_id` INT(11) NOT NULL,"
+                   "`content` VARCHAR(1024) NOT NULL,"
+                   "`msg_type` VARCHAR(128) NOT NULL DEFAULT '',"
+                   "`effect_variety` VARCHAR(256) NOT NULL DEFAULT '',"
+                   "`note` VARCHAR(512) DEFAULT ''"
+                   ")")
+
     db_connection.commit()
     db_connection.close()
 

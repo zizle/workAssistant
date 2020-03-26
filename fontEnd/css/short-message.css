@@ -104,9 +104,7 @@ html,body{
 	font-size: 15px;
 	width: calc(90% - 65px) !important;
 }
-.edit-table table td input[readonly]{
-	color: #787878;
-}
+
 .edit-table .input-td input,.edit-table .input-td select{
 	width: 90%;
 	height: 40px;
@@ -139,4 +137,44 @@ html,body{
 	margin-top: 20px;
 }
 
+.edit-table .choose-variety-div{
+	width: 65%;
+	position: absolute;
+	margin-left: 10px;
+	background-color: #888888;
+	opacity: 0.99;
+}
+.edit-table .check-item{
+	display: inline-block;
+	width: 150px;
+	height: 20px;
+}
+
+.edit-table .check-item input{
+	width: auto;
+	display: inline-block;
+	vertical-align: middle;
+}
+.edit-table .check-item label{
+	width: auto;
+	vertical-align: middle;
+	display: inline-block;
+	user-select: none;
+}
+.edit-table .check-item label:hover{
+	color: #65BAD4;
+}
+.edit-table .confirm-variety{
+	width: 100px;
+	margin: 10px auto;
+	margin-bottom: 10px;
+	text-align: center;
+}
+.edit-table .confirm-variety button{
+	background-color: #65BAD4;
+	color: #FFFFFF;
+	font-size: 16px;
+	width: 100%;
+	cursor: pointer;
+}
 

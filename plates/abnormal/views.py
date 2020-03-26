@@ -1,10 +1,11 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
+import xlrd
 import datetime
 from flask import jsonify,current_app, request
 from flask.views import MethodView
 from db import MySQLConnection
-from vlibs import ABNORMAL_WORK
+from vlibs import ABNORMAL_WORK, ORGANIZATIONS
 from utils.psd_handler import verify_json_web_token
 
 # # 蓝图的测试视图
@@ -40,28 +41,25 @@ class AbnormalWorkView(MethodView):
         start_id = current_page * page_size
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-
-        # # 单表查询当前页数据
-        # select_statement = "SELECT * FROM `abnormal_work` limit %d,%d;" % (start_id,page_size)
-
         # 原生sql内联查询
-        inner_join_statement = "SELECT usertb.name,abworktb.work_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note,orgtb.name as org_name " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
                                "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
-                               "usertb.id=%d AND usertb.id=abworktb.worker INNER JOIN `organization_group` AS orgtb ON orgtb.id=usertb.org_id " \
+                               "usertb.id=%d AND usertb.id=abworktb.author_id " \
                                "limit %d,%d;"% (user_id,start_id,page_size)
-        # 内联查询where子句(INNER JOIN-> ','(逗号); ON->WHERE)
+
+        # 内联查询另一写法:where子句(INNER JOIN->','(逗号); ON->WHERE)
         # "SELECT usertb.name,abworktb.title FROM `user_info` AS usertb,`abnormal_work`AS abworktb WHERE usertb.id=%s AND usertb.id=abworktb.worker;"
+        # 连表查询语句两种方式都可以去除'AS'关键字
+
         cursor.execute(inner_join_statement)
         abworks = cursor.fetchall()
         print("内连接查询结果",abworks)
 
         # 查询总条数
-        inner_join_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `abnormal_work`AS abworktb ON usertb.id=%s AND usertb.id=abworktb.worker;"
+        inner_join_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `abnormal_work`AS abworktb ON usertb.id=%s AND usertb.id=abworktb.author_id;"
         cursor.execute(inner_join_statement,user_id)
-        # print("条目记录：", cursor.fetchone()) 打开注释下行将无法解释编译
-
-        # 计算总页数
-        total_count = cursor.fetchone()['total']
+        # print("条目记录：", cursor.fetchone()) 打开注释，下行将无法解释编译
+        total_count = cursor.fetchone()['total']  # 计算总页数
         total_page = int((total_count + page_size - 1) / page_size)
 
         # print('total_page',total_page)
@@ -69,8 +67,11 @@ class AbnormalWorkView(MethodView):
         response_data = dict()
         response_data['abworks'] = list()
         for work_item in abworks:
-            work_item['work_time'] = work_item['work_time'].strftime('%Y-%m-%d')
+            work_item['custom_time'] = work_item['custom_time'].strftime('%Y-%m-%d')
             work_item['task_type'] = ABNORMAL_WORK.get(work_item['task_type'],'')
+            work_item['org_name'] = ORGANIZATIONS.get(int(work_item['org_id']),'未知')
+            work_item['swiss_coin'] = work_item['swiss_coin'] if work_item['swiss_coin'] else ''
+            work_item['allowance'] = work_item['allowance'] if work_item['allowance'] else ''
             response_data['abworks'].append(work_item)
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
@@ -96,7 +97,7 @@ class AbnormalWorkView(MethodView):
         if not task_type_text or not title:
             return jsonify("参数错误,NOT FOUND TASKTYPE AND TITLE"), 400
         # 组织信息
-        work_time = datetime.datetime.strptime(body_data.get('work_date'), '%Y-%m-%d')
+        custom_time = datetime.datetime.strptime(body_data.get('work_date'), '%Y-%m-%d')
         worker = user_obj['id']
         sponsor = body_data.get('sponser', '')
         applied_org = body_data.get('applicat_org', '')
@@ -108,12 +109,14 @@ class AbnormalWorkView(MethodView):
         partner = body_data.get('partner_name', '')
         # 存入数据库
         save_work_statement = "INSERT INTO `abnormal_work`" \
-                              "(`work_time`,`worker`,`task_type`,`title`,`sponsor`,`applied_org`," \
+                              "(`custom_time`,`author_id`,`task_type`,`title`,`sponsor`,`applied_org`," \
                               "`applicant`,`tel_number`,`swiss_coin`,`allowance`,`note`,`partner`)" \
                               "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
         try:
+            swiss_coin = int(swiss_coin) if swiss_coin else 0
+            allowance = int(allowance) if allowance else 0
             cursor.execute(save_work_statement,
-                           (work_time,worker,task_type,title,sponsor,applied_org,
+                           (custom_time,worker,task_type,title,sponsor,applied_org,
                             applicant,tel_number,swiss_coin,allowance,note,partner)
                            )
             db_connection.commit()
@@ -123,3 +126,81 @@ class AbnormalWorkView(MethodView):
             return jsonify("参数错误!无法保存。"), 400
         else:
             return jsonify("保存成功!"), 201
+
+
+# 文件上传
+class FileHandlerAbnormalWorkView(MethodView):
+    def post(self):
+        # 获取当前用户的信息
+        user_id = request.form.get('uid')
+        print(user_id)
+        file = request.files.get('file', None)
+        if not file or not user_id:
+            return jsonify('参数错误,NOT FILE OR UID'), 400
+        # 准备任务类型字典
+        task_type_dict = {value:key for key,value in ABNORMAL_WORK.items()}
+        # 文件内容
+        file_contents = file.read()
+
+
+        file_contents =xlrd.open_workbook(file_contents=file_contents)
+        table_data = file_contents.sheets()[0]
+        # 检查sheet1是否导入完毕
+        status = file_contents.sheet_loaded(0)
+        if not status:
+            return jsonify('文件数据导入失败'), 400
+        nrows = table_data.nrows
+        ncols = table_data.ncols
+        print("行数：", nrows, "列数：", ncols)
+        # 获取数据
+        ready_to_save = list()  # 准备保存的数据集
+        start_data_in = False
+        # 组织数据写入数据库
+        try:
+            for row in range(nrows):
+                row_content = table_data.row_values(row)
+                # 找到需要开始上传的数据
+                if str(row_content[0]).strip() == 'start':
+                    start_data_in = True
+                    print("第" + str(row) + "行开始记录")
+                    continue  # 继续下一行
+                if str(row_content[0]).strip() == 'end':
+                    start_data_in = False
+                    continue
+                if start_data_in:
+                    record_row = list()  # 每行记录
+                    # 转换数据类型
+                    record_row.append(xlrd.xldate_as_datetime(row_content[0], 0))
+                    record_row.append(user_id)
+                    # 处理任务类型
+                    task_type_id = task_type_dict.get(str(row_content[1].strip()), '')
+                    record_row.append(int(task_type_id))
+                    record_row.append(str(row_content[2]))
+                    record_row.append(str(row_content[3]))
+                    record_row.append(str(row_content[4]))
+                    record_row.append(str(row_content[5]))
+                    record_row.append(str(row_content[6]))
+                    record_row.append(int(row_content[7]) if row_content[7] else 0)
+                    record_row.append(int(row_content[8]) if row_content[8] else 0)
+                    record_row.append(str(row_content[9]))
+                    ready_to_save.append(record_row)
+        except Exception as e:
+            return jsonify("表格列数据类型有误,请检查后上传.")
+
+
+        insert_statement = "INSERT INTO `abnormal_work`" \
+                              "(`custom_time`,`author_id`,`task_type`,`title`,`sponsor`,`applied_org`," \
+                              "`applicant`,`tel_number`,`swiss_coin`,`allowance`,`note`)" \
+                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+        print('准备保存：', ready_to_save)
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        cursor.executemany(insert_statement, ready_to_save)
+        print("获取{}行数据".format(len(ready_to_save)))
+        db_connection.commit()
+        db_connection.close()
+
+
+
+
+        return jsonify("OK")

@@ -89,7 +89,9 @@ html,body{
 .edit-table table td{
 	height: 50px;
 }
-
+.edit-table table td input[readonly]{
+	color: #787878;
+}
 .edit-table .label-td{
 	width: 10%;
 	height: 40px;

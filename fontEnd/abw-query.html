@@ -29,11 +29,11 @@
 				<td>备注</td>
 			</tr>
 			<tr v-for="(abworkItem,index) in currentWorks">
-				<td>{{ abworkItem.work_time}}</td>
+				<td>{{ abworkItem.custom_time}}</td>
 				<td>{{abworkItem.org_name}}</td>
 				<td>{{abworkItem.name}}</td>
 				<td>{{abworkItem.task_type}}</td>
-				<td>{{abworkItem.title}}</td>
+				<td class="record-title"><div><span>{{abworkItem.title}}</span></div></td>
 				<td>{{abworkItem.sponsor}}</td>
 				<td>{{abworkItem.applied_org}}</td>
 				<td>{{abworkItem.applicant}}</td>

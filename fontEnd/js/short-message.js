@@ -1,26 +1,14 @@
 var vm = new Vue({
 	el: "#app",
 	data:{
-		varietyInfoDict: {},
 		currentDate: "",
 		userInfoDict:{},
-		variety:"",
-		contract:"",
-		content:"", // 策略内容
-		direction:"",
-		hands:"",
-		openPosition:"",
-		closePosition:"",
-		profit:"",
+		varietyInfoDict:{},
+		content:"",
+		messageType:"",
+		effectVariety:[],
 		note:"",
-		showContactInput: false,  // 是否显示合约编辑框
-	},
-	watch:{
-		variety(val,oldVal){
-			if(!val){
-				this.showContactInput = false;
-			}else{this.showContactInput = true;}
-		}
+		showVarietyChecks:false,  // 是否显示品种选择框
 		
 	},
 	mounted:function(){
@@ -34,10 +22,6 @@ var vm = new Vue({
 		
 		var today = year + '-' + month + '-' + date;
 		this.currentDate = today;
-		
-		
-		this.buildDateTime = today + "T00:00";
-		this.expireDateTime = today + "T00:00";
 		
 		
 		// 请求当前用户信息
@@ -61,16 +45,24 @@ var vm = new Vue({
 		.then(function(resp){
 			localThis.varietyInfoDict = resp.data;
 		})
+		
 	},
+	
 	methods:{
+		// 点击品种选框
+		selectVariety(){
+			this.showVarietyChecks = true;
+		},
+		// 收起品种选矿
+		slideUpVairetyDiv(){
+			this.showVarietyChecks = false;
+		},
+		// 提交记录
 		submitRecord(){
-			console.log('提交')
 			// 判断不能为空或默认的字段
 			if(
 			!this.userInfoDict.uid || 
-			!this.content ||
-			!this.variety ||
-			!this.direction
+			!this.content
 			){
 				alert("请填写完整信息");
 				return;
@@ -80,24 +72,22 @@ var vm = new Vue({
 				org_id:this.userInfoDict.org_id,
 				author_id:this.userInfoDict.uid,
 				content:this.content,
-				variety:this.variety,
-				contract:this.contract,
-				direction:this.direction,
-				hands: this.hands,
-				open_position:this.openPosition,
-				close_position:this.closePosition,
-				profit:this.profit,
-				note:this.note
+				msg_type:this.messageType,
+				effect_variety:this.effectVariety,
+				note:this.note,
 			};
-			// console.log(recordMsg)
+			console.log(recordMsg)
 			// 提交数据
-			axios.post(host + 'investrategy/',data=recordMsg)
+			axios.post(host + 'short-message/',data=recordMsg)
 			.then(function(resp){
 				alert(resp.data);
 			})
 			.catch(function(e){
 				alert(e.response.data);
 			})
+			
+			
 		},
+		
 	}
 })
