@@ -5,7 +5,7 @@ from flask import jsonify,request,current_app
 from flask.views import MethodView
 from db import MySQLConnection
 from utils.psd_handler import verify_json_web_token
-from vlibs import VARIETY_LIB
+from vlibs import VARIETY_LIB,ORGANIZATIONS
 
 
 class InvestmentView(MethodView):
@@ -27,10 +27,10 @@ class InvestmentView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
-        inner_join_statement = "SELECT usertb.name,orgtb.name as org_name,invstb.custom_time,invstb.title,invstb.variety_id,invstb.contract,invstb.direction,invstb.build_time,invstb.build_price," \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,invstb.custom_time,invstb.title,invstb.variety_id,invstb.contract,invstb.direction,invstb.build_time,invstb.build_price," \
                                "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit " \
                                "FROM `user_info` AS usertb INNER JOIN `investment` AS invstb ON " \
-                               "usertb.id=%d AND usertb.id=invstb.author_id INNER JOIN `organization_group` AS orgtb ON orgtb.id=usertb.org_id " \
+                               "usertb.id=%d AND usertb.id=invstb.author_id " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
@@ -55,6 +55,7 @@ class InvestmentView(MethodView):
             record_item['expire_time'] = record_item['expire_time'].strftime('%Y-%m-%d %H:%M')
             record_item['variety'] = VARIETY_LIB.get(int(record_item['variety_id']), '未知') + str(record_item['contract'])
             record_item['is_publish'] = "是" if record_item['is_publish'] else "否"
+            record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
             response_data['records'].append(record_item)
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
@@ -108,10 +109,11 @@ class InvestmentView(MethodView):
         try:
             # 转换类型
             variety_id = int(variety)
-            build_price = int(build_price)
-            build_hands = int(build_hands)
-            out_price = int(out_price)
-            cutloss_price = int(cutloss_price)
+            build_price = int(build_price) if build_price else 0
+            build_hands = int(build_hands) if build_hands else 0
+            out_price = int(out_price) if out_price else 0
+            cutloss_price = int(cutloss_price) if cutloss_price else 0
+
             cursor.execute(save_invest_statement,
                            (custom_time, author_id, title, variety_id,contract, direction, build_time,
                             build_price, build_hands, out_price, cutloss_price, expire_time, is_publish, profit)

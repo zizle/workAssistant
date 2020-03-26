@@ -10,22 +10,23 @@ from flask import current_app
 from settings import SECRET_KEY, JSON_WEB_TOKEN_EXPIRE
 from db import MySQLConnection
 
+from vlibs import ORGANIZATIONS
 from utils import psd_handler
 
 
 # 部门小组信息的视图函数
 class OrganizationGroupView(MethodView):
     def get(self):
-        # 连接数据库
-        db_connection = MySQLConnection()
-        cursor = db_connection.get_cursor()
-        # 执行查询
-        query_sql = "SELECT id, name FROM organization_group WHERE id>1;"
-        cursor.execute(query_sql)
-        result = cursor.fetchall()
-        db_connection.close()
-        # 测试写入日志
-        return jsonify(result)
+        organizations = []
+        for key,value in ORGANIZATIONS.items():
+            if key == 1:
+                continue
+            o_item = dict()
+            o_item['id'] = key
+            o_item['name'] = value
+            organizations.append(o_item)
+        print(organizations)
+        return jsonify(organizations)
 
 
 # 用户视图
@@ -191,14 +192,6 @@ class UserView(MethodView):
             return jsonify("登录已过期或没有权限进行这个操作"), 400
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        # 查询所有部门信息
-        org_select_statement = "SELECT id,name FROM organization_group;"
-        cursor.execute(org_select_statement)
-        # 组织部门数据为字典
-        org_dict = {0: ""}
-        for org_item in cursor.fetchall():
-            if org_item['id'] not in org_dict:
-                org_dict[org_item['id']] = org_item['name']
         # 查询所有用户信息
         select_statement = "SELECT id,name,fixed_code,join_time,update_time,is_active,is_admin,org_id FROM user_info;"
         cursor.execute(select_statement)
@@ -213,7 +206,7 @@ class UserView(MethodView):
             user_dict['update_time'] = user_item['update_time'].strftime('%Y-%m-%d %H:%M:%S')
             user_dict['is_active'] = user_item['is_active']
             user_dict['is_admin'] = user_item['is_admin']
-            user_dict['organization'] = org_dict.get(user_item['org_id'])
+            user_dict['organization'] = ORGANIZATIONS.get(user_item['org_id'], '未知')
             user_data.append(user_dict)
         return jsonify(user_data)
 
@@ -333,15 +326,10 @@ class ParserUserTokenView(MethodView):
             return jsonify('登录已过期.'), 400
         org_id = user_info.get('org_id', None)
         if org_id:
-            # 查询用户的部门信息
-            org_select_statement = "SELECT `id`,`name` FROM `organization_group` WHERE `id`=%s;"
-            db_connection = MySQLConnection()
-            cursor = db_connection.get_cursor()
-            cursor.execute(org_select_statement, org_id)
-            org_obj = cursor.fetchone()
-            user_info['orgName'] = org_obj.get('name')
+            user_info['org_name'] = ORGANIZATIONS.get(int(org_id),'未知')
+
         else:
-            user_info['orgName'] = '无'
+            user_info['org_name'] = '无'
         return jsonify(user_info)
 
 

@@ -2,8 +2,8 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>非常态工作记录查询</title>
-	<link rel="stylesheet" type="text/css" href="css/mogp-query.css"/>
+	<title>短讯通记录查询</title>
+	<link rel="stylesheet" type="text/css" href="css/shortmsg-query.css"/>
 	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -18,27 +18,23 @@
 				<td>日期</td>
 				<td>姓名</td>
 				<td>部门小组</td>
-				<td>专题题目</td>
-				<td>字数</td>
-				<td>外发情况</td>
-				<td>等级</td>
-				<td>得分</td>
+				<td>信息内容</td>
+				<td>类别</td>
+				<td>影响品种</td>
 				<td>备注</td>
 			</tr>
 			<tr v-for="(recordItem,index) in currentRecords">
-				<td>{{ recordItem.upload_time }}</td>
+				<td>{{ recordItem.custom_time }}</td>
 				<td>{{ recordItem.name }}</td>
 				<td>{{ recordItem.org_name }}</td>
-				<td class="record-title"><div><span>{{ recordItem.title }}</span></div></td>
-				<td>{{ recordItem.words }}</td>
-				<td>{{ recordItem.is_publish }}</td>
-				<td>{{ recordItem.level }}</td>
-				<td>{{ recordItem.score }}</td>
+				<td  class="record-content"><div><span>{{ recordItem.content }}</span></div></td>
+				<td>{{ recordItem.msg_type }}</td>
+				<td>{{ recordItem.effect_vareity }}</td>
 				<td>{{ recordItem.note }}</td>
 			</tr>
 		</table>
 	</div>
 </div>
 </body>
-<script src="js/mogp-query.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/shortmsg-query.js" type="text/javascript" charset="utf-8"></script>
 </html>

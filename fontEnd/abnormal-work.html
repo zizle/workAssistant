@@ -10,7 +10,10 @@
 </head>
 <body>
 <div id="app">
+	<!-- 遮罩层 -->
+	<div class="cover-div" v-show="showUploading"><span>数据处理中...</span></div>
 	<div class="page-title"><span>非常态工作</span>任务填报</div>
+	<div class="upload-file"><span>文件上传</span><input type="file" @change="UploadDataFile"></div>
 	<div class="edit-table">
 		<table border="0" cellspacing="" cellpadding="">
 			<tr>
@@ -19,7 +22,7 @@
 			</tr>
 			<tr>
 				<td class="label-td">部门小组</td>
-				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.orgName"></td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.org_name"></td>
 			</tr>
 			<tr>
 				<td class="label-td">姓名</td>
@@ -64,14 +67,13 @@
 				<td class="input-td"><input type="number" v-model="incomeAllowance"></td>
 			</tr>
 			<tr>
-				<td class="label-td">协作者</td>
-				<td class="input-td">
-					<select v-model="isPartner" style="width: 40%;">
-						<option value ="0">个人完成</option>
-						<option value="1">合作人</option>
-					</select>
-					<input v-show="showPartner" placeholder="在这里键入合作者的姓名" type="text" style="display: inline-block; width: 45%;" v-model="partnerName">
+				
+				<td class="label-td">协作完成</td>
+				<td class="input-partner">
+					<input class="open-close-check" type="checkbox" v-model="isPartner">
+					<input class="partner-edit" v-show="showPartner" placeholder="在这里键入合作者的姓名,多人用;隔开" type="text" style="display: inline-block; width: 45%;" v-model="partnerName">
 				</td>
+				
 			</tr>
 			<tr>
 				<td class="label-td">备注</td>

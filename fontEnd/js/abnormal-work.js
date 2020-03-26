@@ -1,11 +1,12 @@
 var vm = new Vue({
 	el:"#app",
 	data:{
+		showUploading:false,
 		taskTypes:{},  // 初始化的任务类型
 		selectedTaskType:0,  // 选择的任务类型
 		currentDate:"",  // 当前时间
 		userInfoDict: {}, // 用户信息
-		isPartner: 0, // 任务是否是合作完成的标识
+		isPartner: false, // 任务是否是合作完成的标识
 		showPartner: false,  // 是否显示键入合作者
 		partnerName: "", // 协作者
 		workTitle: "", // 主题/标题
@@ -13,9 +14,10 @@ var vm = new Vue({
 		applicantOrg: "", //申请部门/受用单
 		applicationPerson: "",//申请者
 		linkNumber: "", // 联系电话
-		ruiBiCount:0, // 瑞币情况
-		incomeAllowance: 0, // 收入补贴
+		ruiBiCount:"", // 瑞币情况
+		incomeAllowance: "", // 收入补贴
 		workNote: "",// 备注
+		uploadFileProgress: 0,
 	},
 	watch:{
 		isPartner(){
@@ -94,6 +96,35 @@ var vm = new Vue({
 			})
 			.catch(function(e){
 				alert(e.response.data);
+			})
+			
+		},
+		UploadDataFile(e){
+			this.showUploading = true;
+			var param = new FormData();
+			param.append("uid", this.userInfoDict.uid);  // 身份验证
+			var file = e.target.files[0];
+			param.append("file", file);
+			// console.log(param.get('file'));
+			var request_config = {
+				headers:{ "Content-Type": "multipart/form-data"},
+				// 上传进度监听
+				onUploadProgress: e => {
+					var completeProgress = ((e.loaded / e.total * 100) | 0) + "%";
+					this.uploadFileProgress = completeProgress;
+				}
+			};
+			var localThis = this;
+			axios.post(host + 'abnormal-work/file/', param, request_config)
+			.then(function(resp){
+				// console.log(resp);
+				localThis.showUploading = false;  // 关闭遮罩
+				alert(resp.data);
+			})
+			.catch(function(e){
+				// console.log(e.response.data);
+				localThis.showUploading = false;  // 关闭遮罩
+				alert(e.response.data)
 			})
 			
 		},

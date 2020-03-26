@@ -1,7 +1,7 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
 from flask import Blueprint
-from .views import AbnormalWorkView
+from .views import AbnormalWorkView,FileHandlerAbnormalWorkView
 
 """
 非常态工作任务功能模块
@@ -9,6 +9,7 @@ from .views import AbnormalWorkView
 
 abnormal_blp = Blueprint(name='abnormal', import_name=__name__, url_prefix='/')
 abnormal_blp.add_url_rule('abnormal-work/', view_func=AbnormalWorkView.as_view(name="push"))
+abnormal_blp.add_url_rule('abnormal-work/file/', view_func=FileHandlerAbnormalWorkView.as_view(name="pushf"))
 
 
 

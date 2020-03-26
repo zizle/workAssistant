@@ -10,6 +10,7 @@ from plates.monographic import monograohic_blp
 from plates.investment import investment_blp
 from plates.investrategy import investrategy_blp
 from plates.article_publish import article_publish_blp
+from plates.short_message import shortmsg_blp
 from flask_cors import CORS
 from utils.log_handler import config_logger_handler
 
@@ -32,7 +33,7 @@ app.register_blueprint(monograohic_blp)
 app.register_blueprint(investment_blp)
 app.register_blueprint(investrategy_blp)
 app.register_blueprint(article_publish_blp)
-
+app.register_blueprint(shortmsg_blp)
 
 if __name__ == '__main__':
     print(app.url_map)

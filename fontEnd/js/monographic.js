@@ -49,7 +49,7 @@ var vm = new Vue({
 	},
 	methods:{
 		submitMonograohicRecord(){
-			console.log('提交')
+			// console.log('提交')
 			// 判断不能为空或默认的字段
 			if(
 			!this.userInfoDict.uid || 

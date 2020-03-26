@@ -16,6 +16,27 @@ html,body{
 		opacity: 1;
 	}
 }
+.cover-div{
+	position: absolute;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	background-color: #666666;
+	opacity: 0.5;
+}
+.cover-div span{
+	display: block;
+	color: #FFFFFF;
+	width: 100px;
+	height: 50px;
+	position: relative;
+	top: calc(50% - 50px);
+	left: calc(48% - 50px);
+	/* background-color: #888888; */
+	text-align: center;
+	line-height: 50px;
+	border-radius: 20px;
+}
 
 .page-title{
 	font-size: 18px;
@@ -25,22 +46,54 @@ html,body{
 	background: linear-gradient(to right,#7FFFD4,#F0F8FF);
 	color: #444444;
 	box-shadow: 1px 1px 3px #008B8B;
-	margin-bottom: 10px;
 }
 .page-title span{
 	font-size: 19px;
 	color: #EFEFEF;
 	text-shadow: #000 0 0 3px;
 }
+.upload-file{
+	float: right;
+	margin-right: 80px;
+	margin-top: 1px;
+	height: 32px;
+	width: 60px;
+	background-color: #7FFFD4;
+	border: 1px solid #F0F8FF;
+	border-top: none;
+	border-radius: 0 0 4px 4px;
+	box-shadow: 2px 2px 4px #008B8B;
+}
+.upload-file span{
+	font-size: 14px;
+	line-height: 32px;
+}
+.upload-file input{
+	position: relative;
+	top: -30px;
+	width: 60px;
+	line-height: 32px;
+	height: 32px;
+	outline: none;
+	opacity: 0;
+	border-style: none;
+	background-color: #006096;
+}
+
 .edit-table{
-	width: 80%;
+	width: 70%;
 	margin: 0 auto;
 	margin-bottom: 50px;
+	margin-top: 10px;
 }
+
 .edit-table table{
 	margin: 0 auto;
 	border-collapse: collapse;
 	width: 100%;
+}
+.edit-table table td input[readonly]{
+	color: #787878;
 }
 .edit-table table td{
 	height: 50px;
@@ -55,8 +108,9 @@ html,body{
 	text-justify: distribute-all-lines;
 	text-align-last: justify;
 }
+/* 宽度是td的100% - 左右margin2px,左右border2px */
 .edit-table .input-td input,.edit-table .input-td select{
-	width: 90%;
+	width: calc(100% - 14px);  
 	height: 40px;
 	margin-left: 10px;
 	outline: none;
@@ -76,6 +130,56 @@ html,body{
 	color: #EFEFEF;
 	font-size: 18px;
 	margin-top: 20px;
+}
+
+
+.open-close-check{
+	-webkit-appearance: none;
+	cursor: pointer;
+	position: relative;
+	width: 55px;
+	height: 26px;
+	line-height: 25px;
+	background: #F9F9F9;
+	border-radius: 25px;
+	outline: none;
+	vertical-align: middle;
+	margin-left: 10px;
+}
+
+/* 设置关闭时滑块的样式 */
+.open-close-check:before{
+	position: absolute;
+	left: 0;
+	content: '否';
+	color:#000000;
+	font-size: 13px;
+	background-color: #FAFAFA;
+	text-align: center;
+	width: 30px;
+	height: 25px;
+	border-radius: 50%;
+	box-shadow: 0 0 5px #ddd;
+	transition: all 0.2s linear;
+}
+/* 滑槽和滑块的样式 */
+.open-close-check:checked{
+	background: #18ff0a;
+}
+/* 设置开启时滑块的样式 */
+.open-close-check:checked::before{
+	content: '是';
+	left: 29px;
+	color:#666666;
+	background-color: #7FFFD4;
+	transition: all 0.2s linear;
+}
+
+.edit-table .input-partner .partner-edit{
+	height: 40px;
+	outline: none;
+	font-size: 15px;
+	width: calc(90% - 65px) !important;
 }
 
 

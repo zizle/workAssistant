@@ -5,7 +5,7 @@ from flask import jsonify,request,current_app
 from flask.views import MethodView
 from db import MySQLConnection
 from utils.psd_handler import verify_json_web_token
-from vlibs import VARIETY_LIB
+from vlibs import ORGANIZATIONS
 
 
 class ArticlePublishView(MethodView):
@@ -27,9 +27,9 @@ class ArticlePublishView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
-        inner_join_statement = "SELECT usertb.name,orgtb.name as org_name,atltb.custom_time,atltb.title,atltb.media_name,atltb.rough_type,atltb.words,atltb.checker,atltb.allowance " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,atltb.custom_time,atltb.title,atltb.media_name,atltb.rough_type,atltb.words,atltb.checker,atltb.allowance " \
                                "FROM `user_info` AS usertb INNER JOIN `article_publish` AS atltb ON " \
-                               "usertb.id=%d AND usertb.id=atltb.author_id INNER JOIN `organization_group` AS orgtb ON orgtb.id=usertb.org_id " \
+                               "usertb.id=%d AND usertb.id=atltb.author_id " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
@@ -50,6 +50,7 @@ class ArticlePublishView(MethodView):
         response_data['records'] = list()
         for record_item in result_records:
             record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
+            record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), "未知")
             response_data['records'].append(record_item)
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
