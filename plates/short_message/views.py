@@ -19,7 +19,6 @@ class ShortMessageView(MethodView):
         if not user_info:
             return jsonify("您的登录已过期,请重新登录查看.")
         user_id = user_info['uid']
-        print(user_id)
         try:
             current_page = int(params.get('page', 1)) - 1
             page_size = int(params.get('pagesize', 30))
@@ -35,7 +34,7 @@ class ShortMessageView(MethodView):
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
-        print("内连接查短讯通结果", result_records)
+        # print("内连接查短讯通结果", result_records)
 
         # 查询总条数
         count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `short_message`AS smsgtb ON usertb.id=%s AND usertb.id=smsgtb.author_id;"
@@ -59,7 +58,6 @@ class ShortMessageView(MethodView):
         response_data['current_count'] = len(result_records)
 
         return jsonify(response_data)
-
 
     def post(self):
         body_data = request.json
@@ -107,35 +105,22 @@ class ShortMessageView(MethodView):
 
 
 class FileHandlerShortMessageView(MethodView):
-    # 文件模板下载
-    def get(self):
-        def send_file():
-            file_path = os.path.join(BASE_DIR, "excelModels/shortmessage_model.xlsx")
-            with open(file_path, 'rb') as target_file:
-                while True:
-                    file_data = target_file.read(5 * 1024 * 1024)  # 每次读取5M
-                    if not file_data:
-                        break
-                    yield file_data
-
-        response = Response(send_file(), content_type="application/octet-stream")
-        response.headers["Content-disposition"] = 'sttachment;filename=shortmessage.xlsx'
-        return response
-
 
     def post(self):
         # 获取当前用户的信息
         user_id = request.form.get('uid')
-        print(user_id)
         file = request.files.get('file', None)
         if not file or not user_id:
             return jsonify('参数错误,NOT FILE OR UID'), 400
         # 文件内容
         file_contents = file.read()
         file_contents = xlrd.open_workbook(file_contents=file_contents)
-        table_data = file_contents.sheets()[0]
+
+        # 导入名称为“短讯通记录”的表
+        table_data = file_contents.sheet_by_name('短讯通记录')
+
         # 检查sheet1是否导入完毕
-        status = file_contents.sheet_loaded(0)
+        status = file_contents.sheet_loaded('短讯通记录')
         if not status:
             return jsonify('文件数据导入失败'), 400
         # 读取第一行数据
@@ -168,7 +153,6 @@ class FileHandlerShortMessageView(MethodView):
                     record_row.append(str(row_content[4]))
                     ready_to_save.append(record_row)
         except Exception as e:
-            print(e)
             return jsonify("表格内容数据有误，系统无法保存.")
 
         insert_statement = "INSERT INTO `short_message`" \

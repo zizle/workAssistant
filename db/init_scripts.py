@@ -178,6 +178,6 @@ def create_others_table():
 
 
 if __name__ == '__main__':
-    # initial_tables_and_data()
+    initial_tables_and_data()
     create_others_table()
 
