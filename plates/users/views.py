@@ -1,6 +1,5 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import sys
 import jwt
 import time
 import datetime
