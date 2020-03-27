@@ -9,11 +9,18 @@ BASE_DIR= os.path.dirname(os.path.abspath(__file__))
 
 # 数据库配置
 DATABASES = {
+    # 'mysql': {
+    #     'HOST': 'localhost',
+    #     'PORT': 3306,
+    #     'USER': 'assistant_worker',
+    #     'PASSWORD': 'rdyj0327wa',
+    #     'NAME': 'work_assistant'
+    # },
     'mysql': {
         'HOST': 'localhost',
         'PORT': 3306,
-        'USER': 'work_assistant',
-        'PASSWORD': 'rdyj0327wa',
+        'USER': 'root',
+        'PASSWORD': 'mysql',
         'NAME': 'work_assistant'
     },
     # 'sqlite': {

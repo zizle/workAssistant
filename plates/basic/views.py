@@ -2,7 +2,7 @@
 # Author: zizle
 from flask import request,jsonify, current_app
 from flask.views import MethodView
-from utils.psd_handler import verify_json_web_token, user_is_admin
+from utils.psd_handler import user_is_admin
 from db import MySQLConnection
 from vlibs import ABNORMAL_WORK, VARIETY_LIB
 
