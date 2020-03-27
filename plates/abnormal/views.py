@@ -1,12 +1,15 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
+import os
 import xlrd
 import datetime
-from flask import jsonify,current_app, request
+from flask import jsonify, current_app, request, Response
 from flask.views import MethodView
 from db import MySQLConnection
 from vlibs import ABNORMAL_WORK, ORGANIZATIONS
 from utils.psd_handler import verify_json_web_token
+from settings import BASE_DIR
+
 
 # # 蓝图的测试视图
 # class testView(MethodView):
@@ -45,7 +48,7 @@ class AbnormalWorkView(MethodView):
         inner_join_statement = "SELECT usertb.name,usertb.org_id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
                                "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
                                "usertb.id=%d AND usertb.id=abworktb.author_id " \
-                               "limit %d,%d;"% (user_id,start_id,page_size)
+                               "limit %d,%d;" % (user_id, start_id, page_size)
 
         # 内联查询另一写法:where子句(INNER JOIN->','(逗号); ON->WHERE)
         # "SELECT usertb.name,abworktb.title FROM `user_info` AS usertb,`abnormal_work`AS abworktb WHERE usertb.id=%s AND usertb.id=abworktb.worker;"
@@ -53,11 +56,11 @@ class AbnormalWorkView(MethodView):
 
         cursor.execute(inner_join_statement)
         abworks = cursor.fetchall()
-        print("内连接查询结果",abworks)
+        print("内连接查询结果", abworks)
 
         # 查询总条数
         inner_join_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `abnormal_work`AS abworktb ON usertb.id=%s AND usertb.id=abworktb.author_id;"
-        cursor.execute(inner_join_statement,user_id)
+        cursor.execute(inner_join_statement, user_id)
         # print("条目记录：", cursor.fetchone()) 打开注释，下行将无法解释编译
         total_count = cursor.fetchone()['total']  # 计算总页数
         total_page = int((total_count + page_size - 1) / page_size)
@@ -68,8 +71,8 @@ class AbnormalWorkView(MethodView):
         response_data['abworks'] = list()
         for work_item in abworks:
             work_item['custom_time'] = work_item['custom_time'].strftime('%Y-%m-%d')
-            work_item['task_type'] = ABNORMAL_WORK.get(work_item['task_type'],'')
-            work_item['org_name'] = ORGANIZATIONS.get(int(work_item['org_id']),'未知')
+            work_item['task_type'] = ABNORMAL_WORK.get(work_item['task_type'], '')
+            work_item['org_name'] = ORGANIZATIONS.get(int(work_item['org_id']), '未知')
             work_item['swiss_coin'] = work_item['swiss_coin'] if work_item['swiss_coin'] else ''
             work_item['allowance'] = work_item['allowance'] if work_item['allowance'] else ''
             response_data['abworks'].append(work_item)
@@ -116,8 +119,8 @@ class AbnormalWorkView(MethodView):
             swiss_coin = int(swiss_coin) if swiss_coin else 0
             allowance = int(allowance) if allowance else 0
             cursor.execute(save_work_statement,
-                           (custom_time,worker,task_type,title,sponsor,applied_org,
-                            applicant,tel_number,swiss_coin,allowance,note,partner)
+                           (custom_time, worker, task_type, title, sponsor, applied_org,
+                            applicant, tel_number, swiss_coin, allowance, note, partner)
                            )
             db_connection.commit()
             db_connection.close()
@@ -128,8 +131,24 @@ class AbnormalWorkView(MethodView):
             return jsonify("保存成功!"), 201
 
 
-# 文件上传
+# 文件上传与模板下载
 class FileHandlerAbnormalWorkView(MethodView):
+    # 文件模板下载
+    def get(self):
+        def send_file():
+            file_path = os.path.join(BASE_DIR, "excelModels/abnormal_model.xlsx")
+            with open(file_path, 'rb') as target_file:
+                while True:
+                    file_data = target_file.read(5 * 1024 * 1024)  # 每次读取5M
+                    if not file_data:
+                        break
+                    yield file_data
+
+        response = Response(send_file(), content_type="application/octet-stream")
+        response.headers["Content-disposition"] = 'sttachment;filename=abnormalwork.xlsx'
+        return response
+
+
     def post(self):
         # 获取当前用户的信息
         user_id = request.form.get('uid')
@@ -138,20 +157,27 @@ class FileHandlerAbnormalWorkView(MethodView):
         if not file or not user_id:
             return jsonify('参数错误,NOT FILE OR UID'), 400
         # 准备任务类型字典
-        task_type_dict = {value:key for key,value in ABNORMAL_WORK.items()}
+        task_type_dict = {value: key for key, value in ABNORMAL_WORK.items()}
         # 文件内容
         file_contents = file.read()
 
-
-        file_contents =xlrd.open_workbook(file_contents=file_contents)
+        file_contents = xlrd.open_workbook(file_contents=file_contents)
         table_data = file_contents.sheets()[0]
         # 检查sheet1是否导入完毕
         status = file_contents.sheet_loaded(0)
         if not status:
             return jsonify('文件数据导入失败'), 400
+        # 读取第一行数据
+        first_row = table_data.row_values(0)
+        # 格式判断
+        if first_row != [
+            "日期", "任务类型(报告演讲,内外培训,材料撰写,协同开发,课件,客户服务,调研组织,参与外部活动,其它)",
+            "主题/标题", "主办方", "申请部门或受用单位","申请者或受用人", "联系电话", "瑞币情况", "收入补贴", "备注"
+        ]:
+            return jsonify("表格格式有误,请修正."), 400
         nrows = table_data.nrows
-        ncols = table_data.ncols
-        print("行数：", nrows, "列数：", ncols)
+        # ncols = table_data.ncols
+        # print("行数：", nrows, "列数：", ncols)
         # 获取数据
         ready_to_save = list()  # 准备保存的数据集
         start_data_in = False
@@ -187,11 +213,10 @@ class FileHandlerAbnormalWorkView(MethodView):
         except Exception as e:
             return jsonify("表格列数据类型有误,请检查后上传.")
 
-
         insert_statement = "INSERT INTO `abnormal_work`" \
-                              "(`custom_time`,`author_id`,`task_type`,`title`,`sponsor`,`applied_org`," \
-                              "`applicant`,`tel_number`,`swiss_coin`,`allowance`,`note`)" \
-                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+                           "(`custom_time`,`author_id`,`task_type`,`title`,`sponsor`,`applied_org`," \
+                           "`applicant`,`tel_number`,`swiss_coin`,`allowance`,`note`)" \
+                           "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
         print('准备保存：', ready_to_save)
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
@@ -199,8 +224,5 @@ class FileHandlerAbnormalWorkView(MethodView):
         print("获取{}行数据".format(len(ready_to_save)))
         db_connection.commit()
         db_connection.close()
-
-
-
 
         return jsonify("OK")

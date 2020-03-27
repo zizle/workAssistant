@@ -12,16 +12,16 @@ DATABASES = {
     'mysql': {
         'HOST': 'localhost',
         'PORT': 3306,
-        'USER': 'root',
-        'PASSWORD': 'mysql',
+        'USER': 'work_assistant',
+        'PASSWORD': 'rdyj0327wa',
         'NAME': 'work_assistant'
     },
-    'sqlite': {
-        'NAME': 'test.db'
-    }
+    # 'sqlite': {
+    #     'NAME': 'test.db'
+    # }
 }
 # DEBUG,INFO,WARNING,ERROR,CRITICAL
 
-LOGGER_LEVEL = logging.DEBUG
+LOGGER_LEVEL = logging.INFO
 # jwt的有效时间
-JSON_WEB_TOKEN_EXPIRE = 7200
+JSON_WEB_TOKEN_EXPIRE = 1728000
