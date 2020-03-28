@@ -10,6 +10,8 @@ from vlibs import ABNORMAL_WORK, ORGANIZATIONS
 from utils.psd_handler import verify_json_web_token
 from settings import BASE_DIR
 
+
+# 数据提交与查询
 class AbnormalWorkView(MethodView):
     def get(self):
         params = request.args
@@ -30,7 +32,7 @@ class AbnormalWorkView(MethodView):
         # 原生sql内联查询
         inner_join_statement = "SELECT usertb.name,usertb.org_id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
                                "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
-                               "usertb.id=%d AND usertb.id=abworktb.author_id " \
+                               "usertb.id=%d AND usertb.id=abworktb.author_id ORDER BY abworktb.custom_time DESC " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
 
         # 内联查询另一写法:where子句(INNER JOIN->','(逗号); ON->WHERE)
@@ -114,22 +116,8 @@ class AbnormalWorkView(MethodView):
             return jsonify("保存成功!"), 201
 
 
-# 文件上传
+# 文件数据上传(含总模板下载)
 class FileHandlerAbnormalWorkView(MethodView):
-    # 文件模板下载
-    def get(self):
-        def send_file():
-            file_path = os.path.join(BASE_DIR, "excelModels/file_models.xlsx")
-            with open(file_path, 'rb') as target_file:
-                while True:
-                    file_data = target_file.read(5 * 1024 * 1024)  # 每次读取5M
-                    if not file_data:
-                        break
-                    yield file_data
-
-        response = Response(send_file(), content_type="application/octet-stream")
-        response.headers["Content-disposition"] = 'sttachment;filename=a2d5E8aAf6as4Dg96aS4dg6.xlsx'
-        return response
 
     def post(self):
         # 获取当前用户的信息

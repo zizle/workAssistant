@@ -13,6 +13,7 @@ from plates.investment import investment_blp
 from plates.investrategy import investrategy_blp
 from plates.article_publish import article_publish_blp
 from plates.short_message import shortmsg_blp
+from plates.statistics import statistics_blp
 from flask_cors import CORS
 from utils.log_handler import config_logger_handler
 
@@ -26,8 +27,7 @@ app.logger.addHandler(config_logger_handler())  # 配置日志
 # 主页
 @app.route('/')
 def index():
-    return redirect("/static/index.html")
-    return "HELLO WORK ASSISTANT!"
+    return redirect("/static/index.html")  # 重定向
 
 app.register_blueprint(user_blp)
 app.register_blueprint(abnormal_blp)
@@ -37,6 +37,7 @@ app.register_blueprint(investment_blp)
 app.register_blueprint(investrategy_blp)
 app.register_blueprint(article_publish_blp)
 app.register_blueprint(shortmsg_blp)
+app.register_blueprint(statistics_blp)
 
 if __name__ == '__main__':
     app.run()

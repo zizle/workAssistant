@@ -1,7 +1,7 @@
 var vm = new Vue({
 	el:"#app",
 	data:{
-		modelFileUrl: host + 'abnormal-work/file/',
+		modelFileUrl: host + 'model-tables/',
 		showUploading:false,
 		taskTypes:{},  // 初始化的任务类型
 		selectedTaskType:0,  // 选择的任务类型

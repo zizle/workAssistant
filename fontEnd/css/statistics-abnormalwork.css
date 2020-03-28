@@ -1,0 +1,14 @@
+.page-title{
+	font-size: 18px;
+	height: 32px;
+	line-height: 32px;
+	padding-left: 60px;
+	background: linear-gradient(to right,#7FD4FF,#F0F8FF);
+	color: #444444;
+	box-shadow: 1px 1px 3px #008B8B;
+}
+.page-title span{
+	font-size: 19px;
+	color: #EFEFEF;
+	text-shadow: #000 0 0 3px;
+}
