@@ -1,6 +1,8 @@
 var vm = new Vue({
 	el: "#app",
 	data:{
+		showUploading:false,
+		uploadFileProgress:0,
 		varietyInfoDict: {},
 		currentDate: "",
 		userInfoDict:{},
@@ -98,6 +100,35 @@ var vm = new Vue({
 			.catch(function(e){
 				alert(e.response.data);
 			})
+		},
+		UploadDataFile(e){
+			this.showUploading = true;
+			var param = new FormData();
+			param.append("uid", this.userInfoDict.uid);  // 身份验证
+			var file = e.target.files[0];
+			param.append("file", file);
+			// console.log(param.get('file'));
+			var request_config = {
+				headers:{ "Content-Type": "multipart/form-data"},
+				// 上传进度监听
+				onUploadProgress: e => {
+					var completeProgress = ((e.loaded / e.total * 100) | 0) + "%";
+					this.uploadFileProgress = completeProgress;
+				}
+			};
+			var localThis = this;
+			axios.post(host + 'investrategy/file/', param, request_config)
+			.then(function(resp){
+				// console.log(resp);
+				localThis.showUploading = false;  // 关闭遮罩
+				alert(resp.data);
+			})
+			.catch(function(e){
+				// console.log(e.response.data);
+				localThis.showUploading = false;  // 关闭遮罩
+				alert(e.response.data)
+			})
+			
 		},
 	}
 })

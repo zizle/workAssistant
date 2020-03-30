@@ -1,5 +1,6 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
+import xlrd
 import datetime
 from flask import jsonify,request,current_app
 from flask.views import MethodView
@@ -60,7 +61,6 @@ class InvestrategyView(MethodView):
 
         return jsonify(response_data)
 
-
     def post(self):
         body_data = request.json
         author_id = body_data.get('author_id', None)
@@ -115,3 +115,81 @@ class InvestrategyView(MethodView):
             return jsonify("参数错误!无法保存。"), 400
         else:
             return jsonify("保存成功!"), 201
+
+
+class FileHandlerInvestrategyView(MethodView):
+
+    def post(self):
+        # 获取当前用户的信息
+        user_id = request.form.get('uid')
+        file = request.files.get('file', None)
+        if not file or not user_id:
+            return jsonify('参数错误,NOT FILE OR UID'), 400
+        # 准备品种信息
+        variety_dict = {value: key for key, value in VARIETY_LIB.items()}
+        # 文件内容
+        file_contents = file.read()
+        file_contents = xlrd.open_workbook(file_contents=file_contents)
+
+        # 导入名称为“投顾策略记录”的表
+        table_data = file_contents.sheet_by_name('投顾策略记录')
+
+        # 检查sheet1是否导入完毕
+        status = file_contents.sheet_loaded('投顾策略记录')
+        if not status:
+            return jsonify('文件数据导入失败'), 400
+        # 读取第一行数据
+        first_row = table_data.row_values(0)
+        # 格式判断
+        if first_row != ["日期", "策略内容", "品种", "合约", "方向(多头,空头,套利)","10万为限对应手数",
+                         "策略开仓","策略平仓","策略结果(+/-/0)"]:
+            return jsonify("表格格式有误,请修正."), 400
+        # 读取数据并写入数据库
+        nrows = table_data.nrows
+        # ncols = table_data.ncols
+        ready_to_save = list()
+        start_row_in = False
+        variety_false = False
+        try:
+            for row in range(nrows):
+                row_content = table_data.row_values(row)
+                print(row_content)
+                if str(row_content[0]).strip() == "start":
+                    start_row_in = True
+                    continue
+                if str(row_content[0]).strip() == "end":
+                    start_row_in = False
+                    continue
+                if start_row_in:
+                    record_row = list()
+                    record_row.append(xlrd.xldate_as_datetime(row_content[0], 0))
+                    record_row.append(user_id)
+                    record_row.append(str(row_content[1]))
+                    try:
+                        record_row.append(int(variety_dict.get(str(row_content[2]))))  # 品种
+                    except Exception as e:
+                        variety_false = True
+                        raise ValueError("系统中没有【" + str(row_content[2]) + "】品种信息.")
+                    record_row.append(str(row_content[3]))
+                    record_row.append(str(row_content[4]))
+                    record_row.append(int(row_content[5]))
+                    record_row.append(int(row_content[6]) if row_content[6] else 0)
+                    record_row.append(int(row_content[7]) if row_content[7] else 0)
+                    record_row.append(int(row_content[8]) if row_content[8] else 0)
+                    ready_to_save.append(record_row)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            message = str(e) if variety_false else "表格内容数据有误，系统无法保存."
+            return jsonify(message), 400
+
+        insert_statement = "INSERT INTO `investrategy`" \
+                            "(`custom_time`,`author_id`,`content`,`variety_id`,`contract`,`direction`,`hands`," \
+                            "`open_position`,`close_position`,`profit`)" \
+                            "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        cursor.executemany(insert_statement, ready_to_save)
+        db_connection.commit()
+        db_connection.close()
+        return jsonify("数据上传成功!")

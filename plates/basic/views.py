@@ -1,17 +1,21 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-from flask import request,jsonify, current_app
+import os
+from flask import request,jsonify, current_app, Response
 from flask.views import MethodView
 from utils.psd_handler import user_is_admin
 from db import MySQLConnection
 from vlibs import ABNORMAL_WORK, VARIETY_LIB
+from settings import BASE_DIR
 
+# 品种视图
 class VarietyView(MethodView):
 
     def get(self):
         return jsonify(VARIETY_LIB)
 
-# 系统基本模块数据
+
+# 系统功能模块数据
 class BasicModuleView(MethodView):
 
     def get(self):
@@ -71,7 +75,7 @@ class BasicModuleView(MethodView):
             return self.get()  # 查询所有
 
 
-
+# 修改模块功能的私有与有效
 class RetrieveModuleView(MethodView):
     def put(self, module_id):
         body_json = request.json
@@ -97,6 +101,25 @@ class RetrieveModuleView(MethodView):
         return jsonify("修改成功.")
 
 
+# 非常态工作的类型视图
 class NoNormalWorkTaskTypeView(MethodView):
     def get(self):
         return ABNORMAL_WORK
+
+
+# 数据上传的模板下载
+class WorkModelTablesDownloadView(MethodView):
+    # 文件模板下载
+    def get(self):
+        def send_file():
+            file_path = os.path.join(BASE_DIR, "fileStore/work_model_tables.xlsx")
+            with open(file_path, 'rb') as target_file:
+                while True:
+                    file_data = target_file.read(5 * 1024 * 1024)  # 每次读取5M
+                    if not file_data:
+                        break
+                    yield file_data
+
+        response = Response(send_file(), content_type="application/octet-stream")
+        response.headers["Content-disposition"] = 'sttachment;filename=a2d5E8aAf6as4Dg96aS4dg6.xlsx'
+        return response

@@ -20,7 +20,8 @@ var vm = new Vue({
 			'contribute-article.html',
 			'contart-query.html',
 			'short-message.html',
-			'shortmsg-query.html'
+			'shortmsg-query.html',
+			'statistics-abnormalwork.html',
 		],
 		showCover:false,
 		accessModules:[],

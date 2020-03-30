@@ -87,14 +87,14 @@ html,body{
 }
 /* 设置标题行的宽度 */
 .record-table .record-title{
-	width: 350px;
+	width: 320px;
 }
 /* 标题行文字超出用滚动 高度限制与总td一致*/
 /* 设置div的高度主要是限制行高,table无法设置行高 */
 .record-table .record-title div{
 	width: 100%;
 	height: 60px;
-	overflow: scroll;
+	overflow: auto;
 	align-items: center;
 	display: -webkit-flex;
 	flex-wrap: wrap;

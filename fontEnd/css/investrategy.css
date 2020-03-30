@@ -16,7 +16,54 @@ html,body{
 		opacity: 1;
 	}
 }
-
+.cover-div{
+	position: absolute;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	background-color: #666666;
+	opacity: 0.5;
+}
+.cover-div span{
+	display: block;
+	color: #FFFFFF;
+	width: 100px;
+	height: 50px;
+	position: relative;
+	top: calc(50% - 50px);
+	left: calc(48% - 50px);
+	/* background-color: #888888; */
+	text-align: center;
+	line-height: 50px;
+	border-radius: 20px;
+}
+.upload-file{
+	float: right;
+	margin-right: 15px;
+	margin-top: 1px;
+	height: 32px;
+	width: 60px;
+	background-color: #7FFFD4;
+	border: 1px solid #F0F8FF;
+	border-top: none;
+	border-radius: 0 0 4px 4px;
+	box-shadow: 2px 2px 4px #008B8B;
+}
+.upload-file span{
+	font-size: 14px;
+	line-height: 32px;
+}
+.upload-file input{
+	position: relative;
+	top: -30px;
+	width: 60px;
+	line-height: 32px;
+	height: 32px;
+	outline: none;
+	opacity: 0;
+	border-style: none;
+	background-color: #006096;
+}
 .open-close-check{
 	-webkit-appearance: none;
 	cursor: pointer;
@@ -68,7 +115,6 @@ html,body{
 	color: #444444;
 	/* text-shadow: #000 0 0 3px; */
 	box-shadow: 1px 1px 3px #008B8B;
-	margin-bottom: 10px;
 }
 .page-title span{
 	font-size: 19px;
@@ -79,6 +125,7 @@ html,body{
 	width: 80%;
 	margin: 0 auto;
 	margin-bottom: 50px;
+	margin-top: 10px;
 }
 .edit-table table{
 	margin: 0 auto;

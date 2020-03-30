@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>非常态工作统计</title>
+	<link rel="stylesheet" type="text/css" href="css/statistics-abnormalwork.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="page-title"><span>非常态工作</span>统计情况</div>
+	<div class="month-switch"> <span>{{year}}年{{month}}月</span><button @click="preMonthButtonClicked">上一月</button><button @click="nextMonthButtonClicked">下一月</button></div>
+	<div class="statistics-table">
+		<table border="" cellspacing="" cellpadding="">
+			<tr class="title">
+				<td v-for="(item,index) in columns">{{item}}</td>
+			</tr>
+			<tr v-for="(dateCounts,index) in statistics_data">
+				<td v-for="(item, index) in dateCounts" :class="index==0?'date-td':''">{{item}}</td>
+			</tr>
+		</table>
+		
+	</div>
+</div>
+</body>
+<script src="js/statistics-abnormalwork.js" type="text/javascript" charset="utf-8"></script>
+</html>
