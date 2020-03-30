@@ -22,14 +22,11 @@
 		<table border="" cellspacing="" cellpadding="">
 			<tr>
 				<td>日期</td>
-				<td>人员一</td>
-				<td>人员二</td>
-				<td>人员三</td>
+				<td v-for="(item,index) in stuffs">{{item}}</td>
 			</tr>
-			<tr>
-				<td>2020-01-01</td>
-				<td>2</td>
-				<td>3</td>
+			<tr v-for="(dateCounts,date) in statistics_data">
+				<td>{{date}}</td>
+				<td v-for="(count, index) in dateCounts">{{count}}</td>
 			</tr>
 		</table>
 		

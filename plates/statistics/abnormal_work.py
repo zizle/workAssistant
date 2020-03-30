@@ -22,22 +22,51 @@ class StuffAbnormalWorkAmount(MethodView):
         # 生成数据时间段的时间列表
         date_array = self.generate_date(amount_all[-1]['date'], amount_all[0]['date'])
         print(date_array)
-        # 重新整理数据[{"author_id": 1, "name": "xxx", "statistics": [{"date": "xxx-xx-xx", "count": x}]},]
-        resp_data_with_ids = dict()
+
+        # 获取职员的集合数组
+        stuffs = list()
         for work_count_item in amount_all:
-            if work_count_item['author_id'] not in resp_data_with_ids.keys():
-                resp_data_with_ids[work_count_item['author_id']] = author_data_dict = dict()
-                author_data_dict['statistics'] = list()
-                author_data_dict['author_id'] = work_count_item['author_id']
-                author_data_dict['name'] = work_count_item['name']
-            author_data_dict = resp_data_with_ids.get(work_count_item['author_id'])
-            author_data_dict['statistics'].append({'date': work_count_item['date'], 'count': work_count_item['count']})
+            if work_count_item['name'] not in stuffs:
+                stuffs.append(work_count_item['name'])
 
-        print(resp_data_with_ids)
-        # 生成当前年份的所有时间
+        print('系统总职员:', stuffs)
 
+        # 数据集字典
+        statistics_dict = dict()
+        for date_item in date_array:
+            # 构造默认数量均为0
+            statistics_dict[date_item] = [0 for _ in range(len(stuffs))]
+            for work_count_item in amount_all:
+                # 日期一致
+                if work_count_item['date'] == date_item:
+                    name_index = 0  # 默认归属于谁的默认数组
+                    for index, stuff_name in enumerate(stuffs):  # 查找出当前真正属于谁的数据
+                        if work_count_item['name'] == stuff_name:
+                            name_index = index  # 修改索引index
+                    # 修改目标索引的数据
+                    statistics_dict[date_item][name_index] = work_count_item['count']
+            # 计算当日总计数
 
-        return jsonify(resp_data_with_ids)
+        print(statistics_dict)
+        # 返回的数据
+        response_data = dict()
+        response_data['stuffs'] = stuffs
+        response_data['statistics'] = statistics_dict
+
+        return jsonify(response_data)
+
+        # 重新整理数据[{"author_id": 1, "name": "xxx", "statistics": [{"date": "xxx-xx-xx", "count": x}]},]
+        # resp_data_with_ids = dict()
+        # for work_count_item in amount_all:
+        #     if work_count_item['author_id'] not in resp_data_with_ids.keys():
+        #         resp_data_with_ids[work_count_item['author_id']] = author_data_dict = dict()
+        #         author_data_dict['statistics'] = list()
+        #         author_data_dict['author_id'] = work_count_item['author_id']
+        #         author_data_dict['name'] = work_count_item['name']
+        #     author_data_dict = resp_data_with_ids.get(work_count_item['author_id'])
+        #     author_data_dict['statistics'].append({'date': work_count_item['date'], 'count': work_count_item['count']})
+        # print(resp_data_with_ids)
+        # return jsonify(resp_data_with_ids)
 
     def generate_date(self, begin_date, end_date):
         dates = []
