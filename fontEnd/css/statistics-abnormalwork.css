@@ -12,3 +12,38 @@
 	color: #EFEFEF;
 	text-shadow: #000 0 0 3px;
 }
+.month-switch{
+	margin: 5px;
+}
+.month-switch button{
+	margin:0 5px;
+}
+.statistics-table{
+	margin: 5px;
+}
+.statistics-table table{
+	width: 100%;
+	text-align: center;
+	border-collapse: collapse;
+	border: 1px solid #787878;
+	background-color: #F4F4F4;
+	
+}
+.statistics-table td{
+	border: 1px solid #787878;
+	font-size: 15px;
+	height: 22px;
+}
+
+.statistics-table .title td{
+	/* color: #FFFFFF; */
+	/* background-color: #69cfb8; */
+	font-size: 16px;
+	font-weight: bold;
+	line-height: 22px;
+	height: 22px;
+	border-bottom: 1px solid #787878;
+}
+.statistics-table .date-td{
+	width: 100px;
+}

@@ -91,7 +91,7 @@ html,body{
 .record-table .record-content div{
 	width: 100%;
 	height: 100px;
-	overflow: scroll;
+	overflow: auto;
 	align-items: center;
 	display: -webkit-flex;
 	flex-wrap: wrap;

@@ -1,7 +1,9 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
+import json
 import datetime
-from flask import current_app, jsonify
+import pandas as pd
+from flask import jsonify, request
 from db import MySQLConnection
 from flask.views import MethodView
 
@@ -11,62 +13,62 @@ from flask.views import MethodView
 
 class StuffAbnormalWorkAmount(MethodView):
     def get(self):
+        try:
+            query_year = int(request.args.get('year', 0))
+            query_month = int(request.args.get('month', 0))  # 获取查询的月份
+        except Exception:
+            return jsonify("参数错误"), 400
+        start_date, end_date = self.get_start_date_end_date(query_year, query_month)  # 获取开始和结束的时间
+
         # 查询统计每个人每天工作数量
         #query_statement = "SELECT DATE_FORMAT(`custom_time`,'%Y-%m-%d') AS `date`, `author_id`, COUNT(*) AS `count` FROM `abnormal_work` GROUP BY DATE_FORMAT(`custom_time`,'%Y-%m-%d'),`author_id`;"
-        query_statement = "SELECT DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') AS `date`, abwtb.author_id, usertb.name, COUNT(*) AS `count` FROM `abnormal_work` as abwtb INNER JOIN `user_info` as usertb ON abwtb.author_id=usertb.id GROUP BY abwtb.author_id, DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') ORDER BY DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') DESC;"
+        # query_statement = "SELECT DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') AS `date`, abwtb.author_id, usertb.name, COUNT(*) AS `count` FROM `abnormal_work` as abwtb INNER JOIN `user_info` as usertb ON abwtb.author_id=usertb.id GROUP BY abwtb.author_id, DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') ORDER BY DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') DESC;"
+        # query_statement = "SELECT DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') AS `date`, abwtb.author_id, usertb.name, COUNT(*) AS `count` FROM `abnormal_work` as abwtb INNER JOIN `user_info` as usertb " \
+        #                   "ON abwtb.author_id=usertb.id GROUP BY abwtb.author_id, DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') ORDER BY DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') ASC;"
+        query_statement = "SELECT DATE_FORMAT(abwtb.custom_time,'%%Y-%%m-%%d') AS `date`, abwtb.author_id, usertb.name, COUNT(*) AS `count` " \
+                          "FROM `abnormal_work` as abwtb INNER JOIN `user_info` as usertb " \
+                          "ON (abwtb.author_id=usertb.id) AND (DATE_FORMAT(abwtb.custom_time,'%%Y-%%m-%%d') BETWEEN %s AND %s) GROUP BY abwtb.author_id, DATE_FORMAT(abwtb.custom_time,'%%Y-%%m-%%d') ORDER BY DATE_FORMAT(abwtb.custom_time,'%%Y-%%m-%%d') ASC;"
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        cursor.execute(query_statement)
+        cursor.execute(query_statement, (start_date, end_date))
         amount_all = cursor.fetchall()
-        print(amount_all[0], amount_all[-1])
+        # print('数据查询结果:',amount_all)
+        # print(amount_all[0], amount_all[-1])
+        if not amount_all:  # 没有数据记录
+            return jsonify({})
         # 生成数据时间段的时间列表
-        date_array = self.generate_date(amount_all[-1]['date'], amount_all[0]['date'])
-        print(date_array)
-
-        # 获取职员的集合数组
-        stuffs = list()
+        date_array = self.generate_date(amount_all[0]['date'], amount_all[-1]['date'])
+        # 获取职员的集合数组，第一个值为日期（后续做表头使用）
+        stuffs = ['日期']
         for work_count_item in amount_all:
             if work_count_item['name'] not in stuffs:
                 stuffs.append(work_count_item['name'])
-
-        print('系统总职员:', stuffs)
-
-        # 数据集字典
-        statistics_dict = dict()
+        # print('系统总职员:', stuffs)
+        # 用于计算的二维数组
+        array_to_calculate_sum = list()
         for date_item in date_array:
-            # 构造默认数量均为0
-            statistics_dict[date_item] = [0 for _ in range(len(stuffs))]
+            date_statistics_arr = [0 for _ in range(len(stuffs))]  # 默认行的数据
+            date_statistics_arr[0] = date_item  # 修改第一个值为日期
             for work_count_item in amount_all:
-                # 日期一致
-                if work_count_item['date'] == date_item:
-                    name_index = 0  # 默认归属于谁的默认数组
+                if work_count_item['date'] == date_item:  # 日期一致
+                    name_index = 0  # 默认索引为0的数待修改
                     for index, stuff_name in enumerate(stuffs):  # 查找出当前真正属于谁的数据
-                        if work_count_item['name'] == stuff_name:
+                        if work_count_item['name'] == stuff_name:  # 必有值
                             name_index = index  # 修改索引index
-                    # 修改目标索引的数据
-                    statistics_dict[date_item][name_index] = work_count_item['count']
-            # 计算当日总计数
-
-        print(statistics_dict)
-        # 返回的数据
-        response_data = dict()
-        response_data['stuffs'] = stuffs
-        response_data['statistics'] = statistics_dict
-
-        return jsonify(response_data)
-
-        # 重新整理数据[{"author_id": 1, "name": "xxx", "statistics": [{"date": "xxx-xx-xx", "count": x}]},]
-        # resp_data_with_ids = dict()
-        # for work_count_item in amount_all:
-        #     if work_count_item['author_id'] not in resp_data_with_ids.keys():
-        #         resp_data_with_ids[work_count_item['author_id']] = author_data_dict = dict()
-        #         author_data_dict['statistics'] = list()
-        #         author_data_dict['author_id'] = work_count_item['author_id']
-        #         author_data_dict['name'] = work_count_item['name']
-        #     author_data_dict = resp_data_with_ids.get(work_count_item['author_id'])
-        #     author_data_dict['statistics'].append({'date': work_count_item['date'], 'count': work_count_item['count']})
-        # print(resp_data_with_ids)
-        # return jsonify(resp_data_with_ids)
+                    # 修改行中目标索引的数据
+                    date_statistics_arr[name_index] = work_count_item['count']
+            array_to_calculate_sum.append(date_statistics_arr)  # 加入准备好的容器
+        # 转为pandas的DataFrame进行数据计算
+        pd_data_frame = pd.DataFrame(array_to_calculate_sum, columns=stuffs)
+        # 切出数据
+        # print("切片数据：\n", pd_data_frame.iloc[:, 1:])
+        pd_data_frame["合计"] = pd_data_frame.iloc[:, 1:].apply(lambda x: x.sum(), axis=1)  # 各行数据和添加至末尾列
+        pd_data_frame.loc['总计'] = pd_data_frame.iloc[:, 1:].apply(lambda x: x.sum(), axis=0)  # 各列的数据和添加至末尾行
+        # print('计算后的数据:\n', pd_data_frame)
+        pd_data_frame.iloc[pd_data_frame.shape[0]-1, 0] = '总计'  # 将最后一行第一个值原NAN修改为总计
+        # 数据体转为json数据
+        statistics_arr = json.loads(pd_data_frame.to_json(orient='split', double_precision=0))
+        return jsonify(statistics_arr)
 
     def generate_date(self, begin_date, end_date):
         dates = []
@@ -78,5 +80,21 @@ class StuffAbnormalWorkAmount(MethodView):
             date = dt.strftime("%Y-%m-%d")
         return dates
 
-
-
+    # 获取查询的开始日期和结束日期
+    @staticmethod
+    def get_start_date_end_date(year, month):
+        today = datetime.datetime.today()
+        if not year or year < 1 or year > 12:
+            year = today.year
+        if not month or month < 1 or month > 12:
+            month = today.month
+        str_month_first = "%d-%d" % (year, month)
+        if month == 12:
+            next_month = 1
+            next_year = year + 1
+            str_next_month_first = "%d-%d" % (next_year, next_month)
+        else:
+            month += 1
+            str_next_month_first = "%d-%d" % (year, month)
+        return datetime.datetime.strptime(str_month_first, "%Y-%m"), datetime.datetime.strptime(
+            str_next_month_first, "%Y-%m")
