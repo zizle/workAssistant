@@ -86,9 +86,9 @@
 				var date = datetime.getDate();//得到日期
 				var day = datetime.getDay();//得到周几
 				var hour = datetime.getHours();//得到小时
-				if (hour < 10){sec = '0' + hour;}
+				if (hour < 10){hour = '0' + hour;}
 				var minu = datetime.getMinutes();//得到分钟
-				if (minu < 10){sec = '0' + minu;}
+				if (minu < 10){minu = '0' + minu;}
 				var sec = datetime.getSeconds();//得到秒 
 				if (sec < 10){sec = '0' + sec;}
 				datetime.setTime(datetime.getTime() + 1000);
