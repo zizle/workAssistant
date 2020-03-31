@@ -18,8 +18,12 @@ var vm = new Vue({
 		registerPsd1Error: "",
 		registerPsd2: "", // 注册的密码2
 		registerPsd2Error: "",
-		orginazationId: 0, // 注册的部门小组
-		orginazationIdError: "",
+		registerPhone: "", // 注册的手机号
+		registerPhoneError: "",
+		registerEmail: "", // 注册的邮箱
+		registerEmailError: "",
+		//orginazationId: 0, // 注册的部门小组
+		registerResultMsg: "",
 	},
 	watch:{
 		orginazationId(val, oldVal){
@@ -95,6 +99,32 @@ var vm = new Vue({
 				this.loginUsernameError = "请输入用户名"
 			}
 		},
+		// registerPhoneFocus
+		registerPhoneFocus(){
+			this.registerPhoneError = "";
+		},
+		// registerPhoneBlur
+		registerPhoneBlur(){
+			var phoneReg=/^[1][3,4,5,6,7,8,9][0-9]{9}$/;
+			if (!phoneReg.test(this.registerPhone)){
+				this.registerPhoneError = "请输入正确的手机号";
+			}else{
+				this.registerPhoneError = "";
+			}
+		},
+		// registerEmailFocus
+		registerEmailFocus(){
+			this.registerEmailError = "";
+		},
+		// registerEmailBlur
+		registerEmailBlur(){
+			var emailReg = /^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/;
+			if(!emailReg.test(this.registerEmail)){
+				this.registerEmailError = "请输入正确的邮箱";
+			}else{
+				this.registerEmailError = "";
+			}
+		},
 		//loginPsd
 		loginPsdFocus(){
 			this.loginPsdError = "";
@@ -155,28 +185,30 @@ var vm = new Vue({
 				this.registerPsd1Error ||
 				!this.registerPsd1 ||
 				this.registerPsd2Error ||
-				!this.registerPsd2 ||
-				this.orginazationIdError ||
-				this.orginazationId == 0){
-				this.orginazationIdError = "请填写正确的信息!";
+				!this.registerPsd2||
+				!this.registerPhone
+				){
+				this.registerResultMsg = "请填写正确的信息!";
 				return;
 			}
 			// 组织数据提交注册
 			var registerData = {
 				name: this.registerName,
 				password:  md5(this.registerPsd1),  //  密码md5加密
-				organization_id: this.orginazationId,
+				organization_id: 1,  // 默认1
+				phone: this.registerPhone,
+				email: this.registerEmail,
 			};
 			var localThis = this;
 			axios.post(host + "register/",
 				data=registerData
 			)
 			.then(function(resp){
-				localThis.orginazationIdError = "注册成功!赶紧去登录吧^v^";
+				localThis.registerResultMsg = "信息提交成功^v^";
 				//console.log(resp);
 			})
 			.catch(function(error){
-				localThis.orginazationIdError = "注册失败!换个用户名试试^_^";
+				localThis.registerResultMsg = error.response.data;
 				//console.log(error);
 			})
 		},

@@ -17,58 +17,6 @@ html,body{
 		opacity: 1;
 	}
 }
-
-.cover-div{
-	position: absolute;
-	z-index: 1;
-	width: 100%;
-	height: 100%;
-	background-color: #111111;
-	opacity: 0.5;
-}
-
-.work-distribute{
-	z-index: 9;
-	display: none;
-	position: absolute;
-	top: 50px;
-	left: calc(24% - 175px);
-	width: 70%;
-	height: 80%;
-	margin: auto;
-	background: #FFFFFF;
-	border-radius: 15px;
-	box-shadow: 4px 4px 4px rgb(230,230,230);
-}
-/* 显示工作分配弹窗 */
-.active{
-	display: block !important;
-}
-.work-distribute .popup-title{
-	width: 100%;
-	height: 40px;
-	border-bottom: 1px dotted rgb(200,200,200);
-}
-
-.work-distribute .popup-title img{
-	position: relative;
-	width: 50px;
-	height: 50px;
-	bottom: 20px;
-	left: calc(50% - 25px);
-}
-.work-distribute .popup-title button{
-	float: right;
-	margin: 10px 20px;
-	border:none;
-	background: none;
-	font-size: 15px;
-	color: #666666;
-	outline: none;
-	cursor: pointer;
-	
-}
-
 .open-close-check{
 	-webkit-appearance: none;
 	cursor: pointer;
@@ -86,7 +34,7 @@ html,body{
 .open-close-check:before{
 	position: absolute;
 	left: 0;
-	content: '关';
+	content: '未审';
 	color:#000000;
 	font-size: 13px;
 	background-color: #FAFAFA;
@@ -103,35 +51,11 @@ html,body{
 }
 /* 设置开启时滑块的样式 */
 .open-close-check:checked::before{
-	content: '开';
+	content: '通过';
 	left: 29px;
 	color:#666666;
 	background-color: #7FFFD4;
 	transition: all 0.2s linear;
-}
-
-.work-distribute-table{
-		width: 95%;
-		margin: 0 auto;
-}
-.work-distribute-table .title{
-	color: #FFFFFF;
-	background-color: #9ECCF9;
-	font-size: 16px;
-	font-weight: bold;
-	line-height: 45px;
-	height: 42px;
-	border-bottom: 1px solid #787878;
-}
-.work-distribute-table table{
-	width: 100%;
-	text-align: center;
-	border-collapse: collapse;
-}
-.work-distribute-table td{
-	border-bottom: 1px dotted #787878;
-	font-size: 15px;
-	height: 40px;
 }
 .table-show{
 	width: 95%;

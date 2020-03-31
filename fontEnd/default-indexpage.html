@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>研究院工作管理系统</title>
+	<style type="text/css">
+		html,body{
+			margin: 0;
+			padding: 0;
+			width:100%;   
+			height:100%;
+			/* FILTER: progid:DXImageTransform.Microsoft.Gradient(gradientType=0,startColorStr=#006096,endColorStr=#fff); /*IE 6 7 8*/
+			background: -ms-linear-gradient(top, #006096,  #fff);        /* IE 10 */  
+			background:-moz-linear-gradient(top,#006096,#fff);/*火狐*/   
+			background:-webkit-gradient(linear, 0% 0%, 0% 100%,from(#006096), to(#fff));/*谷歌*/   
+			background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#006096), to(#fff));      /* Safari 4-5, Chrome 1-9*/  
+			background: -webkit-linear-gradient(top, #DEEAF1, #fff);   /*Safari5.1 Chrome 10+*/  
+			background: -o-linear-gradient(top, #006096, #fff);  /*Opera 11.10+*/  
+		} 
+		.content{
+			/* width: 360px; */
+			height: 200px;
+			position: absolute;
+			top: calc(50% - 100px);
+			left: calc(50% - 180px);
+
+		}
+		.sys-name{
+			font-size: 38px;
+			/* font-weight: bold; */
+			text-align: center;
+		}
+		.user-name{
+			font-size: 20px;
+			text-align: center;
+			margin-top: 15px;
+		}
+		.sys-time{
+			font-size: 10px;
+			text-align: center;
+			margin-top: 10px;
+		}
+	</style>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="content">
+		<div class="sys-name">研究院工作管理系统</div>
+		<div class="user-name">欢迎您: {{ userInfo.name }}</div>
+		<div class="sys-time"> {{ sysTime }}</div>
+	</div>
+</div>
+</body>
+<script type="text/javascript">
+	var vm = new Vue({
+		el: "#app",
+		data:{
+			userInfo:{},
+			sysTime:"",
+		},
+		mounted:function(){
+			var localThis = this;
+			axios.get(host + 'user/parse-token/?utoken=' + token)
+			.then(function(resp){
+				localThis.userInfo = resp.data;
+				//console.log(resp.data)
+			})
+			var weeks = {
+				1: '星期一',
+				2: '星期二',
+				3: '星期三',
+				4: '星期四',
+				5: '星期五',
+				6: '星期六',
+				7: '星期日',
+				
+			}
+			// 设置时间
+			var datetime = new Date();
+			setInterval(function(){
+				var year = datetime.getFullYear(); //得到年份
+				var month = datetime.getMonth() + 1;//得到月份
+				var date = datetime.getDate();//得到日期
+				var day = datetime.getDay();//得到周几
+				var hour = datetime.getHours();//得到小时
+				if (hour < 10){hour = '0' + hour;}
+				var minu = datetime.getMinutes();//得到分钟
+				if (minu < 10){minu = '0' + minu;}
+				var sec = datetime.getSeconds();//得到秒 
+				if (sec < 10){sec = '0' + sec;}
+				datetime.setTime(datetime.getTime() + 1000);
+				localThis.sysTime = year + '年' + month + '月' + date + '日 ' + weeks[day] +' ' + hour + ':' + minu + ':' + sec;
+			},1000)
+		},
+		methods:{
+			
+		}
+	})
+</script>
+</html>

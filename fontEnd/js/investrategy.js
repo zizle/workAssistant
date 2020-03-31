@@ -3,7 +3,7 @@ var vm = new Vue({
 	data:{
 		showUploading:false,
 		uploadFileProgress:0,
-		varietyInfoDict: {},
+		varietyInfoArray: [],
 		currentDate: "",
 		userInfoDict:{},
 		variety:"",
@@ -61,7 +61,7 @@ var vm = new Vue({
 		var localThis = this;
 		axios.get(host + 'variety/')
 		.then(function(resp){
-			localThis.varietyInfoDict = resp.data;
+			localThis.varietyInfoArray = resp.data;
 		})
 	},
 	methods:{

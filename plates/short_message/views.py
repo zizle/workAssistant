@@ -67,11 +67,13 @@ class ShortMessageView(MethodView):
         # 查找用户
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        select_user_statement = "SELECT `id`,`name` FROM `user_info` WHERE `id`=%s AND `is_active`=1;"
+        select_user_statement = "SELECT `id`,`name`,`is_admin` FROM `user_info` WHERE `id`=%s AND `is_active`=1;"
         cursor.execute(select_user_statement, author_id)
         user_obj = cursor.fetchone()
         if not user_obj:
             return jsonify("系统没有查到您的信息,无法操作."), 400
+        if user_obj['is_admin']:
+            return jsonify('请不要使用用管理员用户添加记录.')
         # 不为空的信息判断
         content = body_data.get('content', False)
         if not content:
@@ -112,6 +114,16 @@ class FileHandlerShortMessageView(MethodView):
         file = request.files.get('file', None)
         if not file or not user_id:
             return jsonify('参数错误,NOT FILE OR UID'), 400
+        # 查找用户
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        select_user_statement = "SELECT `id`,`name`,`is_admin` FROM `user_info` WHERE `id`=%s;"
+        cursor.execute(select_user_statement, user_id)
+        user_obj = cursor.fetchone()
+        db_connection.close()
+        # 管理员不给添加信息
+        if user_obj['is_admin']:
+            return jsonify('请不要使用用管理员用户添加记录.')
         # 文件内容
         file_contents = file.read()
         file_contents = xlrd.open_workbook(file_contents=file_contents)

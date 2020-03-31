@@ -5,7 +5,7 @@ var vm = new Vue({
 		showUploading:false,
 		currentDate: "",
 		userInfoDict:{},
-		varietyInfoDict:{},
+		variettInfoArray:[],
 		content:"",
 		messageType:"",
 		effectVariety:[],
@@ -45,7 +45,7 @@ var vm = new Vue({
 		var localThis = this;
 		axios.get(host + 'variety/')
 		.then(function(resp){
-			localThis.varietyInfoDict = resp.data;
+			localThis.variettInfoArray = resp.data;
 		})
 		
 	},

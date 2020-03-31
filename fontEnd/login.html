@@ -34,17 +34,27 @@
 				<th colspan="2"><input type="submit" value="登录" class="submit-btn" @click="userToLogin"></th>
 			</tr>
 		</table>
-		<div class="to-register">还没用户名?<span @click="toggleLoginRegister">立即注册-></span></div>
+		<div class="to-register">还没用户名?<span @click="toggleLoginRegister">提交信息-></span></div>
 	</div>
 	<!-- 注册表单 -->
 	<div v-else class="register-div">
 		<table>
-			<tr><th colspan="2">用户注册</th></tr>
+			<tr><th colspan="2">提交信息</th></tr>
 			<tr>
 				<td class="register-label">用户名</td>
 				<td ><input type="text" class="register-input" @focus="registerNameFocus" @blur="registerNameBlur" v-model="registerName"></td>
 			</tr>
 			<tr><td colspan="2" class="error-msg">{{ registerNameError }}</td></tr>
+			<tr>
+				<td class="register-label">手机</td>
+				<td ><input type="text" class="register-input" @focus="registerPhoneFocus" @blur="registerPhoneBlur" v-model="registerPhone"></td>
+			</tr>
+			<tr><td colspan="2" class="error-msg">{{ registerPhoneError }}</td></tr>
+			<tr>
+				<td class="register-label">邮箱</td>
+				<td ><input type="text" class="register-input" @focus="registerEmailFocus" @blur="registerEmailBlur" v-model="registerEmail"></td>
+			</tr>
+			<tr><td colspan="2" class="error-msg">{{ registerEmailError }}</td></tr>
 			<tr>
 				<td class="register-label">密码</td>
 				<td><input type="password" class="register-input" @focus="registerPsd1Focus" @blur="registerPsd1Blur" v-model="registerPsd1"></td>
@@ -55,19 +65,18 @@
 				<td><input type="password" class="register-input" @focus="registerPsd2Focus" @blur="registerPsd2Blur" v-model="registerPsd2"></td>
 			</tr>
 			<tr><td colspan="2" class="error-msg">{{ registerPsd2Error }}</td></tr>
-			<tr>
+			<!-- <tr>
 				<td class="register-label">部门小组</td>
 				<td >
 					<select name="" class="register-select" v-model="orginazationId">
 						<option value="0">请选择</option>
-						<!-- 绑定数据对象，循环产生标签 -->
 						<option v-for="(item, i) in organizationGroups" :value ="item.id">{{item.name}}</option>
 					</select>
 				</td>
-			</tr>
-			<tr><td colspan="2" class="error-msg">{{ orginazationIdError }}</td></tr>
+			</tr> -->
+			<tr><td colspan="2" class="error-msg">{{ registerResultMsg }}</td></tr>
 			<tr>
-				<th colspan="2"><input type="submit" value="马上注册" class="register-btn" @click="userToRegister"></th>
+				<th colspan="2"><input type="submit" value="现在提交" class="register-btn" @click="userToRegister"></th>
 			</tr>
 		</table>
 		<div class="to-register">已有用户名?<span @click="toggleLoginRegister">立即登录-></span></div>

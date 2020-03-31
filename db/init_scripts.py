@@ -20,7 +20,7 @@ def initial_tables_and_data():
                    "`parent_id` INT(11) DEFAULT NULL,"
                    "`is_active` BIT NOT NULL DEFAULT 1,"
                    "`is_private` BIT NOT NULL DEFAULT 0"
-                   ")")
+                   ");")
 
     # 创建用户信息表
     cursor.execute("CREATE TABLE IF NOT EXISTS `user_info` ("
@@ -30,10 +30,12 @@ def initial_tables_and_data():
                    "`join_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                    "`update_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
                    "`password` VARCHAR(32) NOT NULL,"
+                   "`phone` VARCHAR(11) NOT NULL DEFAULT '',"
+                   "`email` VARCHAR(64) NOT NULL DEFAULT '',"
                    "`is_admin` BIT NOT NULL DEFAULT 0,"
-                   "`is_active` BIT NOT NULL DEFAULT 1,"
-                   "`org_id` INT(11) NOT NULL DEFAULT 1"
-                   ")")
+                   "`is_active` BIT NOT NULL DEFAULT 0,"
+                   "`org_id` INT(11) NOT NULL DEFAULT 0"
+                   ");")
 
     # 用户与不用提交的模块第三方表
     cursor.execute("CREATE TABLE IF NOT EXISTS `user_ndo_module` ("
@@ -42,7 +44,18 @@ def initial_tables_and_data():
                    "`module_id` INT(11) NOT NULL,"
                    "`is_active` BIT NOT NULL DEFAULT 1,"
                    "UNIQUE KEY `user_id`(`user_id`,`module_id`)"
-                   ")")
+                   ");")
+
+    # 系统中品种信息表
+    cursor.execute("CREATE TABLE IF NOT EXISTS `variety` ("
+                   "`id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+                   "`name` VARCHAR(32) NOT NULL UNIQUE,"
+                   "`en_code` VARCHAR(16) NOT NULL DEFAULT '',"
+                   "`sort` INT(11) NOT NULL DEFAULT 0,"
+                   "`parent_id` INT(11) DEFAULT NULL,"
+                   "`is_active` BIT NOT NULL DEFAULT 1,"
+                   "UNIQUE KEY `name`(`name`,`en_code`)"
+                   ");")
 
     """添加系统默认菜单"""
     # 加入系统设置菜单组
@@ -62,7 +75,7 @@ def initial_tables_and_data():
 
     """添加一个默认管理员信息"""
     # 新增一个管理员信息
-    save_admin = "INSERT INTO `user_info` (`name`,`fixed_code`,`password`,`is_admin`) VALUES ('管理员','rdyj321','bbe7977cef5fcf80a39b801fcfdda5e0', 1);"
+    save_admin = "INSERT INTO `user_info` (`name`,`fixed_code`,`password`,`is_admin`,`is_active`) VALUES ('管理员','rdyj321','bbe7977cef5fcf80a39b801fcfdda5e0', 1, 1);"
     cursor.execute(save_admin)
 
     # 提交数据
@@ -91,7 +104,7 @@ def create_others_table():
                    "`allowance` INT(11) DEFAULT 0,"
                    "`note` VARCHAR(512) DEFAULT '',"
                    "`partner` VARCHAR (128) DEFAULT ''"
-                   ")")
+                   ");")
 
     # 创建专题研究信息表
     cursor.execute("CREATE TABLE IF NOT EXISTS `monographic` ("
@@ -106,7 +119,7 @@ def create_others_table():
                    "`score` INT(11) NOT NULL DEFAULT 0,"
                    "`note` VARCHAR(512) DEFAULT '',"
                    "`partner` VARCHAR (128) DEFAULT ''"
-                   ")")
+                   ");")
 
     # 创建投资方案信息表
     cursor.execute("CREATE TABLE IF NOT EXISTS `investment` ("
@@ -127,7 +140,7 @@ def create_others_table():
                    "`is_publish` BIT NOT NULL DEFAULT 0,"
                    "`profit` INT(11) DEFAULT 0,"
                    "`note` VARCHAR(512) DEFAULT ''"
-                   ")")
+                   ");")
 
     # 创建投顾策略信息表
     cursor.execute("CREATE TABLE IF NOT EXISTS `investrategy` ("
@@ -144,7 +157,7 @@ def create_others_table():
                    "`close_position` INT(11) DEFAULT NULL,"
                    "`profit` INT(11) DEFAULT 0,"
                    "`note` VARCHAR(512) DEFAULT ''"
-                   ")")
+                   ");")
 
     # 创建文章发表审核记录表
     cursor.execute("CREATE TABLE IF NOT EXISTS `article_publish` ("
@@ -159,7 +172,7 @@ def create_others_table():
                    "`checker` VARCHAR(128) DEFAULT '',"
                    "`allowance` INT(11) DEFAULT 0,"
                    "`note` VARCHAR(512) DEFAULT ''"
-                   ")")
+                   ");")
 
     # 创建短讯通记录表
     cursor.execute("CREATE TABLE IF NOT EXISTS `short_message` ("
@@ -171,7 +184,7 @@ def create_others_table():
                    "`msg_type` VARCHAR(128) NOT NULL DEFAULT '',"
                    "`effect_variety` VARCHAR(256) NOT NULL DEFAULT '',"
                    "`note` VARCHAR(512) DEFAULT ''"
-                   ")")
+                   ");")
 
     db_connection.commit()
     db_connection.close()

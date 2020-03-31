@@ -2,7 +2,6 @@
 # Author: zizle
 import json
 import datetime
-import pandas as pd
 from flask import jsonify, request
 from db import MySQLConnection
 from flask.views import MethodView
@@ -13,6 +12,7 @@ from flask.views import MethodView
 
 class StuffAbnormalWorkAmount(MethodView):
     def get(self):
+        import pandas as pd
         try:
             query_year = int(request.args.get('year', 0))
             query_month = int(request.args.get('month', 0))  # 获取查询的月份

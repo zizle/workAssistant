@@ -75,9 +75,12 @@ class AbnormalWorkView(MethodView):
         # 查找用户
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        select_user_statement = "SELECT `id`,`name` FROM `user_info` WHERE `id`=%s;"
+        select_user_statement = "SELECT `id`,`name`,`is_admin` FROM `user_info` WHERE `id`=%s;"
         cursor.execute(select_user_statement, worker_id)
         user_obj = cursor.fetchone()
+        # 管理员不给添加信息
+        if user_obj['is_admin']:
+            return jsonify('请不要使用用管理员用户添加记录.')
         # 不为空的信息判断
         task_type = body_data.get('task_type', 0)
         task_type_text = ABNORMAL_WORK.get(int(task_type), 0)
@@ -125,6 +128,16 @@ class FileHandlerAbnormalWorkView(MethodView):
         file = request.files.get('file', None)
         if not file or not user_id:
             return jsonify('参数错误,NOT FILE OR UID'), 400
+        # 查找用户
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        select_user_statement = "SELECT `id`,`name`,`is_admin` FROM `user_info` WHERE `id`=%s;"
+        cursor.execute(select_user_statement, user_id)
+        user_obj = cursor.fetchone()
+        db_connection.close()
+        # 管理员不给添加信息
+        if user_obj['is_admin']:
+            return jsonify('请不要使用用管理员用户添加记录.')
         # 准备任务类型字典
         task_type_dict = {value: key for key, value in ABNORMAL_WORK.items()}
         # 文件内容

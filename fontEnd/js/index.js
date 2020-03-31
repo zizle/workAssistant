@@ -8,7 +8,9 @@ var vm = new Vue({
 			'login.html',
 			'org-statistics.html',
 			'stuff-work.html',
+			'stuff-auditing.html',
 			'sys-modules.html',
+			'variety-manager.html',
 			'abnormal-work.html',
 			'abw-query.html',
 			'monographic.html',
@@ -25,7 +27,7 @@ var vm = new Vue({
 		],
 		showCover:false,
 		accessModules:[],
-		framePage: "not-found404.html",
+		framePage: "default-indexpage.html",
 	},
 	mounted:function(){
 		// 请求token登录状态
@@ -39,9 +41,9 @@ var vm = new Vue({
 		.then(function(resp){
 			localThis.accessModules = resp.data;
 			// console.log(resp.data);
-			if (resp.data.length > 0){
-				localThis.framePage = resp.data[0].page_url;
-			}
+			// if (resp.data.length > 0){
+			// 	localThis.framePage = resp.data[0].page_url;
+			// }
 		})
 		.catch(function(error){
 			localStorage.clear();
@@ -76,6 +78,8 @@ var vm = new Vue({
 	methods:{
 		// 选择左侧菜单
 		selectMenu(e){
+			// 改变选项卡的css样式
+			
 			// 处理没有页面的问题
 			var page = e.target.dataset.pageurl;
 			var flag = this.pageUrlIsExist(page);

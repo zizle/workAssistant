@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>品种管理</title>
+	<link rel="stylesheet" type="text/css" href="css/variety-manager.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="cover-div" v-show="showCover"></div>
+	<div class="add-variety-button" @click="addNewVariety"><span>+</span>新增</div>
+	<div class="new-variety" :class="addVarietyActive? 'add-active': ''">
+		<div class="popup-title"><img src="img/edit_ico.png" ><button type="button" @click="closeNewVarietyPopup">关闭</button></div>
+		<table border="0" cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="td-label">名称</td>
+				<td><input type="text" class="td-input" v-model="newVarietyName"></td>
+			</tr>
+			<tr>
+				<td class="td-label">英文代码</td>
+				<td><input type="text" class="td-input" v-model="newVarietyEnCode"></td>
+			</tr>
+			<tr>
+				<td class="td-label">所属分组</td>
+				<td>
+					<select class="group-select" v-model="newVarietyParentId">
+						<option value ="0">默认不选</option>
+						<option v-for="(varietyGroup,index) in varietyArray" :value="varietyGroup.id">{{varietyGroup.name}}</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input type="submit" value="确定提交" class="submit-input" @click="submitNewVariety">
+				</td>
+			</tr>
+		</table>
+	</div>
+	
+	<div class="table-show">
+		<details v-for="(varietyGroup,index) in varietyArray" class="variety-group" open> <!-- 一级模块名称 -->
+			<summary>
+				{{varietyGroup.name}}
+			</summary>
+			<!-- 子级模块表 -->
+			<table border="" cellspacing="" cellpadding="">
+				<tr class="tile">
+					<td class="index-td">序号</td>
+					<td class="name-td">品种名称</td>
+					<td class="page-url-td">品种代码</td>
+					<td class="active-td">启用</td>
+				</tr>
+				<tr v-for="(subItem,index) in varietyGroup.subs">
+					<td class="index-td">{{index + 1}}</td>
+					<td class="name-td">{{ subItem.name }}</td>
+					<td class="page-url-td">{{ subItem.en_code}}</td>
+					<td><input type="checkbox" class="open-close-check" :value="subItem.id" @change="checkBoxChanged" :checked="subItem.is_active"></td>
+				</tr>
+			</table>
+		</details>
+	</div>
+</div>
+</body>
+<script src="js/variety-manager.js" type="text/javascript" charset="utf-8"></script>
+</html>

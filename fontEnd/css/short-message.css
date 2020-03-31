@@ -39,7 +39,7 @@ html,body{
 }
 .upload-file{
 	float: right;
-	margin-right: 15px;
+	margin-right: 65px;
 	margin-top: 1px;
 	height: 32px;
 	width: 60px;
@@ -63,26 +63,6 @@ html,body{
 	opacity: 0;
 	border-style: none;
 	background-color: #006096;
-}
-.download-file{
-	float: right;
-	margin-right: 20px;
-	margin-top: 1px;
-	height: 32px;
-	width: 60px;
-	background-color: #6ADFC1;
-	border: 1px solid #F0F8FF;
-	border-top: none;
-	border-radius: 0 0 4px 4px;
-	box-shadow: 2px 2px 4px #008B8B;
-}
-.download-file a{
-	font-size: 14px;
-	text-decoration: none;
-	cursor: pointer;
-	height: 32px;
-	line-height: 32px;
-	color: #000000;
 }
 
 .open-close-check{
@@ -174,7 +154,7 @@ html,body{
 }
 
 .edit-table .input-td input,.edit-table .input-td select{
-	width: 90%;
+	width: calc(100% - 14px);
 	height: 40px;
 	margin-left: 10px;
 	outline: none;

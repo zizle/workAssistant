@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>用户审核</title>
+	<link rel="stylesheet" type="text/css" href="css/stuff-auditing.css"/>
+	<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<!-- 已提交的用户信息表 -->
+	<div class="table-show">
+		<table>
+			<tr class="title">
+				<td>人员名称</td>
+				<td>用户号</td>
+				<td>提交时间</td>
+				<td>手机号</td>
+				<td>邮箱</td>
+				<td>部门小组</td>
+				<td>审核</td>
+			</tr>
+			<tr v-for="(item,index) in stuffsArray">
+				<td>{{ item.name }}</td>
+				<td>{{ item.fixed_code }}</td>
+				<td>{{ item.join_time }}</td>
+				<td>{{ item.phone }}</td>
+				<td>{{ item.email }}</td>
+				<td>
+					<select name="" v-if="item.id != 1">
+						<option v-for="orgItem in organizations" :value="orgItem.id" :selected="item.organization==orgItem.name?1:''">{{orgItem.name}}</option>
+					</select>
+				</td>
+				<td><input v-if="item.id != 1" type="checkbox" class="open-close-check" :value="item.id" @change="userActiveChanged" :checked="item.is_active"></td>
+				<!-- <td><button v-if="item.id != 1" type="button" :value="item.id" @click="workDistribute">工作设置</button></td> -->
+			</tr>
+		</table>
+	</div>
+	
+</div>
+</body>
+<script src="js/stuff-auditing.js" type="text/javascript" charset="utf-8"></script>
+</html>
