@@ -12,8 +12,7 @@
 <div id="app">
 	<div class="cover-div" v-show="showUploading"><span>数据处理中...</span></div>
 	<div class="page-title"><span>短讯通</span>填报</div>
-	<!-- <div class="download-file"><a :href="modelFileUrl">模板下载</a></div> -->
-	<div class="upload-file"><span>文件上传</span><input type="file" @change="UploadDataFile"></div>
+	<div class="upload-file"><span>批量上传</span><input type="file" @change="UploadDataFile"></div>
 	<div class="edit-table">
 		<table border="0" cellspacing="" cellpadding="">
 			<tr>
@@ -42,8 +41,9 @@
 				<td class="input-td">
 					<input type="text" readonly="true" @click="selectVariety" v-model="effectVariety">
 					<div class="choose-variety-div" v-show="showVarietyChecks">
-						
-						<span class="check-item" v-for="(value,key) in varietyInfoDict"><input type="checkbox" :id="'v' + key" :value="value" v-model="effectVariety"><label :for="'v' + key">{{value}}</label></span>
+						<template v-for="(groupItem,index) in variettInfoArray">
+							<span class="check-item" v-for="(varietyItem,index) in groupItem.subs"><input type="checkbox" :id="'v' + index" :value="varietyItem.name" v-model="effectVariety"><label :for="'v' + index">{{varietyItem.name}}</label></span>
+						</template>
 						<div class="confirm-variety"><button type="button" @click="slideUpVairetyDiv">确定</button></div>
 					</div>
 				</td>

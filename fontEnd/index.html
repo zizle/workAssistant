@@ -22,6 +22,13 @@
 				<li v-for="(subItem,index) in moduleItem.subs" :data-pageUrl="subItem.page_url" @click="selectMenu">{{subItem.name}}</li>
 			</ul>
 		</details>
+		<!-- 个人中心 -->
+		<!-- <details class="menu-group">
+			<summary>个人中心</summary>
+			<ul>
+				<li data-pageUrl="user-center.html" @click="selectMenu">基本资料</li>
+			</ul>
+		</details> -->
 	</div><!-- 
 	右侧iframe,要这样注释防止换行之间产生空隙
 	 --><div class="right-content">

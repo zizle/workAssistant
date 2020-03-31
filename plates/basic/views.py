@@ -5,14 +5,64 @@ from flask import request,jsonify, current_app, Response
 from flask.views import MethodView
 from utils.psd_handler import user_is_admin
 from db import MySQLConnection
-from vlibs import ABNORMAL_WORK, VARIETY_LIB
+from vlibs import ABNORMAL_WORK
 from settings import BASE_DIR
+
 
 # 品种视图
 class VarietyView(MethodView):
-
     def get(self):
-        return jsonify(VARIETY_LIB)
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        select_statement = "SELECT `id`,`name`,`parent_id`,`is_active` FROM `variety` WHERE `parent_id` is NULL ORDER BY `sort`;"
+        cursor.execute(select_statement)
+        all_groups = cursor.fetchall()
+        response_data = list()
+        for group_item in all_groups:
+            # 查询模块的子集
+            sub_modules_statement = "SELECT `id`,`name`,`en_code`,`parent_id`,`is_active` FROM `variety` WHERE `parent_id`=%d;" % group_item['id']
+            cursor.execute(sub_modules_statement)
+            group_item['subs'] = cursor.fetchall()
+            response_data.append(group_item)
+        db_connection.close()
+        return jsonify(response_data)
+
+    def post(self):
+        json_data = request.json
+        token = json_data.get('utoken', None)
+        if not user_is_admin(token):
+            return jsonify("登录已过期或没有权限进行这个操作."), 400
+        # 验证上传的数据
+        variety_name = json_data.get('variety_name', None)
+        variety_group_id = json_data.get('parent_id', None)
+        variety_en_code = json_data.get('en_code', None)
+        if not variety_name:
+            return jsonify("请填写名称!"), 400
+        if variety_group_id and not variety_en_code:
+            return jsonify("品种请填写英文代码."), 400
+        # 写入数据库
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        try:
+            if not variety_group_id:
+                save_statement = "INSERT INTO `variety` (`name`,`parent_id`) VALUES (%s,NULL);"
+                cursor.execute(save_statement, variety_name)
+                new_id = db_connection.insert_id()
+            else:
+                save_statement = "INSERT INTO `variety` (`name`, `parent_id`,`en_code`) VALUES (%s,%s,%s);"
+                cursor.execute(save_statement, (variety_name, variety_group_id, variety_en_code))
+                new_id = db_connection.insert_id()
+            # 修改sort值
+            update_sort_statement = "UPDATE `variety` SET `sort`=%s WHERE `id`=%s;"
+            cursor.execute(update_sort_statement,(new_id,new_id))
+            db_connection.commit()
+        except Exception as e:
+            logger = current_app.logger
+            logger.error("新增品种错误:" + str(e))
+            db_connection.close()
+            return jsonify("系统发生了个错误。"), 400
+        else:
+            return self.get()  # 查询所有
 
 
 # 系统功能模块数据

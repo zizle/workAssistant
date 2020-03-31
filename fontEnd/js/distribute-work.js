@@ -7,7 +7,7 @@ var vm = new Vue({
 		worksToDistrubute:[],
 	},
 	mounted:function(){
-		console.log("请求当前需要的信息,人员信息和模块名称")
+		// console.log("请求当前需要的信息,人员信息和模块名称")
 		var locationSrcQuery = window.document.location.search.substring(1);
 		var vars = locationSrcQuery.split("&");
 		var userId = false;

@@ -1,5 +1,6 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
+import re
 import jwt
 import time
 import datetime
@@ -18,13 +19,10 @@ class OrganizationGroupView(MethodView):
     def get(self):
         organizations = []
         for key,value in ORGANIZATIONS.items():
-            if key == 1:
-                continue
             o_item = dict()
             o_item['id'] = key
             o_item['name'] = value
             organizations.append(o_item)
-        print(organizations)
         return jsonify(organizations)
 
 
@@ -37,26 +35,32 @@ class RegisterView(MethodView):
         # 验证数据完整性，存入数据库
         username = json_data.get('name')
         password = psd_handler.hash_user_password(json_data.get('password'))
-        org_id = json_data.get('organization_id')
-        if not username or not password or not org_id:
+        phone = json_data.get('phone', '')
+        email = json_data.get('email', '')
+        if not username or not password or not phone:
             return jsonify("请提交完整注册信息."), 400
+        # 验证手机号和邮箱
+        if not re.match(r'^1[345678][0-9]{9}$', phone):
+            return jsonify('请提交正确的手机号.'), 400
+        if not re.match(r'^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$', email):
+            return jsonify("请提交正确的邮箱."), 400
         # 生成fixed_code
-        fixed_code = psd_handler.generate_string_with_time(org_id, 6)
-        if self.save_user_information(username, password, org_id, fixed_code):
+        fixed_code = psd_handler.generate_string_with_time(1, 6)
+        if self.save_user_information(username, password, 1, fixed_code, phone, email):
             return jsonify("注册成功!"), 201
         else:
             return jsonify("注册失败"), 400
 
     @staticmethod
-    def save_user_information(username, password, org_id, fixed_code):
+    def save_user_information(username, password, org_id, fixed_code, phone, email):
         logger = current_app.logger
         try:
             # 连接数据库，写入数据
             db_connection = MySQLConnection()
             cursor = db_connection.get_cursor()
-            user_info = "('%s','%s','%s',%d)" % (username, fixed_code, password, org_id)
-            save_user = "INSERT INTO user_info (name,fixed_code,password,org_id) VALUES %s;" % (user_info)
-            cursor.execute(save_user)
+            # user_info = "('%s','%s','%s',%d, )" % (username, fixed_code, password, org_id)
+            save_user = "INSERT INTO user_info (name,fixed_code,password,phone,email,org_id) VALUES (%s,%s,%s,%s,%s,%s);"
+            cursor.execute(save_user, (username, fixed_code, password, phone, email, org_id))
             db_connection.commit()
             db_connection.close()
         except Exception as e:
@@ -192,7 +196,7 @@ class UserView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # 查询所有用户信息
-        select_statement = "SELECT id,name,fixed_code,join_time,update_time,is_active,is_admin,org_id FROM user_info;"
+        select_statement = "SELECT id,name,fixed_code,join_time,phone,email,update_time,is_active,is_admin,org_id FROM user_info;"
         cursor.execute(select_statement)
         # 重新组织用户数据
         user_data = list()
@@ -206,21 +210,24 @@ class UserView(MethodView):
             user_dict['is_active'] = user_item['is_active']
             user_dict['is_admin'] = user_item['is_admin']
             user_dict['organization'] = ORGANIZATIONS.get(user_item['org_id'], '未知')
+            user_dict['phone'] = user_item['phone']
+            user_dict['email'] = user_item['email']
             user_data.append(user_dict)
         return jsonify(user_data)
 
 
 # 单用户视图
 class RetrieveUserView(MethodView):
-    def put(self,user_id):
+    def put(self, user_id):
         utoken = request.json.get('utoken')
         is_active = 1 if request.json.get('is_checked', False) else 0
-
+        org_id = request.json.get('org_id')
         if not psd_handler.user_is_admin(utoken):
             return jsonify("登录已过期或没有权限进行这个操作"), 400
         try:
+            org_id = int(org_id)
             # 进行修改
-            modify_statement = "UPDATE user_info SET is_active=%d WHERE id=%d;" % (is_active, user_id)
+            modify_statement = "UPDATE `user_info` SET `is_active`=%d,`org_id`=%d WHERE id=%d;" % (is_active, org_id, user_id)
             db_connection = MySQLConnection()
             cursor = db_connection.get_cursor()
             cursor.execute(modify_statement)
@@ -228,7 +235,7 @@ class RetrieveUserView(MethodView):
             db_connection.close()
         except Exception as e:
             logger = current_app.logger
-            logger.error('修改用户有效错误:' + str(e))
+            logger.error('审核用户有效错误:' + str(e))
             return jsonify('参数错误 require int'), 400
         else:
             return jsonify("修改成功。")

@@ -72,11 +72,13 @@ class InvestmentView(MethodView):
         # 查找用户
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        select_user_statement = "SELECT `id`,`name` FROM `user_info` WHERE `id`=%s AND `is_active`=1;"
+        select_user_statement = "SELECT `id`,`name`,`is_admin` FROM `user_info` WHERE `id`=%s AND `is_active`=1;"
         cursor.execute(select_user_statement, author_id)
         user_obj = cursor.fetchone()
         if not user_obj:
             return jsonify("系统没有查到您的信息,无法操作."), 400
+        if user_obj['is_admin']:
+            return jsonify('请不要使用用管理员用户添加记录.')
         # 不为空的信息判断
         title = body_data.get('title', False)
         variety = body_data.get('variety', False)

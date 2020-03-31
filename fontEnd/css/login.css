@@ -1,5 +1,7 @@
 
-html,body{   
+html,body{
+	margin: 0;
+	padding: 0;
 	width:100%;   
 	height:100%;
 	/* FILTER: progid:DXImageTransform.Microsoft.Gradient(gradientType=0,startColorStr=#006096,endColorStr=#fff); /*IE 6 7 8*/
@@ -26,9 +28,9 @@ html,body{
 .register-div{
 	position: absolute;
 	width: 400px;
-	height: 350px;
+	height: 400px;
 	left: 50%;
-	top: 40%;
+	top: 30%;
 	margin-top: -150px;
 	margin-left: -200px;
 	background-color: rgba(200, 200,200, 0.4);

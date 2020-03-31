@@ -18,7 +18,6 @@ class InvestrategyView(MethodView):
         if not user_info:
             return jsonify("您的登录已过期,请重新登录查看.")
         user_id = user_info['uid']
-        print(user_id)
         try:
             current_page = int(params.get('page', 1)) - 1
             page_size = int(params.get('pagesize', 30))
@@ -35,7 +34,7 @@ class InvestrategyView(MethodView):
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
-        print("内连接查投顾策略自方案结果", result_records)
+        # print("内连接查投顾策略自方案结果", result_records)
 
         # 查询总条数
         count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `investrategy`AS invstb ON usertb.id=%s AND usertb.id=invstb.author_id;"
@@ -69,11 +68,13 @@ class InvestrategyView(MethodView):
         # 查找用户
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        select_user_statement = "SELECT `id`,`name` FROM `user_info` WHERE `id`=%s AND `is_active`=1;"
+        select_user_statement = "SELECT `id`,`name`,`is_admin` FROM `user_info` WHERE `id`=%s AND `is_active`=1;"
         cursor.execute(select_user_statement, author_id)
         user_obj = cursor.fetchone()
         if not user_obj:
             return jsonify("系统没有查到您的信息,无法操作."), 400
+        if user_obj['is_admin']:
+            return jsonify('请不要使用用管理员用户添加记录.')
         # 不为空的信息判断
         content = body_data.get('content', False)
         variety = body_data.get('variety', False)
@@ -92,7 +93,6 @@ class InvestrategyView(MethodView):
         close_position = body_data.get('close_position', 0)
         profit = body_data.get('profit')
         note = body_data.get('work_note', '')
-
         # 存入数据库
         save_invest_statement = "INSERT INTO `investrategy`" \
                               "(`custom_time`,`author_id`,`content`,`variety_id`,`contract`,`direction`,`hands`," \
@@ -125,6 +125,16 @@ class FileHandlerInvestrategyView(MethodView):
         file = request.files.get('file', None)
         if not file or not user_id:
             return jsonify('参数错误,NOT FILE OR UID'), 400
+        # 查找用户
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        select_user_statement = "SELECT `id`,`name`,`is_admin` FROM `user_info` WHERE `id`=%s;"
+        cursor.execute(select_user_statement, user_id)
+        user_obj = cursor.fetchone()
+        db_connection.close()
+        # 管理员不给添加信息
+        if user_obj['is_admin']:
+            return jsonify('请不要使用用管理员用户添加记录.')
         # 准备品种信息
         variety_dict = {value: key for key, value in VARIETY_LIB.items()}
         # 文件内容

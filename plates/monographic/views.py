@@ -17,7 +17,7 @@ class MonographicView(MethodView):
         if not user_info:
             return jsonify("您的登录已过期,请重新登录查看.")
         user_id = user_info['uid']
-        print(user_id)
+        # print(user_id)
         try:
             current_page = int(params.get('page', 1)) - 1
             page_size = int(params.get('pagesize', 30))
@@ -33,7 +33,7 @@ class MonographicView(MethodView):
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
-        print("内连接查询专题研究结果", result_records)
+        # print("内连接查询专题研究结果", result_records)
 
         # 查询总条数
         count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `monographic`AS mgpctb ON usertb.id=%s AND usertb.id=mgpctb.author_id;"
@@ -68,11 +68,13 @@ class MonographicView(MethodView):
         # 查找用户
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        select_user_statement = "SELECT `id`,`name` FROM `user_info` WHERE `id`=%s AND `is_active`=1;"
+        select_user_statement = "SELECT `id`,`name`,`is_admin` FROM `user_info` WHERE `id`=%s AND `is_active`=1;"
         cursor.execute(select_user_statement, author_id)
         user_obj = cursor.fetchone()
         if not user_obj:
             return jsonify("系统没有查到您的信息,无法操作."), 400
+        if user_obj['is_admin']:
+            return jsonify('请不要使用用管理员用户添加记录.')
         # 不为空的信息判断
         title = body_data.get('title', False)
         if not title:

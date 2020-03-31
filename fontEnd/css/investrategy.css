@@ -39,7 +39,7 @@ html,body{
 }
 .upload-file{
 	float: right;
-	margin-right: 15px;
+	margin-right: 65px;
 	margin-top: 1px;
 	height: 32px;
 	width: 60px;
@@ -122,7 +122,7 @@ html,body{
 	text-shadow: #000 0 0 3px;
 }
 .edit-table{
-	width: 80%;
+	width: 70%;
 	margin: 0 auto;
 	margin-bottom: 50px;
 	margin-top: 10px;
@@ -155,7 +155,7 @@ html,body{
 	color: #787878;
 }
 .edit-table .input-td input,.edit-table .input-td select{
-	width: 90%;
+	width: calc(100% - 14px);
 	height: 40px;
 	margin-left: 10px;
 	outline: none;

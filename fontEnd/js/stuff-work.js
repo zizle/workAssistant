@@ -28,25 +28,6 @@ var vm = new Vue({
 	},
 	
 	methods:{
-		// 改变用户的有效状态
-		userActiveChanged(e){
-			var itemid = e.target.value;
-			var isChecked = e.target.checked;
-			// 请求后端修改
-			axios.put(host + 'user/' + itemid + '/',
-			 data={
-				is_checked: isChecked,
-				utoken: token,
-			})
-			.then(function(resp){
-				console.log(resp);
-				// alert(resp.data);
-			})
-			.catch(function(error){
-				console.log(error)
-			})
-		},
-		
 		// 人员的工作设置
 		workDistribute(e){
 			var itemid = e.target.value;  // 设置工作的对象id		
