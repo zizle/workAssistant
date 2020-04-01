@@ -133,8 +133,8 @@ class LoginView(MethodView):
         # 查询数据库
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        select_statement = "SELECT id,name,fixed_code,password,is_admin,org_id FROM user_info WHERE (name=%s OR fixed_code=%s) AND is_active=1;"
-        cursor.execute(select_statement, [name, name])
+        select_statement = "SELECT id,name,fixed_code,password,is_admin,org_id FROM user_info WHERE (name=%s OR fixed_code=%s OR phone=%s) AND is_active=1;"
+        cursor.execute(select_statement, [name, name, name])
         user_obj = cursor.fetchone()
         if not user_obj:
             return jsonify("无效用户"), 400
