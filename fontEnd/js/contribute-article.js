@@ -66,7 +66,7 @@ var vm = new Vue({
 				allowance:this.allowance,
 				note:this.note
 			};
-			console.log(recordMsg)
+			// console.log(recordMsg)
 			// 提交数据
 			axios.post(host + 'article-publish/',data=recordMsg)
 			.then(function(resp){

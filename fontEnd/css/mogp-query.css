@@ -94,7 +94,7 @@ html,body{
 .record-table .record-title div{
 	width: 100%;
 	height: 60px;
-	overflow: scroll;
+	overflow: auto;
 	align-items: center;
 	display: -webkit-flex;
 	flex-wrap: wrap;

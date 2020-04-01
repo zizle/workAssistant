@@ -13,7 +13,7 @@ var vm = new Vue({
 		var localThis = this;
 		axios.get(host + 'variety/')
 		.then(function(resp){
-			console.log(resp.data);
+			// console.log(resp.data);
 			localThis.varietyArray = resp.data;
 		})
 		.catch(function(){})

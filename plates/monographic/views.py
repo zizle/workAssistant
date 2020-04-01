@@ -27,7 +27,7 @@ class MonographicView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
-        inner_join_statement = "SELECT usertb.name,usertb.org_id,mgpctb.upload_time,mgpctb.title,mgpctb.words,mgpctb.is_publish,mgpctb.level,mgpctb.score,mgpctb.note " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,mgpctb.custom_time,mgpctb.title,mgpctb.words,mgpctb.is_publish,mgpctb.level,mgpctb.score,mgpctb.note " \
                                "FROM `user_info` AS usertb INNER JOIN `monographic` AS mgpctb ON " \
                                "usertb.id=%d AND usertb.id=mgpctb.author_id " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
@@ -49,7 +49,7 @@ class MonographicView(MethodView):
         response_data = dict()
         response_data['records'] = list()
         for record_item in result_records:
-            record_item['upload_time'] = record_item['upload_time'].strftime('%Y-%m-%d')
+            record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
             record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']),'未知')
             record_item['is_publish'] = "是" if record_item['is_publish'] else "否"
             response_data['records'].append(record_item)
@@ -92,7 +92,7 @@ class MonographicView(MethodView):
         partner = body_data.get('partner_name', '')
         # 存入数据库
         save_work_statement = "INSERT INTO `monographic`" \
-                              "(`upload_time`,`author_id`,`title`,`words`,`is_publish`,`level`," \
+                              "(`custom_time`,`author_id`,`title`,`words`,`is_publish`,`level`," \
                               "`score`,`note`,`partner`)" \
                               "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);"
         try:

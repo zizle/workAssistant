@@ -10,7 +10,7 @@ var vm = new Vue({
 		var localThis = this;
 		axios.get(host + 'users/?utoken=' + token)
 		.then(function(resp){
-			console.log(resp);
+			// console.log(resp);
 			localThis.stuffsArray = resp.data;
 		})
 		.catch(function(error){

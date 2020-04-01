@@ -22,7 +22,7 @@ var vm = new Vue({
 			// 获取数据
 			axios.get(host + 'statistics/abwork/?year=' + this.year + '&month=' + this.month)
 			.then(function(resp){
-				console.log(resp);
+				// console.log(resp);
 				localThis.columns = resp.data.columns;
 				localThis.statistics_data = resp.data.data;
 			})

@@ -54,7 +54,7 @@ def initial_tables_and_data():
                    "`sort` INT(11) NOT NULL DEFAULT 0,"
                    "`parent_id` INT(11) DEFAULT NULL,"
                    "`is_active` BIT NOT NULL DEFAULT 1,"
-                   "UNIQUE KEY `name`(`name`,`en_code`)"
+                   "UNIQUE KEY `name_unique`(`name`,`en_code`)"
                    ");")
 
     """添加系统默认菜单"""
@@ -110,7 +110,7 @@ def create_others_table():
     cursor.execute("CREATE TABLE IF NOT EXISTS `monographic` ("
                    "`id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
                    "`create_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-                   "`upload_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                   "`custom_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                    "`author_id` INT(11) NOT NULL,"
                    "`title` VARCHAR(128) NOT NULL,"
                    "`words` INT(11) DEFAULT 0,"
@@ -193,4 +193,3 @@ def create_others_table():
 if __name__ == '__main__':
     initial_tables_and_data()
     create_others_table()
-

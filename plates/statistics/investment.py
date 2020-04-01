@@ -7,10 +7,10 @@ from db import MySQLConnection
 from flask.views import MethodView
 
 
-"""非常态工作统计视图"""
+"""专题研究统计视图"""
 
 
-class StuffAbnormalWorkAmount(MethodView):
+class InvestmentAmount(MethodView):
     def get(self):
         import pandas as pd
         try:
@@ -21,14 +21,9 @@ class StuffAbnormalWorkAmount(MethodView):
         start_date, end_date = self.get_start_date_end_date(query_year, query_month)  # 获取开始和结束的时间
         start_date = start_date.strftime("%Y-%m-%d")
         end_date = end_date.strftime("%Y-%m-%d %H:%M:%S")
-        # 查询统计每个人每天工作数量
-        #query_statement = "SELECT DATE_FORMAT(`custom_time`,'%Y-%m-%d') AS `date`, `author_id`, COUNT(*) AS `count` FROM `abnormal_work` GROUP BY DATE_FORMAT(`custom_time`,'%Y-%m-%d'),`author_id`;"
-        # query_statement = "SELECT DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') AS `date`, abwtb.author_id, usertb.name, COUNT(*) AS `count` FROM `abnormal_work` as abwtb INNER JOIN `user_info` as usertb ON abwtb.author_id=usertb.id GROUP BY abwtb.author_id, DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') ORDER BY DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') DESC;"
-        # query_statement = "SELECT DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') AS `date`, abwtb.author_id, usertb.name, COUNT(*) AS `count` FROM `abnormal_work` as abwtb INNER JOIN `user_info` as usertb " \
-        #                   "ON abwtb.author_id=usertb.id GROUP BY abwtb.author_id, DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') ORDER BY DATE_FORMAT(abwtb.custom_time,'%Y-%m-%d') ASC;"
-        query_statement = "SELECT DATE_FORMAT(abwtb.custom_time,'%%Y-%%m-%%d') AS `date`, abwtb.author_id, usertb.name, COUNT(*) AS `count` " \
-                          "FROM `abnormal_work` as abwtb INNER JOIN `user_info` as usertb " \
-                          "ON (abwtb.author_id=usertb.id) AND (DATE_FORMAT(abwtb.custom_time,'%%Y-%%m-%%d') BETWEEN %s AND %s) GROUP BY abwtb.author_id, DATE_FORMAT(abwtb.custom_time,'%%Y-%%m-%%d') ORDER BY DATE_FORMAT(abwtb.custom_time,'%%Y-%%m-%%d') ASC;"
+        query_statement = "SELECT DATE_FORMAT(invstb.custom_time,'%%Y-%%m-%%d') AS `date`, invstb.author_id, usertb.name, COUNT(*) AS `count` " \
+                          "FROM `investment` as invstb INNER JOIN `user_info` as usertb " \
+                          "ON (invstb.author_id=usertb.id) AND (DATE_FORMAT(invstb.custom_time,'%%Y-%%m-%%d') BETWEEN %s AND %s) GROUP BY invstb.author_id, DATE_FORMAT(invstb.custom_time,'%%Y-%%m-%%d') ORDER BY DATE_FORMAT(invstb.custom_time,'%%Y-%%m-%%d') ASC;"
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         cursor.execute(query_statement, (start_date, end_date))

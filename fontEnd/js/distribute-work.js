@@ -22,7 +22,7 @@ var vm = new Vue({
 		var localThis = this;
 		axios.get(host + 'user/' + userId + '/module/')
 		.then(function(resp){
-			console.log(resp)
+			// console.log(resp)
 			localThis.currentUserId = resp.data.user_id;
 			localThis.currentUserName = resp.data.username;
 			localThis.currentUserFixedCode = resp.data.fixed_code;

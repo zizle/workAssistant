@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>专题研究统计</title>
+	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+	<style>
+		html,body{
+			width: 100%;
+			min-height: max-content;
+			margin: 0px;
+			opacity: 0;
+			animation: page-fade-in 0.7s forwards;
+			background-color: #EBEBE4;
+			/* background:-webkit-gradient(linear, 0% 0%, 0% 100%,from(#EBEBE4), to(#fff));/*谷歌*/
+		}
+		
+		@keyframes page-fade-in{
+			from{
+				opacity: 0;
+			}
+			to{
+				opacity: 1;
+			}
+		}
+		.page-title{
+			font-size: 18px;
+			height: 32px;
+			line-height: 32px;
+			padding-left: 60px;
+			background: linear-gradient(to right,#7FD4FF,#F0F8FF);
+			color: #444444;
+			box-shadow: 1px 1px 3px #008B8B;
+		}
+		.page-title span{
+			font-size: 19px;
+			color: #EFEFEF;
+			text-shadow: #000 0 0 3px;
+		}
+		.month-switch{
+			margin: 5px;
+		}
+		.month-switch button{
+			margin:0 5px;
+		}
+		.statistics-table{
+			margin: 5px;
+		}
+		.statistics-table table{
+			width: 100%;
+			text-align: center;
+			border-collapse: collapse;
+			border: 1px solid #787878;
+			background-color: #F4F4F4;
+			
+		}
+		.statistics-table td{
+			border: 1px solid #787878;
+			font-size: 15px;
+			height: 22px;
+		}
+		
+		.statistics-table .title td{
+			/* color: #FFFFFF; */
+			/* background-color: #69cfb8; */
+			font-size: 16px;
+			font-weight: bold;
+			line-height: 22px;
+			height: 22px;
+			border-bottom: 1px solid #787878;
+		}
+		.statistics-table .date-td{
+			width: 100px;
+		}
+	</style>
+</head>
+<body>
+<div id="app">
+	<div class="page-title"><span>专题研究</span>统计情况</div>
+	<div class="month-switch"> <span>{{year}}年{{month}}月</span><button @click="preMonthButtonClicked">上个月</button><button @click="nextMonthButtonClicked">下个月</button></div>
+	<div class="statistics-table">
+		<table border="" cellspacing="" cellpadding="">
+			<tr class="title">
+				<td v-for="(item,index) in columns">{{item}}</td>
+			</tr>
+			<tr v-for="(dateCounts,index) in statistics_data">
+				<td v-for="(item, index) in dateCounts" :class="index==0?'date-td':''">{{item}}</td>
+			</tr>
+		</table>
+		
+	</div>
+</div>
+</body>
+<script type="text/javascript">
+var vm = new Vue({
+	el:"#app",
+	data:{
+		statisticsType:"",
+		columns:[],  // 类型必须与返回值一致
+		statistics_data: [],  // 类型必须与返回值一致
+		// 初始化年份和月份
+		year:"",
+		month:"",
+		
+	},
+	mounted:function(){
+		// 日期默认
+		var date = new Date();
+		this.year = date.getFullYear()
+		this.month = date.getMonth() + 1
+		this.getTargetStatistics(this.year, this.month)
+	},
+	methods:{
+		getTargetStatistics(year, month){
+			var localThis = this;
+			// 获取数据
+			axios.get(host + 'statistics/monographic/?year=' + this.year + '&month=' + this.month)
+			.then(function(resp){
+				console.log(resp);
+				localThis.columns = resp.data.columns;
+				localThis.statistics_data = resp.data.data;
+			})
+			.catch(function(e){
+				
+			})
+		},
+		// 点击‘上一月’按钮
+		preMonthButtonClicked(){
+			if(this.month == 1){
+				this.year = this.year - 1;
+				this.month = 12;
+			}else{
+				this.month = this.month - 1;
+			}
+			// 获取数据
+			this.getTargetStatistics(this.year, this.month);
+		},
+		// 点击下一月
+		nextMonthButtonClicked(){
+			if(this.month == 12){
+				this.year =  this.year + 1;
+				this.month = 1;
+			}else{
+				this.month =  this.month + 1;
+			}
+			// 获取数据
+			this.getTargetStatistics(this.year, this.month);
+		}
+	}
+})
+</script>
+</html>
