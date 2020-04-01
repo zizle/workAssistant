@@ -45,8 +45,8 @@ class RegisterView(MethodView):
         if not re.match(r'^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$', email):
             return jsonify("请提交正确的邮箱."), 400
         # 生成fixed_code
-        fixed_code = psd_handler.generate_string_with_time(1, 6)
-        if self.save_user_information(username, password, 1, fixed_code, phone, email):
+        fixed_code = psd_handler.generate_string_with_time(7)
+        if self.save_user_information(username, password, 0, fixed_code, phone, email):
             return jsonify("注册成功!"), 201
         else:
             return jsonify("注册失败"), 400
@@ -235,7 +235,7 @@ class RetrieveUserView(MethodView):
             db_connection.close()
         except Exception as e:
             logger = current_app.logger
-            logger.error('审核用户有效错误:' + str(e))
+            logger.error('审核用户错误:' + str(e))
             return jsonify('参数错误 require int'), 400
         else:
             return jsonify("修改成功。")

@@ -33,7 +33,9 @@
 				<td class="label-td">品种</td>
 				<td class="input-td">
 					<select v-model="variety" class="variety-select">
-						<option v-for="(value, key) in varietyInfoDict" :value ="key">{{value}}</option>
+						<template v-for="(groupItem,index) in varietyInfoArray">
+							<option v-for="(varietyItem,index) in groupItem.subs" :value ="varietyItem.id">{{varietyItem.name}}</option>
+						</template>
 					</select>
 					<label v-show="showContactInput">合约</label>
 					<input v-show="showContactInput" type="text" class="contract-input" v-model="contract">
@@ -95,5 +97,5 @@
 	</div>
 </div>
 </body>
-<script src="js/investment.js?v=0.12" type="text/javascript" charset="utf-8"></script>
+<script src="js/investment.js?v=0.121" type="text/javascript" charset="utf-8"></script>
 </html>

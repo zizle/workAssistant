@@ -1,7 +1,7 @@
 var vm = new Vue({
 	el: "#app",
 	data:{
-		varietyInfoDict: {},
+		varietyInfoArray: [],
 		currentDate: "",
 		userInfoDict:{},
 		articleTitle:"",
@@ -66,7 +66,7 @@ var vm = new Vue({
 		var localThis = this;
 		axios.get(host + 'variety/')
 		.then(function(resp){
-			localThis.varietyInfoDict = resp.data;
+			localThis.varietyInfoArray = resp.data;
 		})
 	},
 	methods:{
@@ -100,7 +100,7 @@ var vm = new Vue({
 				profit:this.profit,
 				note:this.note
 			};
-			console.log(recordMsg)
+			// console.log(recordMsg)
 			// 提交数据
 			axios.post(host + 'investment/',data=recordMsg)
 			.then(function(resp){

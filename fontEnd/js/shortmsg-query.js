@@ -12,7 +12,7 @@ var vm = new Vue({
 		var hostServer = host + 'short-message/?page=1&pagesize=30&utoken=' + token; 
 		axios.get(hostServer)
 		.then(function(resp){
-			console.log(resp)
+			// console.log(resp)
 			localThis.currentRecords = resp.data.records;
 			localThis.currentPage = resp.data.current_page;
 			localThis.totalPage = resp.data.total_page;
@@ -23,7 +23,7 @@ var vm = new Vue({
 	},
 	methods:{
 		goToTargetPage(flag){
-			console.log(flag);
+			// console.log(flag);
 			var requirePage = this.currentPage;
 			// 上一页
 			if (flag=="pre"){
@@ -48,7 +48,7 @@ var vm = new Vue({
 			var hostServer = host + 'short-message/?page='+ requirePage+'&pagesize=30&utoken=' + token; 
 			axios.get(hostServer)
 			.then(function(resp){
-				console.log(resp)
+				// console.log(resp)
 				localThis.currentRecords = resp.data.records;
 				localThis.currentPage = resp.data.current_page;
 				localThis.totalPage = resp.data.total_page;

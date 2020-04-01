@@ -24,6 +24,11 @@ var vm = new Vue({
 			'short-message.html',
 			'shortmsg-query.html',
 			'statistics-abnormalwork.html',
+			'statistics-monographic.html',
+			'statistics-investment.html',
+			'statistics-investrategy.html',
+			'statistics-contributearticle.html',
+			'statistics-shortmessage.html'
 		],
 		showCover:false,
 		accessModules:[],
@@ -68,7 +73,7 @@ var vm = new Vue({
 			};
 			// 改变frame显示的页面
 			if (receiveMsg.name == "changeFramePage"){
-				console.log("222" + receiveMsg.changeFramePage + receiveMsg.uid);
+				// console.log("222" + receiveMsg.changeFramePage + receiveMsg.uid);
 				localThis.framePage = receiveMsg.changeFramePage + "?uid=" + receiveMsg.uid;
 				document.title = "研究院工作管理系统-工作分配"
 			}

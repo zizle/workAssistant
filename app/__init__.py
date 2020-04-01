@@ -4,7 +4,8 @@
 # 文档中有这么一句话："你的应用可能是一个你符号链接到site-packages文件夹的单个.py文件。
 # 请注意这不会正常工作，除非把这个文件放进pythonpath包含的文件夹中，或是把应用转换成一个包。
 # 这个问题同样适用于非安装的包，模块文件名用于定位资源，而符号链接会获取错误的文件名。"
-from flask import Flask,redirect
+import os
+from flask import Flask,redirect, send_from_directory
 from plates.abnormal import abnormal_blp
 from plates.users import user_blp
 from plates.basic import basic_blp
@@ -24,10 +25,19 @@ app.config['JSON_AS_ASCII'] = False  # json返回数据支持中文
 
 app.logger.addHandler(config_logger_handler())  # 配置日志
 
+
 # 主页
 @app.route('/')
 def index():
     return redirect("/static/index.html")  # 重定向
+
+
+# favicon
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(app.root_path,
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 
 app.register_blueprint(user_blp)
 app.register_blueprint(abnormal_blp)

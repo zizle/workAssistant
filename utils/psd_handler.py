@@ -25,14 +25,13 @@ def check_user_password(password, real_password):
         return False
 
 
-def generate_string_with_time(org_id, len):
+def generate_string_with_time(len):
     """
     # 以时间戳hash生成固定位数的字符串
-    :param org_id: 前缀整数
     :param len: 生成的长度
     :return: 结果
     """
-    result_str = "%02d" % org_id
+    result_str = ""
     t = "%.4f" % time.time()
     md5_hash = md5()
     md5_hash.update(t.encode('utf-8'))
