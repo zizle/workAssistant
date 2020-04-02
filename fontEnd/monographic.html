@@ -63,6 +63,10 @@
 				<td class="input-td"><input type="text" v-model="note"></input></td>
 			</tr>
 			<tr>
+				<td class="label-td">附件</td>
+				<td class="input-td input-annex"><input type="file" @change="annexChanged"></input></td>
+			</tr>
+			<tr>
 				<td></td>
 				<td class="submit-td"><button type="submit" class="submit-btn" @click="submitMonograohicRecord">确认提交</button></td>
 			</tr>

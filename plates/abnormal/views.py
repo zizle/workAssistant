@@ -104,6 +104,7 @@ class AbnormalWorkView(MethodView):
         if not annex_file:
             filename = ''
             annex_url = ''
+            file_path = ''
         else:
             # 文件名hash
             filename = annex_file.filename
@@ -128,6 +129,9 @@ class AbnormalWorkView(MethodView):
             db_connection.close()
         except Exception as e:
             current_app.logger.error("写入非常态工作错误:" + str(e))
+            # 保存错误得删除已保存的文件
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
             return jsonify("参数错误!无法保存。"), 400
         else:
             return jsonify("保存成功!"), 201

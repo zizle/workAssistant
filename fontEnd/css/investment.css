@@ -139,5 +139,8 @@ html,body{
 	font-size: 18px;
 	margin-top: 20px;
 }
-
+.edit-table .input-annex input{
+	width: 300px;
+	line-height: 40px;
+}
 

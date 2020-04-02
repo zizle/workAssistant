@@ -1,11 +1,14 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
+import os
 import datetime
 from flask import jsonify,request,current_app
 from flask.views import MethodView
 from db import MySQLConnection
 from utils.psd_handler import verify_json_web_token
+from utils.file_handler import hash_file_name
 from vlibs import ORGANIZATIONS
+from settings import BASE_DIR
 
 
 class ArticlePublishView(MethodView):
@@ -17,7 +20,7 @@ class ArticlePublishView(MethodView):
         if not user_info:
             return jsonify("您的登录已过期,请重新登录查看.")
         user_id = user_info['uid']
-        print(user_id)
+        # print(user_id)
         try:
             current_page = int(params.get('page', 1)) - 1
             page_size = int(params.get('pagesize', 30))
@@ -33,7 +36,7 @@ class ArticlePublishView(MethodView):
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
-        print("内连接查文章审核记录结果", result_records)
+        # print("内连接查文章审核记录结果", result_records)
 
         # 查询总条数
         count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `article_publish`AS atltb ON usertb.id=%s AND usertb.id=atltb.author_id;"
@@ -58,9 +61,8 @@ class ArticlePublishView(MethodView):
 
         return jsonify(response_data)
 
-
     def post(self):
-        body_data = request.json
+        body_data = request.form
         author_id = body_data.get('author_id', None)
         if not author_id:
             return jsonify("参数错误，HAS NO AUTHORID.")
@@ -82,7 +84,6 @@ class ArticlePublishView(MethodView):
         # 组织信息
         custom_time = body_data.get('custom_time')
         custom_time = datetime.datetime.strptime(custom_time, '%Y-%m-%d') if custom_time else datetime.datetime.now()
-
         author_id = user_obj['id']
         media_name = body_data.get('media_name', '')
         rough_type = body_data.get('rough_type', '')
@@ -90,23 +91,40 @@ class ArticlePublishView(MethodView):
         checker = body_data.get('checker', '')
         allowance = body_data.get('allowance', 0)
         note = body_data.get('note', '')
+        # 读取文件
+        annex_file = request.files.get('annex_file', None)
+        if not annex_file:
+            filename = ''
+            annex_url = ''
+            file_path = ''
+        else:
+            # 文件名hash
+            filename = annex_file.filename
+            hash_name = hash_file_name(filename)
+            # 获取保存的位置
+            file_path = os.path.join(BASE_DIR, "fileStore/artpublish/" + hash_name)
+            annex_url = "fileStore/artpublish/" + hash_name  # 数据库路径
+            annex_file.save(file_path)
         # 存入数据库
         save_invest_statement = "INSERT INTO `article_publish`" \
                               "(`custom_time`,`author_id`,`title`,`media_name`,`rough_type`,`words`,`checker`," \
-                              "`allowance`,`note`)" \
-                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+                              "`allowance`,`note`,`annex`,`annex_url`)" \
+                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
         try:
             # 转换类型
-            words = int(words)
+            words = int(words) if words else 0
             allowance = int(allowance) if allowance else 0
             cursor.execute(save_invest_statement,
                            (custom_time, author_id, title, media_name, rough_type, words,checker,
-                            allowance, note)
+                            allowance, note,filename,annex_url)
                            )
             db_connection.commit()
             db_connection.close()
         except Exception as e:
             current_app.logger.error("写入文章审核记录错误:" + str(e))
+            # 保存错误得删除已保存的文件
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
             return jsonify("参数错误!无法保存。"), 400
         else:
             return jsonify("保存成功!"), 201

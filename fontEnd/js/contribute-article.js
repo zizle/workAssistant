@@ -10,6 +10,8 @@ var vm = new Vue({
 		checker:"",
 		allowance:"",
 		note:"",
+		annexFile: "", // 附件
+		uploadFileProgress: 0,
 	},
 	mounted:function(){
 		// 日期默认
@@ -44,31 +46,57 @@ var vm = new Vue({
 			})
 	},
 	methods:{
+		// 附件改变
+		annexChanged(e){
+			this.annexFile=e.target.files[0];
+		},
 		submitRecord(){
 			console.log('提交');
 			// 判断不能为空或默认的字段
 			if(
 			!this.userInfoDict.uid || 
-			!this.title
+			!this.title ||
+			!this.publishType
 			){
 				alert("请填写完整信息");
 				return;
 			}
-			var recordMsg = {
-				custom_time:this.currentDate,
-				org_id:this.userInfoDict.org_id,
-				author_id:this.userInfoDict.uid,
-				title: this.title,
-				media_name: this.mediaOrg,
-				rough_type:this.publishType,
-				words: this.words,
-				checker:this.checker,
-				allowance:this.allowance,
-				note:this.note
+			var param = new FormData();
+			param.append("custom_time", this.currentDate);
+			param.append("org_id", this.userInfoDict.org_id);
+			param.append("author_id", this.userInfoDict.uid);
+			param.append("title", this.title);
+			param.append("work_title", this.workTitle);
+			param.append("media_name", this.mediaOrg);
+			param.append("rough_type", this.publishType);
+			param.append("words", this.words);
+			param.append("checker", this.checker);
+			param.append("allowance", this.allowance);
+			param.append("note", this.note);
+			param.append("annex_file", this.annexFile);
+			var request_config = {
+				headers:{ "Content-Type": "multipart/form-data"},
+				// 上传进度监听
+				onUploadProgress: e => {
+					var completeProgress = ((e.loaded / e.total * 100) | 0) + "%";
+					this.uploadFileProgress = completeProgress;
+				}
 			};
+			// var recordMsg = {
+			// 	custom_time:this.currentDate,
+			// 	org_id:this.userInfoDict.org_id,
+			// 	author_id:this.userInfoDict.uid,
+			// 	title: this.title,
+			// 	media_name: this.mediaOrg,
+			// 	rough_type:this.publishType,
+			// 	words: this.words,
+			// 	checker:this.checker,
+			// 	allowance:this.allowance,
+			// 	note:this.note
+			// };
 			// console.log(recordMsg)
 			// 提交数据
-			axios.post(host + 'article-publish/',data=recordMsg)
+			axios.post(host + 'article-publish/',param, request_config)
 			.then(function(resp){
 				alert(resp.data);
 			})

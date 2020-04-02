@@ -56,11 +56,13 @@
 				<td class="label-td">收入奖励</td>
 				<td class="input-td"><input type="number" v-model="allowance"></td>
 			</tr>
-			
-			
 			<tr>
 				<td class="label-td">备注</td>
 				<td class="input-td"><input type="text" v-model="note"></input></td>
+			</tr>
+			<tr>
+				<td class="label-td">附件</td>
+				<td class="input-td input-annex"><input type="file" @change="annexChanged"></input></td>
 			</tr>
 			<tr>
 				<td></td>

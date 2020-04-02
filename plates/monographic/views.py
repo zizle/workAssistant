@@ -1,11 +1,14 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
+import os
 import datetime
 from flask import jsonify,request,current_app
 from flask.views import MethodView
 from db import MySQLConnection
 from utils.psd_handler import verify_json_web_token
+from utils.file_handler import hash_file_name
 from vlibs import ORGANIZATIONS
+from settings import BASE_DIR
 
 
 class MonographicView(MethodView):
@@ -59,9 +62,8 @@ class MonographicView(MethodView):
 
         return jsonify(response_data)
 
-
     def post(self):
-        body_data = request.json
+        body_data = request.form
         author_id = body_data.get('author_id', None)
         if not author_id:
             return jsonify("参数错误，HAS NO AUTHORID.")
@@ -79,7 +81,6 @@ class MonographicView(MethodView):
         title = body_data.get('title', False)
         if not title:
             return jsonify("参数错误,NOT FOUND TITLE"), 400
-
         # 组织信息
         upload_time = body_data.get('upload_time')
         upload_time = datetime.datetime.strptime(upload_time, '%Y-%m-%d') if upload_time else datetime.datetime.now()
@@ -90,23 +91,40 @@ class MonographicView(MethodView):
         score = body_data.get('score', 0)
         note = body_data.get('work_note', '')
         partner = body_data.get('partner_name', '')
+        # 读取文件
+        annex_file = request.files.get('annex_file', None)
+        if not annex_file:
+            filename = ''
+            annex_url = ''
+            file_path = ''
+        else:
+            # 文件名hash
+            filename = annex_file.filename
+            hash_name = hash_file_name(filename)
+            # 获取保存的位置
+            file_path = os.path.join(BASE_DIR, "fileStore/monographic/" + hash_name)
+            annex_url = "fileStore/monographic/" + hash_name  # 数据库路径
+            annex_file.save(file_path)
         # 存入数据库
         save_work_statement = "INSERT INTO `monographic`" \
                               "(`custom_time`,`author_id`,`title`,`words`,`is_publish`,`level`," \
-                              "`score`,`note`,`partner`)" \
-                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+                              "`score`,`note`,`partner`,`annex`,`annex_url`)" \
+                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
         try:
             # 转换类型
             words = int(words) if words else 0
             score = int(score) if score else 0
-
+            is_publish = 1 if is_publish else 0
             cursor.execute(save_work_statement,
-                           (upload_time, author_id,title, words,is_publish,level,score,note,partner)
+                           (upload_time, author_id,title, words,is_publish,level,score,note,partner,filename,annex_url)
                            )
             db_connection.commit()
             db_connection.close()
         except Exception as e:
             current_app.logger.error("写入专题研究记录错误:" + str(e))
+            # 保存错误得删除已保存的文件
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
             return jsonify("参数错误!无法保存。"), 400
         else:
             return jsonify("保存成功!"), 201

@@ -103,22 +103,7 @@ var vm = new Vue({
 					this.uploadFileProgress = completeProgress;
 				}
 			};
-			// var workMsg = {
-			// 	work_date:this.currentDate,
-			// 	org_id:this.userInfoDict.org_id,
-			// 	worker_id:this.userInfoDict.uid,
-			// 	task_type: this.selectedTaskType,
-			// 	work_title:this.workTitle,
-			// 	sponser:this.sponser,
-			// 	applicat_org:this.applicantOrg,
-			// 	application_person:this.applicationPerson,
-			// 	link_number:this.linkNumber,
-			// 	ruibi_count:this.ruiBiCount,
-			// 	income_allowance:this.incomeAllowance,
-			// 	partner_name:this.partnerName,
-			// 	work_note:this.workNote,
-			// };
-			// console.log(workMsg)
+			
 			// 提交数据
 			axios.post(host + 'abnormal-work/',param, request_config)
 			.then(function(resp){
