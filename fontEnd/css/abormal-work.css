@@ -202,4 +202,12 @@ html,body{
 	width: calc(90% - 65px) !important;
 }
 
+.edit-table .input-annex input{
+	width: 300px;
+	line-height: 40px;
+}
+.edit-table .input-annex button{
+	color: #65BAC1;
+}
+
 

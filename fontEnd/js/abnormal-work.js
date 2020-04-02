@@ -18,6 +18,7 @@ var vm = new Vue({
 		ruiBiCount:"", // 瑞币情况
 		incomeAllowance: "", // 收入补贴
 		workNote: "",// 备注
+		annexFile: "", // 附件
 		uploadFileProgress: 0,
 	},
 	watch:{
@@ -63,8 +64,13 @@ var vm = new Vue({
 	
 	},
 	methods:{
+		// 附件改变
+		annexChanged(e){
+			this.annexFile=e.target.files[0];
+		},
 		// 提交任务
 		submitWorkRecord(){
+			// console.log(this.annexFile);
 			// 判断不能为或默认的字段
 			if(
 			!this.userInfoDict.uid || 
@@ -74,24 +80,47 @@ var vm = new Vue({
 				alert("请填写完整信息");
 				return;
 			}
-			var workMsg = {
-				work_date:this.currentDate,
-				org_id:this.userInfoDict.org_id,
-				worker_id:this.userInfoDict.uid,
-				task_type: this.selectedTaskType,
-				work_title:this.workTitle,
-				sponser:this.sponser,
-				applicat_org:this.applicantOrg,
-				application_person:this.applicationPerson,
-				link_number:this.linkNumber,
-				ruibi_count:this.ruiBiCount,
-				income_allowance:this.incomeAllowance,
-				partner_name:this.partnerName,
-				work_note:this.workNote,
+			var param = new FormData();
+			param.append("worker_id", this.userInfoDict.uid);
+			param.append("org_id", this.userInfoDict.org_id);
+			param.append("work_date", this.currentDate);
+			param.append("task_type", this.selectedTaskType);
+			param.append("work_title", this.workTitle);
+			param.append("sponser", this.sponser);
+			param.append("applicat_org", this.applicantOrg);
+			param.append("application_person", this.applicationPerson);
+			param.append("link_number", this.linkNumber);
+			param.append("ruibi_count", this.linkNumber);
+			param.append("income_allowance", this.incomeAllowance);
+			param.append("partner_name", this.partnerName);
+			param.append("work_note", this.workNote);
+			param.append("annex_file", this.annexFile);
+			var request_config = {
+				headers:{ "Content-Type": "multipart/form-data"},
+				// 上传进度监听
+				onUploadProgress: e => {
+					var completeProgress = ((e.loaded / e.total * 100) | 0) + "%";
+					this.uploadFileProgress = completeProgress;
+				}
 			};
-			console.log(workMsg)
+			// var workMsg = {
+			// 	work_date:this.currentDate,
+			// 	org_id:this.userInfoDict.org_id,
+			// 	worker_id:this.userInfoDict.uid,
+			// 	task_type: this.selectedTaskType,
+			// 	work_title:this.workTitle,
+			// 	sponser:this.sponser,
+			// 	applicat_org:this.applicantOrg,
+			// 	application_person:this.applicationPerson,
+			// 	link_number:this.linkNumber,
+			// 	ruibi_count:this.ruiBiCount,
+			// 	income_allowance:this.incomeAllowance,
+			// 	partner_name:this.partnerName,
+			// 	work_note:this.workNote,
+			// };
+			// console.log(workMsg)
 			// 提交数据
-			axios.post(host + 'abnormal-work/',data=workMsg)
+			axios.post(host + 'abnormal-work/',param, request_config)
 			.then(function(resp){
 				alert(resp.data);
 			})
@@ -100,6 +129,7 @@ var vm = new Vue({
 			})
 			
 		},
+		// 批量上传
 		UploadDataFile(e){
 			this.showUploading = true;
 			var param = new FormData();
