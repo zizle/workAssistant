@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>投资方案撰写</title>
-	<link rel="stylesheet" type="text/css" href="css/investment.css"/>
+	<link rel="stylesheet" type="text/css" href="css/investment.css?v=0.13"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -27,7 +27,7 @@
 			</tr>
 			<tr>
 				<td class="label-td">方案标题</td>
-				<td class="input-td"><input type="text" v-model="articleTitle"></td>
+				<td class="input-td"><input type="text" placeholder="在此输入标题,此项不支持为空" v-model="articleTitle"></td>
 			</tr>
 			<tr>
 				<td class="label-td">品种</td>
@@ -38,7 +38,7 @@
 						</template>
 					</select>
 					<label v-show="showContactInput">合约</label>
-					<input v-show="showContactInput" type="text" class="contract-input" v-model="contract">
+					<input v-show="showContactInput" type="text" class="contract-input" placeholder="在此输入品种的详细合约" v-model="contract">
 				</td>
 			</tr>
 			<tr>
@@ -57,19 +57,19 @@
 			</tr>
 			<tr>
 				<td class="label-td">实建均价</td>
-				<td class="input-td"><input type="number" v-model="buildAvgPrice"></td>
+				<td class="input-td"><input type="number" placeholder="请在此输入价格" v-model="buildAvgPrice"></td>
 			</tr>
 			<tr>
 				<td class="label-td">实建手数</td>
-				<td class="input-td"><input type="number" v-model="buildHands"></td>
+				<td class="input-td"><input type="number" placeholder="仅支持整数" v-model="buildHands"></td>
 			</tr>
 			<tr>
 				<td class="label-td">实出均价</td>
-				<td class="input-td"><input type="number" v-model="outAvgPrice"></td>
+				<td class="input-td"><input type="number" placeholder="请在此输入价格" v-model="outAvgPrice"></td>
 			</tr>
 			<tr>
 				<td class="label-td">止损均价</td>
-				<td class="input-td"><input type="number" v-model="cutLossAvgPrice"></td>
+				<td class="input-td"><input type="number" placeholder="请在此输入价格" v-model="cutLossAvgPrice"></td>
 			</tr>
 			<tr>
 				<td class="label-td">有效期止</td>
@@ -81,11 +81,15 @@
 			</tr>
 			<tr>
 				<td class="label-td">方案结果</td>
-				<td class="input-td"><input type="number" v-model="profit"></td>
+				<td class="input-td"><input type="number" placeholder="用'+'号和'-'表示盈利或亏损" v-model="profit"></td>
 			</tr>
 			<tr>
 				<td class="label-td">备注</td>
 				<td class="input-td"><input type="text" v-model="note"></input></td>
+			</tr>
+			<tr>
+				<td class="label-td">附件</td>
+				<td class="input-td input-annex"><input type="file" @change="annexChanged"></input></td>
 			</tr>
 			<tr>
 				<td></td>
@@ -97,5 +101,5 @@
 	</div>
 </div>
 </body>
-<script src="js/investment.js?v=0.121" type="text/javascript" charset="utf-8"></script>
+<script src="js/investment.js?v=0.13" type="text/javascript" charset="utf-8"></script>
 </html>

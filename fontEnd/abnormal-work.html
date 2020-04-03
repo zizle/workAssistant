@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>工作记录提交</title>
-	<link rel="stylesheet" type="text/css" href="css/abormal-work.css"/>
+	<link rel="stylesheet" type="text/css" href="css/abormal-work.css?v=0.13"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -40,7 +40,7 @@
 			</tr>
 			<tr>
 				<td class="label-td">主题/标题</td>
-				<td class="input-td"><input type="text" v-model="workTitle"></input></td>
+				<td class="input-td"><input type="text" placeholder="输入标题,标题不能为空" v-model="workTitle"></input></td>
 			</tr>
 			<tr>
 				<td class="label-td">主办方</td>
@@ -60,12 +60,12 @@
 			</tr>
 			<tr>
 				<td class="label-td">瑞币情况</td>
-				<td class="input-td"><input type="number" v-model="ruiBiCount"></td>
+				<td class="input-td"><input type="number" placeholder="仅支持输入整数,默认为0" v-model="ruiBiCount"></td>
 				
 			</tr>
 			<tr>
 				<td class="label-td">收入补贴</td>
-				<td class="input-td"><input type="number" v-model="incomeAllowance"></td>
+				<td class="input-td"><input type="number" placeholder="默认为0" v-model="incomeAllowance"></td>
 			</tr>
 			<tr>
 				
@@ -81,6 +81,10 @@
 				<td class="input-td"><input type="text" v-model="workNote"></input></td>
 			</tr>
 			<tr>
+				<td class="label-td">附件</td>
+				<td class="input-td input-annex"><input type="file" @change="annexChanged"></input></td>
+			</tr>
+			<tr>
 				<td></td>
 				<td class="submit-td"><button type="submit" class="submit-btn" @click="submitWorkRecord">确认提交</button></td>
 			</tr>
@@ -90,5 +94,5 @@
 	</div>
 </div>
 </body>
-<script src="js/abnormal-work.js?v=0.12" type="text/javascript" charset="utf-8"></script>
+<script src="js/abnormal-work.js?v=0.13" type="text/javascript" charset="utf-8"></script>
 </html>

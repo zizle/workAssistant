@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>短讯通记录</title>
-	<link rel="stylesheet" href="css/short-message.css">
+	<link rel="stylesheet" href="css/short-message.css?v=0.13">
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -21,7 +21,7 @@
 			</tr>
 			<tr>
 				<td class="label-td">部门小组</td>
-				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.orgName"></td>
+				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.org_name"></td>
 			</tr>
 			<tr>
 				<td class="label-td">作者</td>
@@ -30,16 +30,16 @@
 			
 			<tr>
 				<td class="label-td">信息内容</td>
-				<td class="input-td"><input type="text" v-model="content"></td>
+				<td class="input-td"><input type="text" placeholder="在此输入信息内容,不能为空" v-model="content"></td>
 			</tr>
 			<tr>
 				<td class="label-td">类别</td>
-				<td class="input-td"><input type="text" v-model="messageType"></td>
+				<td class="input-td"><input type="text" placeholder="输入信息类别<市场异动;数据解读等>" v-model="messageType"></td>
 			</tr>
 			<tr>
 				<td class="label-td">影响品种</td>
 				<td class="input-td">
-					<input type="text" readonly="true" @click="selectVariety" v-model="effectVariety">
+					<input type="text" readonly="true" placeholder="点击选择影响的品种" @click="selectVariety" v-model="effectVariety">
 					<div class="choose-variety-div" v-show="showVarietyChecks">
 						<template v-for="(groupItem,index) in variettInfoArray">
 							<span class="check-item" v-for="(varietyItem,index) in groupItem.subs"><input type="checkbox" :id="'v' + index" :value="varietyItem.name" v-model="effectVariety"><label :for="'v' + index">{{varietyItem.name}}</label></span>
@@ -63,5 +63,5 @@
 	</div>
 </div>
 </body>
-<script src="js/short-message.js?v=0.12" type="text/javascript" charset="utf-8"></script>
+<script src="js/short-message.js?v=0.13" type="text/javascript" charset="utf-8"></script>
 </html>

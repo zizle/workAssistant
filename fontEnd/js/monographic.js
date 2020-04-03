@@ -12,7 +12,8 @@ var vm = new Vue({
 		showPartner: false,
 		partnerName: "",
 		note: "",
-		
+		annexFile: "", // 附件
+		uploadFileProgress: 0,
 	},
 	watch:{
 		isPartner(){
@@ -48,6 +49,10 @@ var vm = new Vue({
 			})
 	},
 	methods:{
+		// 附件改变
+		annexChanged(e){
+			this.annexFile=e.target.files[0];
+		},
 		submitMonograohicRecord(){
 			// console.log('提交')
 			// 判断不能为空或默认的字段
@@ -58,21 +63,44 @@ var vm = new Vue({
 				alert("请填写完整信息");
 				return;
 			}
-			var recordMsg = {
-				upload_time:this.currentDate,
-				org_id:this.userInfoDict.org_id,
-				author_id:this.userInfoDict.uid,
-				title:this.articleTitle,
-				words:this.articleWord,
-				is_publish:this.isOpened,
-				level:this.articleLevel,
-				score:this.articleScore,
-				partner_name:this.partnerName,
-				note:this.workNote,
+			var param = new FormData();
+			param.append("worker_id", this.userInfoDict.uid);
+			param.append("org_id", this.userInfoDict.org_id);
+			param.append("work_date", this.currentDate);
+			param.append("upload_time", this.currentDate,);
+			param.append("org_id", this.userInfoDict.org_id);
+			param.append("author_id", this.userInfoDict.uid);
+			param.append("title", this.articleTitle);
+			param.append("words", this.articleWord);
+			param.append("is_publish", this.isOpened);
+			param.append("level", this.articleLevel);
+			param.append("score", this.articleScore);
+			param.append("partner_name", this.partnerName);
+			param.append("note", this.workNote);
+			param.append("annex_file", this.annexFile);
+			var request_config = {
+				headers:{ "Content-Type": "multipart/form-data"},
+				// 上传进度监听
+				onUploadProgress: e => {
+					var completeProgress = ((e.loaded / e.total * 100) | 0) + "%";
+					this.uploadFileProgress = completeProgress;
+				}
 			};
-			console.log(recordMsg)
+			// var recordMsg = {
+			// 	upload_time:this.currentDate,
+			// 	org_id:this.userInfoDict.org_id,
+			// 	author_id:this.userInfoDict.uid,
+			// 	title:this.articleTitle,
+			// 	words:this.articleWord,
+			// 	is_publish:this.isOpened,
+			// 	level:this.articleLevel,
+			// 	score:this.articleScore,
+			// 	partner_name:this.partnerName,
+			// 	note:this.workNote,
+			// };
+			// console.log(recordMsg)
 			// 提交数据
-			axios.post(host + 'monographic/',data=recordMsg)
+			axios.post(host + 'monographic/',param, request_config)
 			.then(function(resp){
 				alert(resp.data);
 			})

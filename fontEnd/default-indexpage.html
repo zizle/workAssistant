@@ -9,13 +9,9 @@
 			padding: 0;
 			width:100%;   
 			height:100%;
-			/* FILTER: progid:DXImageTransform.Microsoft.Gradient(gradientType=0,startColorStr=#006096,endColorStr=#fff); /*IE 6 7 8*/
-			background: -ms-linear-gradient(top, #006096,  #fff);        /* IE 10 */  
-			background:-moz-linear-gradient(top,#006096,#fff);/*火狐*/   
-			background:-webkit-gradient(linear, 0% 0%, 0% 100%,from(#006096), to(#fff));/*谷歌*/   
-			background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#006096), to(#fff));      /* Safari 4-5, Chrome 1-9*/  
-			background: -webkit-linear-gradient(top, #DEEAF1, #fff);   /*Safari5.1 Chrome 10+*/  
-			background: -o-linear-gradient(top, #006096, #fff);  /*Opera 11.10+*/  
+			background-color: #EBEBE4; 
+			/*background: -webkit-linear-gradient(top, #DEEAF1, #fff);   Safari5.1 Chrome 10+*/  
+			
 		} 
 		.content{
 			/* width: 360px; */
@@ -59,7 +55,7 @@
 		<div class="user-name">欢迎您: {{ userInfo.name }}</div>
 		<div class="sys-time"> {{ sysTime }}</div>
 	</div>
-	<div class="version">v=0.12</div>
+	<div class="version">v=0.13</div>
 </div>
 </body>
 <script type="text/javascript">

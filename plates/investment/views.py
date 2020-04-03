@@ -1,11 +1,14 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
+import os
 import datetime
 from flask import jsonify,request,current_app
 from flask.views import MethodView
 from db import MySQLConnection
 from utils.psd_handler import verify_json_web_token
+from utils.file_handler import hash_file_name
 from vlibs import VARIETY_LIB,ORGANIZATIONS
+from settings import BASE_DIR
 
 
 class InvestmentView(MethodView):
@@ -34,7 +37,7 @@ class InvestmentView(MethodView):
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
-        print("内连接查询投资自方案结果", result_records)
+        # print("内连接查询投资自方案结果", result_records)
 
         # 查询总条数
         count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `investment`AS invstb ON usertb.id=%s AND usertb.id=invstb.author_id;"
@@ -56,6 +59,10 @@ class InvestmentView(MethodView):
             record_item['variety'] = VARIETY_LIB.get(int(record_item['variety_id']), '未知') + str(record_item['contract'])
             record_item['is_publish'] = "是" if record_item['is_publish'] else "否"
             record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
+            record_item['build_price'] = int(record_item['build_price'])
+            record_item['out_price'] = int(record_item['out_price'])
+            record_item['cutloss_price'] = int(record_item['cutloss_price'])
+            record_item['profit'] = int(record_item['profit'])
             response_data['records'].append(record_item)
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
@@ -63,9 +70,8 @@ class InvestmentView(MethodView):
 
         return jsonify(response_data)
 
-
     def post(self):
-        body_data = request.json
+        body_data = request.form
         author_id = body_data.get('author_id', None)
         if not author_id:
             return jsonify("参数错误，HAS NO AUTHORID.")
@@ -85,7 +91,6 @@ class InvestmentView(MethodView):
         direction = body_data.get('direction', False)
         if not title or not variety or not direction:
             return jsonify("参数错误,NOT FOUND TITLE,VARIETY,DIRECTION."), 400
-
         # 组织信息
         write_time = body_data.get('write_time')
         custom_time = datetime.datetime.strptime(write_time, '%Y-%m-%d') if write_time else datetime.datetime.now()
@@ -99,31 +104,47 @@ class InvestmentView(MethodView):
         cutloss_price = body_data.get('cutloss_price')
         expire_time = body_data.get('expire_time')
         expire_time = datetime.datetime.strptime(expire_time,'%Y-%m-%dT%H:%M') if expire_time else datetime.datetime.now()
-        is_publish = body_data.get('is_publish', False)
+        is_publish = 1 if body_data.get('is_publish', False) else 0
         profit = body_data.get('profit')
         note = body_data.get('work_note', '')
-
+        # 读取文件
+        annex_file = request.files.get('annex_file', None)
+        if not annex_file:
+            filename = ''
+            annex_url = ''
+            file_path = ''
+        else:
+            # 文件名hash
+            filename = annex_file.filename
+            hash_name = hash_file_name(filename)
+            # 获取保存的位置
+            file_path = os.path.join(BASE_DIR, "fileStore/investment/" + hash_name)
+            annex_url = "fileStore/investment/" + hash_name  # 数据库路径
+            annex_file.save(file_path)
         # 存入数据库
         save_invest_statement = "INSERT INTO `investment`" \
                               "(`custom_time`,`author_id`,`title`,`variety_id`,`contract`,`direction`,`build_time`," \
-                              "`build_price`,`build_hands`,`out_price`,`cutloss_price`,`expire_time`,`is_publish`,`profit`)" \
-                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+                              "`build_price`,`build_hands`,`out_price`,`cutloss_price`,`expire_time`,`is_publish`,`profit`,`annex`,`annex_url`)" \
+                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
         try:
             # 转换类型
             variety_id = int(variety)
-            build_price = int(build_price) if build_price else 0
+            build_price = float(build_price) if build_price else 0
             build_hands = int(build_hands) if build_hands else 0
-            out_price = int(out_price) if out_price else 0
-            cutloss_price = int(cutloss_price) if cutloss_price else 0
-
+            out_price = float(out_price) if out_price else 0
+            cutloss_price = float(cutloss_price) if cutloss_price else 0
+            profit = float(profit) if profit else 0
             cursor.execute(save_invest_statement,
                            (custom_time, author_id, title, variety_id,contract, direction, build_time,
-                            build_price, build_hands, out_price, cutloss_price, expire_time, is_publish, profit)
+                            build_price, build_hands, out_price, cutloss_price, expire_time, is_publish, profit, filename,annex_url)
                            )
             db_connection.commit()
             db_connection.close()
         except Exception as e:
             current_app.logger.error("写入投在方案记录错误:" + str(e))
+            # 保存错误得删除已保存的文件
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
             return jsonify("参数错误!无法保存。"), 400
         else:
             return jsonify("保存成功!"), 201

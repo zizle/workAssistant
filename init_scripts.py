@@ -101,9 +101,11 @@ def create_others_table():
                    "`applicant` VARCHAR (64) DEFAULT '',"
                    "`tel_number` VARCHAR (128) DEFAULT '',"
                    "`swiss_coin` INT(11) DEFAULT 0,"
-                   "`allowance` INT(11) DEFAULT 0,"
+                   "`allowance` DECIMAL(13,4) DEFAULT 0,"
                    "`note` VARCHAR(512) DEFAULT '',"
-                   "`partner` VARCHAR (128) DEFAULT ''"
+                   "`partner` VARCHAR (128) DEFAULT '',"
+                   "`annex` VARCHAR (512) DEFAULT '',"
+                   "`annex_url` VARCHAR (512) DEFAULT ''"
                    ");")
 
     # 创建专题研究信息表
@@ -132,14 +134,16 @@ def create_others_table():
                    "`contract` VARCHAR(64) DEFAULT '',"
                    "`direction` VARCHAR (8) DEFAULT '',"
                    "`build_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-                   "`build_price` INT(11) DEFAULT NULL,"
+                   "`build_price` DECIMAL (13,4) DEFAULT 0,"
                    "`build_hands` INT(11) DEFAULT NULL,"
-                   "`out_price` INT(11) DEFAULT NULL,"
-                   "`cutloss_price` INT(11) DEFAULT NULL,"
+                   "`out_price` DECIMAL (13,4) DEFAULT 0,"
+                   "`cutloss_price` DECIMAL (13,4) DEFAULT 0,"
                    "`expire_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                    "`is_publish` BIT NOT NULL DEFAULT 0,"
-                   "`profit` INT(11) DEFAULT 0,"
-                   "`note` VARCHAR(512) DEFAULT ''"
+                   "`profit` DECIMAL (13,4) DEFAULT 0,"
+                   "`note` VARCHAR(512) DEFAULT '',"
+                   "`annex` VARCHAR (512) DEFAULT '',"
+                   "`annex_url` VARCHAR (512) DEFAULT ''"
                    ");")
 
     # 创建投顾策略信息表
@@ -155,7 +159,7 @@ def create_others_table():
                    "`hands` INT(11) DEFAULT NULL,"
                    "`open_position` INT(11) DEFAULT NULL,"
                    "`close_position` INT(11) DEFAULT NULL,"
-                   "`profit` INT(11) DEFAULT 0,"
+                   "`profit` DECIMAL(13,4) DEFAULT 0,"
                    "`note` VARCHAR(512) DEFAULT ''"
                    ");")
 
@@ -171,7 +175,9 @@ def create_others_table():
                    "`words` INT(11) DEFAULT 0,"
                    "`checker` VARCHAR(128) DEFAULT '',"
                    "`allowance` INT(11) DEFAULT 0,"
-                   "`note` VARCHAR(512) DEFAULT ''"
+                   "`note` VARCHAR(512) DEFAULT '',"
+                   "`annex` VARCHAR (512) DEFAULT '',"
+                   "`annex_url` VARCHAR (512) DEFAULT ''"
                    ");")
 
     # 创建短讯通记录表

@@ -8,6 +8,7 @@ from flask.views import MethodView
 from db import MySQLConnection
 from vlibs import ABNORMAL_WORK, ORGANIZATIONS
 from utils.psd_handler import verify_json_web_token
+from utils.file_handler import hash_file_name
 from settings import BASE_DIR
 
 
@@ -59,7 +60,7 @@ class AbnormalWorkView(MethodView):
             work_item['task_type'] = ABNORMAL_WORK.get(work_item['task_type'], '')
             work_item['org_name'] = ORGANIZATIONS.get(int(work_item['org_id']), '未知')
             work_item['swiss_coin'] = work_item['swiss_coin'] if work_item['swiss_coin'] else ''
-            work_item['allowance'] = work_item['allowance'] if work_item['allowance'] else ''
+            work_item['allowance'] = int(work_item['allowance'])
             response_data['abworks'].append(work_item)
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
@@ -68,7 +69,7 @@ class AbnormalWorkView(MethodView):
         return jsonify(response_data)
 
     def post(self):
-        body_data = request.json
+        body_data = request.form
         worker_id = body_data.get('worker_id', None)
         if not worker_id:
             return jsonify("参数错误，HAS NO WORKERID.")
@@ -98,22 +99,39 @@ class AbnormalWorkView(MethodView):
         allowance = body_data.get('income_allowance', 0)
         note = body_data.get('work_note', '')
         partner = body_data.get('partner_name', '')
+        # 读取文件
+        annex_file = request.files.get('annex_file', None)
+        if not annex_file:
+            filename = ''
+            annex_url = ''
+            file_path = ''
+        else:
+            # 文件名hash
+            filename = annex_file.filename
+            hash_name = hash_file_name(filename)
+            # 获取保存的位置
+            file_path = os.path.join(BASE_DIR, "fileStore/abwork/" + hash_name)
+            annex_url = "fileStore/abwork/" + hash_name  # 数据库路径
+            annex_file.save(file_path)
         # 存入数据库
         save_work_statement = "INSERT INTO `abnormal_work`" \
                               "(`custom_time`,`author_id`,`task_type`,`title`,`sponsor`,`applied_org`," \
-                              "`applicant`,`tel_number`,`swiss_coin`,`allowance`,`note`,`partner`)" \
-                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+                              "`applicant`,`tel_number`,`swiss_coin`,`allowance`,`note`,`partner`,`annex`,`annex_url`)" \
+                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
         try:
             swiss_coin = int(swiss_coin) if swiss_coin else 0
-            allowance = int(allowance) if allowance else 0
+            allowance = float(allowance) if allowance else 0
             cursor.execute(save_work_statement,
                            (custom_time, worker, task_type, title, sponsor, applied_org,
-                            applicant, tel_number, swiss_coin, allowance, note, partner)
+                            applicant, tel_number, swiss_coin, allowance, note, partner, filename, annex_url)
                            )
             db_connection.commit()
             db_connection.close()
         except Exception as e:
             current_app.logger.error("写入非常态工作错误:" + str(e))
+            # 保存错误得删除已保存的文件
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
             return jsonify("参数错误!无法保存。"), 400
         else:
             return jsonify("保存成功!"), 201
@@ -142,7 +160,6 @@ class FileHandlerAbnormalWorkView(MethodView):
         task_type_dict = {value: key for key, value in ABNORMAL_WORK.items()}
         # 文件内容
         file_contents = file.read()
-
         file_contents = xlrd.open_workbook(file_contents=file_contents)
         # table_data = file_contents.sheets()[0]
         # 导入名称为“非常态工作”的表

@@ -90,7 +90,7 @@ html,body{
 	height: 50px;
 }
 .edit-table table td input[readonly]{
-	color: #787878;
+	color:#04A9FF;
 }
 .edit-table .label-td{
 	width: 10%;
@@ -129,6 +129,10 @@ html,body{
 	color: #EFEFEF;
 	font-size: 18px;
 	margin-top: 20px;
+}
+.edit-table .input-annex input{
+	width: 300px;
+	line-height: 40px;
 }
 
 

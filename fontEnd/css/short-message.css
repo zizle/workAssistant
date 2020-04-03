@@ -136,6 +136,9 @@ html,body{
 .edit-table table td{
 	height: 50px;
 }
+.edit-table table td input[readonly]{
+	color: #04A9FF;
+}
 
 .edit-table .label-td{
 	width: 10%;

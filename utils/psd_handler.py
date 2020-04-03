@@ -11,14 +11,14 @@ def hash_user_password(password):
     hasher = md5()
     hasher.update(password.encode('utf-8'))
     hasher.update(SECRET_KEY.encode('utf-8'))
-    print('输入密码hash后：', hasher.hexdigest())
+    # print('输入密码hash后：', hasher.hexdigest())
     return hasher.hexdigest()
 
 
 # 检查密码
 def check_user_password(password, real_password):
-    print("用户输入密码：", password)
-    print('数据库密码：', real_password)
+    # print("用户输入密码：", password)
+    # print('数据库密码：', real_password)
     if hash_user_password(password) == real_password:
         return True
     else:

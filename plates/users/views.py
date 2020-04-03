@@ -89,14 +89,14 @@ class LoginView(MethodView):
         # print('no_work_module', no_work_module)
         # 查询系统模块
         if user_info['is_admin']:
-            print('管理员')
+            # print('管理员')
             # 查询主功能
             modules_statement = "SELECT `id`,`name` FROM `work_module` WHERE `is_active`=1 AND `parent_id` is NULL ORDER BY `sort`;"
             # 查询子集的语句
             sub_modules_statement = "SELECT `id`,`name`,`page_url` FROM `work_module` WHERE `is_active`=1 AND `parent_id`=%s ORDER BY `sort`;"
 
         else:
-            print('非管理员')
+            # print('非管理员')
             # 查询主功能
             modules_statement = "SELECT `id`,`name`,`page_url` FROM `work_module` WHERE `is_active`=1 AND `is_private`=0 AND `parent_id` is NULL ORDER BY `sort`;"
             # 查询子集的语句

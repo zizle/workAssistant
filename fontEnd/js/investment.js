@@ -18,6 +18,8 @@ var vm = new Vue({
 		profit:"",
 		note:"",
 		showContactInput: false,  // 是否显示合约编辑框
+		annexFile: "", // 附件
+		uploadFileProgress: 0,
 	},
 	watch:{
 		isPartner(){
@@ -70,8 +72,11 @@ var vm = new Vue({
 		})
 	},
 	methods:{
+		// 附件改变
+		annexChanged(e){
+			this.annexFile=e.target.files[0];
+		},
 		submitRecord(){
-			console.log('提交')
 			// 判断不能为空或默认的字段
 			if(
 			!this.userInfoDict.uid || 
@@ -82,27 +87,53 @@ var vm = new Vue({
 				alert("请填写完整信息");
 				return;
 			}
-			var recordMsg = {
-				write_time:this.currentDate,
-				org_id:this.userInfoDict.org_id,
-				author_id:this.userInfoDict.uid,
-				title:this.articleTitle,
-				variety:this.variety,
-				contract:this.contract,
-				direction:this.direction,
-				build_date_time: this.buildDateTime,
-				build_price:this.buildAvgPrice,
-				build_hands:this.buildHands,
-				out_price:this.outAvgPrice,
-				cutloss_price:this.cutLossAvgPrice,
-				expire_time:this.expireDateTime,
-				is_publish:this.isPublish,
-				profit:this.profit,
-				note:this.note
+			var param = new FormData();
+			param.append("write_time", this.currentDate);
+			param.append("org_id", this.userInfoDict.org_id);
+			param.append("author_id", this.userInfoDict.uid);
+			param.append("title", this.articleTitle);
+			param.append("variety", this.variety);
+			param.append("contract", this.contract);
+			param.append("direction", this.direction);
+			param.append("build_date_time", this.buildDateTime);
+			param.append("build_price", this.buildAvgPrice);
+			param.append("build_hands", this.buildHands);
+			param.append("out_price", this.outAvgPrice);
+			param.append("cutloss_price", this.cutLossAvgPrice);
+			param.append("expire_time", this.expireDateTime);
+			param.append("is_publish", this.isPublish);
+			param.append("profit", this.profit);
+			param.append("note", this.note);
+			param.append("annex_file", this.annexFile);
+			var request_config = {
+				headers:{ "Content-Type": "multipart/form-data"},
+				// 上传进度监听
+				onUploadProgress: e => {
+					var completeProgress = ((e.loaded / e.total * 100) | 0) + "%";
+					this.uploadFileProgress = completeProgress;
+				}
 			};
+			// var recordMsg = {
+			// 	write_time:this.currentDate,
+			// 	org_id:this.userInfoDict.org_id,
+			// 	author_id:this.userInfoDict.uid,
+			// 	title:this.articleTitle,
+			// 	variety:this.variety,
+			// 	contract:this.contract,
+			// 	direction:this.direction,
+			// 	build_date_time: this.buildDateTime,
+			// 	build_price:this.buildAvgPrice,
+			// 	build_hands:this.buildHands,
+			// 	out_price:this.outAvgPrice,
+			// 	cutloss_price:this.cutLossAvgPrice,
+			// 	expire_time:this.expireDateTime,
+			// 	is_publish:this.isPublish,
+			// 	profit:this.profit,
+			// 	note:this.note
+			// };
 			// console.log(recordMsg)
 			// 提交数据
-			axios.post(host + 'investment/',data=recordMsg)
+			axios.post(host + 'investment/',param, request_config)
 			.then(function(resp){
 				alert(resp.data);
 			})

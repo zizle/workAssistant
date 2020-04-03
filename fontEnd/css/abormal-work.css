@@ -113,7 +113,7 @@ html,body{
 	width: 100%;
 }
 .edit-table table td input[readonly]{
-	color: #787878;
+	color: #04A9FF;
 }
 .edit-table table td{
 	height: 50px;
@@ -201,5 +201,11 @@ html,body{
 	font-size: 15px;
 	width: calc(90% - 65px) !important;
 }
+
+.edit-table .input-annex input{
+	width: 300px;
+	line-height: 40px;
+}
+
 
 
