@@ -53,6 +53,7 @@ class InvestrategyView(MethodView):
             record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
             record_item['variety'] = VARIETY_LIB.get(int(record_item['variety_id']), '未知') + str(record_item['contract'])
             record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
+            record_item['profit'] = int(record_item['profit'])
             response_data['records'].append(record_item)
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
@@ -104,6 +105,7 @@ class InvestrategyView(MethodView):
             hands = int(hands)
             open_position = int(open_position)
             close_position = int(close_position)
+            profit = float(profit) if profit else 0
             cursor.execute(save_invest_statement,
                            (custom_time, author_id, content, variety_id, contract, direction,hands,
                             open_position, close_position, profit)
@@ -163,7 +165,6 @@ class FileHandlerInvestrategyView(MethodView):
         try:
             for row in range(nrows):
                 row_content = table_data.row_values(row)
-                print(row_content)
                 if str(row_content[0]).strip() == "start":
                     start_row_in = True
                     continue
@@ -185,7 +186,7 @@ class FileHandlerInvestrategyView(MethodView):
                     record_row.append(int(row_content[5]))
                     record_row.append(int(row_content[6]) if row_content[6] else 0)
                     record_row.append(int(row_content[7]) if row_content[7] else 0)
-                    record_row.append(int(row_content[8]) if row_content[8] else 0)
+                    record_row.append(float(row_content[8]) if row_content[8] else 0)
                     ready_to_save.append(record_row)
         except Exception as e:
             import traceback

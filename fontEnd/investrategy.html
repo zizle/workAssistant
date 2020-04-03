@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>投顾策略记录</title>
-	<link rel="stylesheet" type="text/css" href="css/investrategy.css"/>
+	<link rel="stylesheet" type="text/css" href="css/investrategy.css?v=0.13"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -37,12 +37,12 @@
 						
 					</select>
 					<label v-show="showContactInput">合约</label>
-					<input v-show="showContactInput" type="text" class="contract-input" v-model="contract">
+					<input v-show="showContactInput" type="text" class="contract-input" placeholder="在此输入详细合约" v-model="contract">
 				</td>
 			</tr>
 			<tr>
 				<td class="label-td">策略内容</td>
-				<td class="input-td"><input type="text" v-model="content"></td>
+				<td class="input-td"><input type="text" placeholder="策略内容不能为空" v-model="content"></td>
 			</tr>
 			<tr>
 				<td class="label-td">方向</td>
@@ -56,21 +56,21 @@
 			</tr>
 			<tr>
 				<td class="label-td">手数</td>
-				<td class="input-td"><input type="number" v-model="hands"></td>
+				<td class="input-td"><input type="number" placeholder="仅支持整数,默认为0" v-model="hands"></td>
 			</tr>
 			
 			<tr>
 				<td class="label-td">策略开仓</td>
-				<td class="input-td"><input type="number" v-model="openPosition"></td>
+				<td class="input-td"><input type="number" placeholder="仅支持整数,默认为0" v-model="openPosition"></td>
 			</tr>
 			<tr>
 				<td class="label-td">策略平仓</td>
-				<td class="input-td"><input type="number" v-model="closePosition"></td>
+				<td class="input-td"><input type="number" placeholder="仅支持整数,默认为0" v-model="closePosition"></td>
 			</tr>
 			
 			<tr>
 				<td class="label-td">策略结果</td>
-				<td class="input-td"><input type="number" v-model="profit"></td>
+				<td class="input-td"><input type="number" placeholder="用'+'号和'-'表示盈利或亏损" v-model="profit"></td>
 			</tr>
 			<tr>
 				<td class="label-td">备注</td>
@@ -86,6 +86,6 @@
 	</div>
 </div>
 </body>
-<script src="js/investrategy.js?v=0.12" type="text/javascript" charset="utf-8"></script>
+<script src="js/investrategy.js?v=0.13" type="text/javascript" charset="utf-8"></script>
 </html>
 

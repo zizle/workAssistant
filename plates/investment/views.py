@@ -59,6 +59,10 @@ class InvestmentView(MethodView):
             record_item['variety'] = VARIETY_LIB.get(int(record_item['variety_id']), '未知') + str(record_item['contract'])
             record_item['is_publish'] = "是" if record_item['is_publish'] else "否"
             record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
+            record_item['build_price'] = int(record_item['build_price'])
+            record_item['out_price'] = int(record_item['out_price'])
+            record_item['cutloss_price'] = int(record_item['cutloss_price'])
+            record_item['profit'] = int(record_item['profit'])
             response_data['records'].append(record_item)
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
@@ -125,11 +129,11 @@ class InvestmentView(MethodView):
         try:
             # 转换类型
             variety_id = int(variety)
-            build_price = int(build_price) if build_price else 0
+            build_price = float(build_price) if build_price else 0
             build_hands = int(build_hands) if build_hands else 0
-            out_price = int(out_price) if out_price else 0
-            cutloss_price = int(cutloss_price) if cutloss_price else 0
-            profit = int(profit) if profit else 0
+            out_price = float(out_price) if out_price else 0
+            cutloss_price = float(cutloss_price) if cutloss_price else 0
+            profit = float(profit) if profit else 0
             cursor.execute(save_invest_statement,
                            (custom_time, author_id, title, variety_id,contract, direction, build_time,
                             build_price, build_hands, out_price, cutloss_price, expire_time, is_publish, profit, filename,annex_url)

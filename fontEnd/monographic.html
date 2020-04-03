@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>专题研究</title>
-	<link rel="stylesheet" type="text/css" href="css/monographic.css"/>
+	<link rel="stylesheet" type="text/css" href="css/monographic.css?v=0.13"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -27,11 +27,11 @@
 			</tr>
 			<tr>
 				<td class="label-td">专题题目</td>
-				<td class="input-td"><input type="text" v-model="articleTitle"></td>
+				<td class="input-td"><input type="text" placeholder="请输入题目,不能为空" v-model="articleTitle"></td>
 			</tr>
 			<tr>
 				<td class="label-td">字数</td>
-				<td class="input-td"><input type="number" v-model="articleWord"></input></td>
+				<td class="input-td"><input type="number" placeholder="输入文章字数,默认为0" v-model="articleWord"></input></td>
 			</tr>
 			<tr>
 				<td class="label-td">是否外发</td>
@@ -49,7 +49,7 @@
 			</tr>
 			<tr>
 				<td class="label-td">得分</td>
-				<td class="input-td"><input type="number" v-model="articleScore"></td>
+				<td class="input-td"><input type="number" placeholder="仅支持输入整数,默认为0" v-model="articleScore"></td>
 			</tr>
 			<tr>
 				<td class="label-td">协作者</td>
@@ -76,5 +76,5 @@
 	</div>
 </div>
 </body>
-<script src="js/monographic.js?v=0.12" type="text/javascript" charset="utf-8"></script>
+<script src="js/monographic.js?v=0.13" type="text/javascript" charset="utf-8"></script>
 </html>

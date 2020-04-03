@@ -60,7 +60,7 @@ class AbnormalWorkView(MethodView):
             work_item['task_type'] = ABNORMAL_WORK.get(work_item['task_type'], '')
             work_item['org_name'] = ORGANIZATIONS.get(int(work_item['org_id']), '未知')
             work_item['swiss_coin'] = work_item['swiss_coin'] if work_item['swiss_coin'] else ''
-            work_item['allowance'] = work_item['allowance'] if work_item['allowance'] else ''
+            work_item['allowance'] = int(work_item['allowance'])
             response_data['abworks'].append(work_item)
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
@@ -120,7 +120,7 @@ class AbnormalWorkView(MethodView):
                               "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
         try:
             swiss_coin = int(swiss_coin) if swiss_coin else 0
-            allowance = int(allowance) if allowance else 0
+            allowance = float(allowance) if allowance else 0
             cursor.execute(save_work_statement,
                            (custom_time, worker, task_type, title, sponsor, applied_org,
                             applicant, tel_number, swiss_coin, allowance, note, partner, filename, annex_url)

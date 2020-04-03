@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>文章审核记录</title>
-	<link rel="stylesheet" type="text/css" href="css/contribute-article.css"/>
+	<link rel="stylesheet" type="text/css" href="css/contribute-article.css?v=0.13"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -28,11 +28,11 @@
 			
 			<tr>
 				<td class="label-td">题目</td>
-				<td class="input-td"><input type="text" v-model="title"></td>
+				<td class="input-td"><input type="text" placeholder="请输入文章题目,不能为空" v-model="title"></td>
 			</tr>
 			<tr>
 				<td class="label-td">发表/采访媒体</td>
-				<td class="input-td"><input type="text" v-model="mediaOrg"></td>
+				<td class="input-td"><input type="text" placeholder="在此输入文章发表的目标媒体" v-model="mediaOrg"></td>
 			</tr>
 			<tr>
 				<td class="label-td">稿件形式</td>
@@ -45,16 +45,16 @@
 			</tr>
 			<tr>
 				<td class="label-td">字数</td>
-				<td class="input-td"><input type="number" v-model="words"></td>
+				<td class="input-td"><input type="number" placeholder="文章字数,默认为0" v-model="words"></td>
 			</tr>
 			
 			<tr>
 				<td class="label-td">审核人</td>
-				<td class="input-td"><input type="text" v-model="checker"></td>
+				<td class="input-td"><input type="text" placeholder="在此输入文章的审核人" v-model="checker"></td>
 			</tr>
 			<tr>
 				<td class="label-td">收入奖励</td>
-				<td class="input-td"><input type="number" v-model="allowance"></td>
+				<td class="input-td"><input type="number" placeholder="仅支持整数,默认为0" v-model="allowance"></td>
 			</tr>
 			<tr>
 				<td class="label-td">备注</td>
@@ -74,5 +74,5 @@
 	</div>
 </div>
 </body>
-<script src="js/contribute-article.js?v=0.12" type="text/javascript" charset="utf-8"></script>
+<script src="js/contribute-article.js?v=0.13" type="text/javascript" charset="utf-8"></script>
 </html>

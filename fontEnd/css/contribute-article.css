@@ -105,7 +105,7 @@ html,body{
 	width: calc(90% - 65px) !important;
 }
 .edit-table table td input[readonly]{
-	color: #787878;
+	color: #04A9FF;
 }
 .edit-table .input-td input,.edit-table .input-td select{
 	width: calc(100% - 14px);
