@@ -87,14 +87,18 @@ var vm = new Vue({
 			.catch(function(e){
 				alert(e.response.data);
 			})
-			
-			
+		},
+		// 点击input框就置空value
+		clickFileInput(e){
+			e.target.value = "";
 		},
 		UploadDataFile(e){
 			this.showUploading = true;
 			var param = new FormData();
 			param.append("uid", this.userInfoDict.uid);  // 身份验证
 			var file = e.target.files[0];
+			console.log(file);
+			if (typeof(file) == "undefined"){return;}
 			param.append("file", file);
 			// console.log(param.get('file'));
 			var request_config = {

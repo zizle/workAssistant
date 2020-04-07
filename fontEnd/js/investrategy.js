@@ -101,6 +101,10 @@ var vm = new Vue({
 				alert(e.response.data);
 			})
 		},
+		// 点击input框就置空value
+		clickFileInput(e){
+			e.target.value = "";
+		},
 		UploadDataFile(e){
 			this.showUploading = true;
 			var param = new FormData();
@@ -108,6 +112,7 @@ var vm = new Vue({
 			var file = e.target.files[0];
 			param.append("file", file);
 			// console.log(param.get('file'));
+			if (typeof(file) == "undefined"){return;}
 			var request_config = {
 				headers:{ "Content-Type": "multipart/form-data"},
 				// 上传进度监听

@@ -23,7 +23,7 @@
 			<tr><td colspan="2" class="error-msg">{{ loginUsernameError }}</td></tr>
 			<tr>
 				<td class="login-label">密码</td>
-				<td><input type="password" class="login-input" @focus="loginPsdFocus" @blur="loginPsdBlur" v-model="loginPsd"></td>
+				<td><input type="password" class="login-input" @focus="loginPsdFocus" @blur="loginPsdBlur" @keyup.enter="userToLogin" v-model="loginPsd"></td>
 			</tr>
 			<tr><td colspan="2" class="error-msg">{{ loginPsdError }}</td></tr>
 			<tr>

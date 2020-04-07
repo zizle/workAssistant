@@ -145,6 +145,7 @@ class FileHandlerShortMessageView(MethodView):
         # ncols = table_data.ncols
         ready_to_save = list()
         start_row_in = False
+        message = "表格列数据类型有误,请检查后上传."
         try:
             for row in range(nrows):
                 row_content = table_data.row_values(row)
@@ -157,7 +158,11 @@ class FileHandlerShortMessageView(MethodView):
                     continue
                 if start_row_in:
                     record_row = list()
-                    record_row.append(xlrd.xldate_as_datetime(row_content[0], 0))
+                    try:
+                        record_row.append(xlrd.xldate_as_datetime(row_content[0], 0))
+                    except Exception as e:
+                        message = "第一列【日期】请使用日期格式上传."
+                        raise ValueError(e)
                     record_row.append(user_id)
                     record_row.append(str(row_content[1]))
                     record_row.append(str(row_content[2]))
@@ -165,7 +170,7 @@ class FileHandlerShortMessageView(MethodView):
                     record_row.append(str(row_content[4]))
                     ready_to_save.append(record_row)
         except Exception as e:
-            return jsonify("表格内容数据有误，系统无法保存.")
+            return jsonify(message), 400
 
         insert_statement = "INSERT INTO `short_message`" \
                            "(`custom_time`,`author_id`,`content`,`msg_type`,`effect_variety`,`note`)" \
