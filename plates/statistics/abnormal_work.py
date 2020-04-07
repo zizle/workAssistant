@@ -7,12 +7,44 @@ from db import MySQLConnection
 from flask.views import MethodView
 
 
+def parse_query_result(date_array, amount_all):
+    import pandas as pd
+    stuffs = ['日期']
+    # 获取职员的集合数组，第一个值为日期（后续做表头使用）
+    for work_count_item in amount_all:
+        if work_count_item['name'] not in stuffs:
+            stuffs.append(work_count_item['name'])
+    # 用于计算的二维数组
+    array_to_calculate_sum = list()
+    for date_item in date_array:
+        date_statistics_arr = [0 for _ in range(len(stuffs))]  # 默认行的数据
+        date_statistics_arr[0] = date_item  # 修改第一个值为日期
+        for work_count_item in amount_all:
+            if work_count_item['date'] == date_item:  # 日期一致
+                name_index = 0  # 默认索引为0的数待修改
+                for index, stuff_name in enumerate(stuffs):  # 查找出当前真正属于谁的数据
+                    if work_count_item['name'] == stuff_name:  # 必有值
+                        name_index = index  # 修改索引index
+                # 修改行中目标索引的数据
+                date_statistics_arr[name_index] = work_count_item['count']
+        array_to_calculate_sum.append(date_statistics_arr)  # 加入准备好的容器
+    # 转为pandas的DataFrame进行数据计算
+    pd_data_frame = pd.DataFrame(array_to_calculate_sum, columns=stuffs)
+    # 切出数据
+    # print("切片数据：\n", pd_data_frame.iloc[:, 1:])
+    pd_data_frame["合计"] = pd_data_frame.iloc[:, 1:].apply(lambda x: x.sum(), axis=1)  # 各行数据和添加至末尾列
+    pd_data_frame.loc['总计'] = pd_data_frame.iloc[:, 1:].apply(lambda x: x.sum(), axis=0)  # 各列的数据和添加至末尾行
+    # print('计算后的数据:\n', pd_data_frame)
+    pd_data_frame.iloc[pd_data_frame.shape[0] - 1, 0] = '总计'  # 将最后一行第一个值原NAN修改为总计
+    # 数据体转为json数据
+    return json.loads(pd_data_frame.to_json(orient='split', double_precision=0))
+
+
 """非常态工作统计视图"""
 
 
 class StuffAbnormalWorkAmount(MethodView):
     def get(self):
-        import pandas as pd
         try:
             query_year = int(request.args.get('year', 0))
             query_month = int(request.args.get('month', 0))  # 获取查询的月份
@@ -39,37 +71,40 @@ class StuffAbnormalWorkAmount(MethodView):
             return jsonify({})
         # 生成数据时间段的时间列表
         date_array = self.generate_date(amount_all[0]['date'], amount_all[-1]['date'])
-        # 获取职员的集合数组，第一个值为日期（后续做表头使用）
-        stuffs = ['日期']
-        for work_count_item in amount_all:
-            if work_count_item['name'] not in stuffs:
-                stuffs.append(work_count_item['name'])
-        # print('系统总职员:', stuffs)
-        # 用于计算的二维数组
-        array_to_calculate_sum = list()
-        for date_item in date_array:
-            date_statistics_arr = [0 for _ in range(len(stuffs))]  # 默认行的数据
-            date_statistics_arr[0] = date_item  # 修改第一个值为日期
-            for work_count_item in amount_all:
-                if work_count_item['date'] == date_item:  # 日期一致
-                    name_index = 0  # 默认索引为0的数待修改
-                    for index, stuff_name in enumerate(stuffs):  # 查找出当前真正属于谁的数据
-                        if work_count_item['name'] == stuff_name:  # 必有值
-                            name_index = index  # 修改索引index
-                    # 修改行中目标索引的数据
-                    date_statistics_arr[name_index] = work_count_item['count']
-            array_to_calculate_sum.append(date_statistics_arr)  # 加入准备好的容器
-        # 转为pandas的DataFrame进行数据计算
-        pd_data_frame = pd.DataFrame(array_to_calculate_sum, columns=stuffs)
-        # 切出数据
-        # print("切片数据：\n", pd_data_frame.iloc[:, 1:])
-        pd_data_frame["合计"] = pd_data_frame.iloc[:, 1:].apply(lambda x: x.sum(), axis=1)  # 各行数据和添加至末尾列
-        pd_data_frame.loc['总计'] = pd_data_frame.iloc[:, 1:].apply(lambda x: x.sum(), axis=0)  # 各列的数据和添加至末尾行
-        # print('计算后的数据:\n', pd_data_frame)
-        pd_data_frame.iloc[pd_data_frame.shape[0]-1, 0] = '总计'  # 将最后一行第一个值原NAN修改为总计
-        # 数据体转为json数据
-        statistics_arr = json.loads(pd_data_frame.to_json(orient='split', double_precision=0))
+        statistics_arr = parse_query_result(date_array, amount_all)
         return jsonify(statistics_arr)
+        # """抽取了公共部分"""
+        # # 获取职员的集合数组，第一个值为日期（后续做表头使用）
+        # stuffs = ['日期']
+        # for work_count_item in amount_all:
+        #     if work_count_item['name'] not in stuffs:
+        #         stuffs.append(work_count_item['name'])
+        # # print('系统总职员:', stuffs)
+        # # 用于计算的二维数组
+        # array_to_calculate_sum = list()
+        # for date_item in date_array:
+        #     date_statistics_arr = [0 for _ in range(len(stuffs))]  # 默认行的数据
+        #     date_statistics_arr[0] = date_item  # 修改第一个值为日期
+        #     for work_count_item in amount_all:
+        #         if work_count_item['date'] == date_item:  # 日期一致
+        #             name_index = 0  # 默认索引为0的数待修改
+        #             for index, stuff_name in enumerate(stuffs):  # 查找出当前真正属于谁的数据
+        #                 if work_count_item['name'] == stuff_name:  # 必有值
+        #                     name_index = index  # 修改索引index
+        #             # 修改行中目标索引的数据
+        #             date_statistics_arr[name_index] = work_count_item['count']
+        #     array_to_calculate_sum.append(date_statistics_arr)  # 加入准备好的容器
+        # # 转为pandas的DataFrame进行数据计算
+        # pd_data_frame = pd.DataFrame(array_to_calculate_sum, columns=stuffs)
+        # # 切出数据
+        # # print("切片数据：\n", pd_data_frame.iloc[:, 1:])
+        # pd_data_frame["合计"] = pd_data_frame.iloc[:, 1:].apply(lambda x: x.sum(), axis=1)  # 各行数据和添加至末尾列
+        # pd_data_frame.loc['总计'] = pd_data_frame.iloc[:, 1:].apply(lambda x: x.sum(), axis=0)  # 各列的数据和添加至末尾行
+        # # print('计算后的数据:\n', pd_data_frame)
+        # pd_data_frame.iloc[pd_data_frame.shape[0]-1, 0] = '总计'  # 将最后一行第一个值原NAN修改为总计
+        # # 数据体转为json数据
+        # statistics_arr = json.loads(pd_data_frame.to_json(orient='split', double_precision=0))
+        # return jsonify(statistics_arr)
 
     def generate_date(self, begin_date, end_date):
         dates = []
@@ -104,15 +139,38 @@ class StuffAbnormalWorkAmount(MethodView):
 # 年度数据统计
 class StuffAbWorkYearAmount(MethodView):
     def get(self):
-        import pandas as pd
         try:
             query_year = int(request.args.get('year', 0))
         except Exception:
             return jsonify("参数错误"), 400
-        start_time = self.get_start_year_end_year(query_year)
-        # year = year.strftime("%Y")
+        start_time, end_time = self.get_start_month_end_month(query_year)
+        start_time = start_time.strftime("%Y-%m-%d")
+        end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
+        query_statement = "SELECT DATE_FORMAT(abwtb.custom_time,'%%Y-%%m') AS `date`, abwtb.author_id, usertb.name, COUNT(*) AS `count` " \
+                          "FROM `abnormal_work` as abwtb INNER JOIN `user_info` as usertb " \
+                          "ON (abwtb.author_id=usertb.id) AND (DATE_FORMAT(abwtb.custom_time,'%%Y-%%m') BETWEEN %s AND %s) GROUP BY abwtb.author_id, DATE_FORMAT(abwtb.custom_time,'%%Y-%%m') ORDER BY DATE_FORMAT(abwtb.custom_time,'%%Y-%%m') ASC;"
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        cursor.execute(query_statement, (start_time, end_time))
+        amount_all = cursor.fetchall()
+        if not amount_all:  # 没有数据记录
+            return jsonify({})
+        # 生成数据时间段的时间列表
+        date_array = self.generate_month(amount_all[0]['date'])
+        statistics_arr = parse_query_result(date_array, amount_all)
+        return jsonify(statistics_arr)
 
-        return jsonify("OK")
+    @staticmethod
+    def generate_month(begin_month):
+        dates = []
+        dt = datetime.datetime.strptime(begin_month, "%Y-%m")
+        year = dt.year
+        month = 1
+        while month <= 12:
+            month_str = "%d-%02d" % (year, month)
+            dates.append(month_str)
+            month += 1
+        return dates
 
     @staticmethod
     def get_start_month_end_month(year):  # year年的第一天和最后一天
@@ -120,6 +178,6 @@ class StuffAbWorkYearAmount(MethodView):
         if not year:
             year = today.year
         start_month = "%d-%d" % (year, 1)
-        end_time = "%d-12-31 23:59:59" % (year + 1)
+        end_time = "%d-12-31 23:59:59" % year
         return datetime.datetime.strptime(start_month, "%Y-%m"), datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
 

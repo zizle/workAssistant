@@ -87,7 +87,7 @@
 	<div class="page-title"><span>非常态工作</span>统计情况</div>
 	<div class="month-switch">
 		<span>{{year}}年{{month}}月</span><button @click="preMonthButtonClicked">上一月</button><button @click="nextMonthButtonClicked">下一月</button>
-		<!-- <span class="year-statistic" title="当前年度" @click="getYearStatistic">{{year}}年</span><button type="button">上年度</button><button type="button">下年度</button> -->
+		<span class="year-statistic" title="当前年度" @click="getYearStatistic">{{year}}年</span><button @click="preYearButtonClicked">上年度</button><button @click="nextYearButtonClicked">下年度</button>
 	</div>
 	<div class="statistics-table">
 		<table border="" cellspacing="" cellpadding="">
@@ -98,7 +98,6 @@
 				<td v-for="(item, index) in dateCounts" :class="index==0?'date-td':''">{{item}}</td>
 			</tr>
 		</table>
-		
 	</div>
 </div>
 </body>
@@ -112,7 +111,6 @@ var vm = new Vue({
 		// 初始化年份和月份
 		year:"",
 		month:"",
-		
 	},
 	mounted:function(){
 		// 日期默认
@@ -162,9 +160,24 @@ var vm = new Vue({
 		// 获取年度统计数据
 		getYearStatistic(year){
 			var localThis = this;
-			
-		}
-		
+			axios.get(host + 'statistics/abwork-year/?year=' + this.year)
+			.then(function(resp){
+				// console.log(resp);
+				localThis.columns = resp.data.columns;
+				localThis.statistics_data = resp.data.data;
+			})
+			.catch(function(e){
+				
+			})
+		},
+		preYearButtonClicked(){
+			this.year = this.year - 1;
+			this.getYearStatistic(this.year);
+		},
+		nextYearButtonClicked(){
+			this.year = this.year + 1;
+			this.getYearStatistic(this.year);
+		}	
 	}
 })
 </script>
