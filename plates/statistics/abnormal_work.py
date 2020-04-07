@@ -99,3 +99,27 @@ class StuffAbnormalWorkAmount(MethodView):
             str_next_month_first = "%d-%d" % (year, month)
         return datetime.datetime.strptime(str_month_first, "%Y-%m"), datetime.datetime.strptime(
             str_next_month_first, "%Y-%m") + datetime.timedelta(seconds=-1)
+
+
+# 年度数据统计
+class StuffAbWorkYearAmount(MethodView):
+    def get(self):
+        import pandas as pd
+        try:
+            query_year = int(request.args.get('year', 0))
+        except Exception:
+            return jsonify("参数错误"), 400
+        start_time = self.get_start_year_end_year(query_year)
+        # year = year.strftime("%Y")
+
+        return jsonify("OK")
+
+    @staticmethod
+    def get_start_month_end_month(year):  # year年的第一天和最后一天
+        today = datetime.datetime.today()
+        if not year:
+            year = today.year
+        start_month = "%d-%d" % (year, 1)
+        end_time = "%d-12-31 23:59:59" % (year + 1)
+        return datetime.datetime.strptime(start_month, "%Y-%m"), datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+

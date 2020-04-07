@@ -161,7 +161,7 @@ class FileHandlerInvestrategyView(MethodView):
         # ncols = table_data.ncols
         ready_to_save = list()
         start_row_in = False
-        variety_false = False
+        message = "表格列数据类型有误,请检查后上传."
         try:
             for row in range(nrows):
                 row_content = table_data.row_values(row)
@@ -173,14 +173,18 @@ class FileHandlerInvestrategyView(MethodView):
                     continue
                 if start_row_in:
                     record_row = list()
-                    record_row.append(xlrd.xldate_as_datetime(row_content[0], 0))
+                    try:
+                        record_row.append(xlrd.xldate_as_datetime(row_content[0], 0))
+                    except Exception as e:
+                        message = "第一列【日期】请使用日期格式上传."
+                        raise ValueError(e)
                     record_row.append(user_id)
                     record_row.append(str(row_content[1]))
                     try:
                         record_row.append(int(variety_dict.get(str(row_content[2]))))  # 品种
                     except Exception as e:
-                        variety_false = True
-                        raise ValueError("系统中没有【" + str(row_content[2]) + "】品种信息.")
+                        message = "系统中没有【" + str(row_content[2]) + "】品种信息."
+                        raise ValueError(e)
                     record_row.append(str(row_content[3]))
                     record_row.append(str(row_content[4]))
                     record_row.append(int(row_content[5]))
@@ -189,9 +193,6 @@ class FileHandlerInvestrategyView(MethodView):
                     record_row.append(float(row_content[8]) if row_content[8] else 0)
                     ready_to_save.append(record_row)
         except Exception as e:
-            import traceback
-            traceback.print_exc()
-            message = str(e) if variety_false else "表格内容数据有误，系统无法保存."
             return jsonify(message), 400
 
         insert_statement = "INSERT INTO `investrategy`" \
@@ -204,3 +205,5 @@ class FileHandlerInvestrategyView(MethodView):
         db_connection.commit()
         db_connection.close()
         return jsonify("数据上传成功!")
+
+

@@ -114,6 +114,9 @@ var vm = new Vue({
 			})
 			
 		},
+		clickFileInput(e){
+			e.target.value = "";
+		},
 		// 批量上传
 		UploadDataFile(e){
 			this.showUploading = true;
@@ -122,6 +125,7 @@ var vm = new Vue({
 			var file = e.target.files[0];
 			param.append("file", file);
 			// console.log(param.get('file'));
+			if (typeof(file)=="undefined"){return;}
 			var request_config = {
 				headers:{ "Content-Type": "multipart/form-data"},
 				// 上传进度监听

@@ -184,6 +184,7 @@ class FileHandlerAbnormalWorkView(MethodView):
         ready_to_save = list()  # 准备保存的数据集
         start_data_in = False
         # 组织数据写入数据库
+        message = "表格列数据类型有误,请检查后上传."
         try:
             for row in range(nrows):
                 row_content = table_data.row_values(row)
@@ -197,7 +198,11 @@ class FileHandlerAbnormalWorkView(MethodView):
                 if start_data_in:
                     record_row = list()  # 每行记录
                     # 转换数据类型
-                    record_row.append(xlrd.xldate_as_datetime(row_content[0], 0))
+                    try:
+                        record_row.append(xlrd.xldate_as_datetime(row_content[0], 0))
+                    except Exception as e:
+                        message = "第一列【日期】请使用日期格式上传."
+                        raise ValueError(e)
                     record_row.append(user_id)
                     # 处理任务类型
                     task_type_id = task_type_dict.get(str(row_content[1].strip()), '')
@@ -212,7 +217,7 @@ class FileHandlerAbnormalWorkView(MethodView):
                     record_row.append(str(row_content[9]))
                     ready_to_save.append(record_row)
         except Exception as e:
-            return jsonify("表格列数据类型有误,请检查后上传.")
+            return jsonify(message), 400
 
         insert_statement = "INSERT INTO `abnormal_work`" \
                            "(`custom_time`,`author_id`,`task_type`,`title`,`sponsor`,`applied_org`," \

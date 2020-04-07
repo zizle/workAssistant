@@ -140,8 +140,7 @@ var vm = new Vue({
 			if(this.loginUsernameError ||
 			!this.loginUsername ||
 			this.loginPsdError ||
-			!this.loginPsd ||
-			this.loginErrorMsg
+			!this.loginPsd
 			){
 				this.loginErrorMsg = "请填写正确用户名密码!";
 				return;
