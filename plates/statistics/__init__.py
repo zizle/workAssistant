@@ -1,7 +1,7 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
 from flask import Blueprint
-from .abnormal_work import StuffAbnormalWorkAmount, StuffAbWorkYearAmount
+from .abnormal_work import StuffAbnormalWorkAmount
 from .monographic import MonographicWorkAmount
 from .investment import InvestmentAmount
 from .investrategy import InvestrategyAmount
@@ -13,8 +13,7 @@ from .shormessage import ShortMessageAmount
 """
 
 statistics_blp = Blueprint(name='statistics', import_name=__name__, url_prefix='/')
-statistics_blp.add_url_rule('statistics/abwork-month/', view_func=StuffAbnormalWorkAmount.as_view(name="abwm"))
-statistics_blp.add_url_rule('statistics/abwork-year/', view_func=StuffAbWorkYearAmount.as_view(name='abwy'))
+statistics_blp.add_url_rule('statistics/abwork/', view_func=StuffAbnormalWorkAmount.as_view(name="abwm"))
 statistics_blp.add_url_rule('statistics/monographic/', view_func=MonographicWorkAmount.as_view(name="moghic"))
 statistics_blp.add_url_rule('statistics/investment/', view_func=InvestmentAmount.as_view(name="investmentcount"))
 statistics_blp.add_url_rule('statistics/investrategy/', view_func=InvestrategyAmount.as_view(name="investrategycount"))

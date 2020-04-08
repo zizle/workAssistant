@@ -74,12 +74,20 @@
 		.statistics-table .date-td{
 			width: 100px;
 		}
+		.year-statistic{
+			margin-left: 30px;
+			color: #04A9FF;
+			cursor:pointer;
+		}
 	</style>
 </head>
 <body>
 <div id="app">
 	<div class="page-title"><span>投资方案记录</span>统计情况</div>
-	<div class="month-switch"> <span>{{year}}年{{month}}月</span><button @click="preMonthButtonClicked">上个月</button><button @click="nextMonthButtonClicked">下个月</button></div>
+	<div class="month-switch">
+		<span>{{year}}年{{month}}月</span><button @click="preMonthButtonClicked">上个月</button><button @click="nextMonthButtonClicked">下个月</button>
+		<span class="year-statistic" title="当前年度" @click="getYearStatistic">{{year}}年</span><button @click="preYearButtonClicked">上年度</button><button @click="nextYearButtonClicked">下年度</button>
+	</div>
 	<div class="statistics-table">
 		<table border="" cellspacing="" cellpadding="">
 			<tr class="title">
@@ -147,7 +155,28 @@ var vm = new Vue({
 			}
 			// 获取数据
 			this.getTargetStatistics(this.year, this.month);
-		}
+		},
+		// 获取年度统计数据
+		getYearStatistic(year){
+			var localThis = this;
+			axios.get(host + 'statistics/investment/?year=' + this.year)
+			.then(function(resp){
+				// console.log(resp);
+				localThis.columns = resp.data.columns;
+				localThis.statistics_data = resp.data.data;
+			})
+			.catch(function(e){
+				
+			})
+		},
+		preYearButtonClicked(){
+			this.year = this.year - 1;
+			this.getYearStatistic(this.year);
+		},
+		nextYearButtonClicked(){
+			this.year = this.year + 1;
+			this.getYearStatistic(this.year);
+		}	
 	}
 })
 </script>

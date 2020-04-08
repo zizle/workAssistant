@@ -102,9 +102,9 @@ class InvestrategyView(MethodView):
         try:
             # 转换类型
             variety_id = int(variety)
-            hands = int(hands)
-            open_position = int(open_position)
-            close_position = int(close_position)
+            hands = int(hands) if hands else 0
+            open_position = int(open_position) if open_position else 0
+            close_position = int(close_position) if close_position else 0
             profit = float(profit) if profit else 0
             cursor.execute(save_invest_statement,
                            (custom_time, author_id, content, variety_id, contract, direction,hands,
@@ -187,7 +187,7 @@ class FileHandlerInvestrategyView(MethodView):
                         raise ValueError(e)
                     record_row.append(str(row_content[3]))
                     record_row.append(str(row_content[4]))
-                    record_row.append(int(row_content[5]))
+                    record_row.append(int(row_content[5]) if row_content[5] else 0)
                     record_row.append(int(row_content[6]) if row_content[6] else 0)
                     record_row.append(int(row_content[7]) if row_content[7] else 0)
                     record_row.append(float(row_content[8]) if row_content[8] else 0)

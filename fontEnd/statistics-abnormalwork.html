@@ -124,7 +124,7 @@ var vm = new Vue({
 		getTargetStatistics(year, month){
 			var localThis = this;
 			// 获取数据
-			axios.get(host + 'statistics/abwork-month/?year=' + this.year + '&month=' + this.month)
+			axios.get(host + 'statistics/abwork/?year=' + this.year + '&month=' + this.month)
 			.then(function(resp){
 				// console.log(resp);
 				localThis.columns = resp.data.columns;
@@ -160,7 +160,7 @@ var vm = new Vue({
 		// 获取年度统计数据
 		getYearStatistic(year){
 			var localThis = this;
-			axios.get(host + 'statistics/abwork-year/?year=' + this.year)
+			axios.get(host + 'statistics/abwork/?year=' + this.year)
 			.then(function(resp){
 				// console.log(resp);
 				localThis.columns = resp.data.columns;
