@@ -15,6 +15,7 @@ from plates.investrategy import investrategy_blp
 from plates.article_publish import article_publish_blp
 from plates.short_message import shortmsg_blp
 from plates.statistics import statistics_blp
+from plates.onduty import onduty_blp
 from flask_cors import CORS
 from utils.log_handler import config_logger_handler
 
@@ -47,6 +48,7 @@ app.register_blueprint(investment_blp)
 app.register_blueprint(investrategy_blp)
 app.register_blueprint(article_publish_blp)
 app.register_blueprint(shortmsg_blp)
+app.register_blueprint(onduty_blp)
 app.register_blueprint(statistics_blp)
 
 if __name__ == '__main__':

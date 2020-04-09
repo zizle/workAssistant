@@ -192,6 +192,16 @@ def create_others_table():
                    "`note` VARCHAR(512) DEFAULT ''"
                    ");")
 
+    # 值班信息记录表
+    cursor.execute("CREATE TABLE IF NOT EXISTS `onduty_message` ("
+                   "`id` INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+                   "`create_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                   "`custom_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                   "`author_id` INT(11) NOT NULL,"
+                   "`content` VARCHAR(1024) NOT NULL,"
+                   "`note` VARCHAR(512) DEFAULT ''"
+                   ");")
+
     db_connection.commit()
     db_connection.close()
 
