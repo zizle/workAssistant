@@ -7,6 +7,7 @@ from .investment import InvestmentAmount
 from .investrategy import InvestrategyAmount
 from .contribute_article import DistributeArticleAmount
 from .shormessage import ShortMessageAmount
+from .ondutymsg import OnDutyMessageAmount
 
 """
 非常态工作任务功能模块
@@ -19,4 +20,5 @@ statistics_blp.add_url_rule('statistics/investment/', view_func=InvestmentAmount
 statistics_blp.add_url_rule('statistics/investrategy/', view_func=InvestrategyAmount.as_view(name="investrategycount"))
 statistics_blp.add_url_rule('statistics/distribute-article/', view_func=DistributeArticleAmount.as_view(name="disartcount"))
 statistics_blp.add_url_rule('statistics/shortmessage/', view_func=ShortMessageAmount.as_view(name="srtmsgcount"))
+statistics_blp.add_url_rule('statistics/ondutymsg/', view_func=OnDutyMessageAmount.as_view(name="ondmsgcount"))
 

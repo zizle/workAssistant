@@ -23,12 +23,15 @@ var vm = new Vue({
 			'contart-query.html',
 			'short-message.html',
 			'shortmsg-query.html',
+			'ondutymsg.html',
+			'ondutymsg-query.html',
 			'statistics-abnormalwork.html',
 			'statistics-monographic.html',
 			'statistics-investment.html',
 			'statistics-investrategy.html',
 			'statistics-contributearticle.html',
-			'statistics-shortmessage.html'
+			'statistics-shortmessage.html',
+			'statistics-onduty.html'
 		],
 		showCover:false,
 		accessModules:[],
