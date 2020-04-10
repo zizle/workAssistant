@@ -1,9 +1,13 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
 import os
+import csv
 import xlrd
 import datetime
-from flask import jsonify, current_app, request, Response
+import time
+import hashlib
+import codecs
+from flask import jsonify, current_app, request, Response, send_from_directory
 from flask.views import MethodView
 from db import MySQLConnection
 from vlibs import ABNORMAL_WORK, ORGANIZATIONS
@@ -31,7 +35,7 @@ class AbnormalWorkView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # 原生sql内联查询
-        inner_join_statement = "SELECT usertb.name,usertb.org_id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,abworktb.id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
                                "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
                                "usertb.id=%d AND usertb.id=abworktb.author_id ORDER BY abworktb.custom_time DESC " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
@@ -42,8 +46,7 @@ class AbnormalWorkView(MethodView):
 
         cursor.execute(inner_join_statement)
         abworks = cursor.fetchall()
-        print("内连接查询结果", abworks)
-
+        # print("内连接查询结果", abworks)
         # 查询总条数
         inner_join_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `abnormal_work`AS abworktb ON usertb.id=%s AND usertb.id=abworktb.author_id;"
         cursor.execute(inner_join_statement, user_id)
@@ -232,3 +235,95 @@ class FileHandlerAbnormalWorkView(MethodView):
         db_connection.close()
 
         return jsonify("数据保存成功!")
+
+
+# 导出数据到文件
+class ExportAbnormalWorkView(MethodView):
+    def get(self):
+        utoken = request.args.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        print(user_info)
+        if not user_info:
+            return jsonify("登录已过期!刷新网页重新登录."), 400
+        # 查询当前用户的非常态工作记录
+        query_statement = "SELECT usertb.name,usertb.org_id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
+                          "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
+                          "usertb.id=%s AND usertb.id=abworktb.author_id ORDER BY abworktb.custom_time ASC;"
+
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        cursor.execute(query_statement, user_info['uid'])
+        records_all = cursor.fetchall()
+        # 生成承载数据的文件
+        t = "%.4f" % time.time()
+        md5_hash = hashlib.md5()
+        md5_hash.update(t.encode('utf-8'))
+        md5_hash.update(user_info['name'].encode('utf-8'))
+        md5_str = md5_hash.hexdigest()
+        file_folder = os.path.join(BASE_DIR, 'fileStore/exports/')
+        if not os.path.exists(file_folder):
+            os.makedirs(file_folder)
+        csv_file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+
+        file_records = list()
+        for record_item in records_all:
+            row_content = list()
+            row_content.append(record_item['custom_time'].strftime("%Y-%m-%d"))
+            row_content.append(ORGANIZATIONS.get(record_item['org_id'], '未知'))
+            row_content.append(record_item['name'])
+            row_content.append(ABNORMAL_WORK.get(record_item['task_type'], ''))
+            row_content.append(record_item['title'])
+            row_content.append(record_item['sponsor'])
+            row_content.append(record_item['applied_org'])
+            row_content.append(record_item['applicant'])
+            row_content.append(record_item['tel_number'])
+            row_content.append(record_item['swiss_coin'] if record_item['swiss_coin'] else '')
+            row_content.append(int(record_item['allowance']))
+            row_content.append(record_item['note'])
+            file_records.append(row_content)
+        with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
+            writer = csv.writer(f, dialect='excel')
+            writer.writerow(['日期', '部门小组','姓名', '任务类型',
+                             '主题/标题', '主办方', '申请部门/受用单位', '申请者', '联系电话', '瑞币情况', '收入补贴','备注'])
+            writer.writerows(file_records)
+        # 将文件返回
+        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+                                   )
+
+
+class RetrieveAbWorkView(MethodView):
+    def get(self, work_id):
+        print(work_id)
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        select_statement = "SELECT usertb.name,usertb.org_id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
+                           "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
+                           "abworktb.id=%s AND abworktb.author_id=usertb.id;"
+        cursor.execute(select_statement, work_id)
+        work_item = cursor.fetchone()
+        print(work_item)
+        work_item['custom_time'] = work_item['custom_time'].strftime('%Y-%m-%d')
+        work_item['allowance'] = int(work_item['allowance'])
+        work_item['org_name'] = ORGANIZATIONS.get(int(work_item['org_id']), '')
+        return jsonify(work_item)
+
+
+    def put(self, work_id):
+        body_json = request.json
+        print(body_json)
+
+        return jsonify('ok')
+
+
+
+
+
+
+
+
+
+
+
+
+
