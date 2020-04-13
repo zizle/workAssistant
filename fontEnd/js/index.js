@@ -94,18 +94,21 @@ var vm = new Vue({
 	methods:{
 		// 选择左侧菜单
 		selectMenu(e){
-			// 改变选项卡的css样式
-			
 			// 处理没有页面的问题
 			var page = e.target.dataset.pageurl;
 			var flag = this.pageUrlIsExist(page);
 			if (flag)
 			{
-				this.framePage = page;
+				console.log(page);
+				// this.framePage = page;
+				var iframeEle = document.getElementById("rightframe");
+				iframeEle.src=page;
+				
 			}else{
 				this.framePage = "not-found404.html";
 			}
-			document.title = "研究院工作管理系统-" + e.target.innerText
+			document.title = "研究院工作管理系统-" + e.target.innerText;
+			
 		},
 		// 判断数组中是否存在
 		pageUrlIsExist(pageUrl){
