@@ -53,36 +53,70 @@
 		<table border="" cellspacing="" cellpadding="">
 			<tr class="title">
 				<td>日期</td>
+				<td><input type="date" v-model="modifyWork.custom_time" :value="modifyWork.custom_time"></td>
+			</tr>
 				<td>部门小组</td>
+				<td><input type="text" readonly="true" :value="modifyWork.org_name"></td>
+			<tr>
 				<td>姓名</td>
-				<td>任务类型</td>
-				<td>主题/标题</td>
-				<td>主办方</td>
-				<td>申请部门/受用单位</td>
-				<td>申请者</td>
-				<td>联系电话</td>
-				<td>瑞币情况</td>
-				<td>收入补贴</td>
-				<td>备注</td>
+				<td><input type="text" readonly="true" :value="modifyWork.name"></td>
 			</tr>
 			<tr>
-				<td contenteditable="1" v-model="customTime">{{ modifyWork.custom_time }}</td>
-				<td>{{ modifyWork.org_name }}</td>
-				<td>{{ modifyWork.name }}</td>
-				<td contenteditable="1" v-model="taskType">{{ modifyWork.task_type }}</td>
-				<td contenteditable="1" v-model="title">{{ modifyWork.title }}</td>
-				<td contenteditable="1" v-model="sponsor">{{ modifyWork.sponsor }}</td>
-				<td contenteditable="1" v-model="appliedOrg">{{ modifyWork.appliedOrg }}</td>
-				<td contenteditable="1" v-model="applicant">{{ modifyWork.applicant }}</td>
-				<td contenteditable="1" v-model="link">{{ modifyWork.link }}</td>
-				<td contenteditable="1" v-model="swissCoin">{{ modifyWork.swiss_coin }}</td>
-				<td contenteditable="1" v-model="note">{{ modifyWork.note }}</td>
+				<td>任务类型</td>
+				<td>
+					<select >
+						<option :value ="modifyWork.task_type">{{modifyWork.task_type_name}}</option>
+						<option v-for="(key,value) in modifyWork.work_types" :value ="value">{{key}}</option>
+					</select>
+				</td>
+			</tr>
 			<tr>
+				<td>主题/标题</td>
+				<td><input type="text" v-model="modifyWork.title"></td>
+			</tr>
+			<tr>
+				<td>主办方</td>
+				<td><input type="text" v-model="modifyWork.sponsor"></td>
+				
+			</tr>
+			<tr>
+				<td>申请部门/受用单位</td>
+				<td><input type="text" v-model="modifyWork.applied_org"></td>
+				
+			</tr>
+			<tr>
+				<td>申请者</td>
+				<td><input type="text" v-model="modifyWork.applicant"></td>
+				
+			</tr>
+			<tr>
+				<td>联系电话</td>
+				<td><input type="text" v-model="modifyWork.tel_number"></td>
+				
+			</tr>
+			<tr>
+				<td>瑞币情况</td>
+				<td><input type="number" v-model="modifyWork.swiss_coin"></td>
+				
+			</tr>
+			<tr>
+				<td>收入补贴</td>
+				<td><input type="number" v-model="modifyWork.allowance"></td>
+				
+			</tr>
+			<tr>
+				<td>备注</td>
+				<td><input type="text" v-model="modifyWork.note"></td>
+			</tr>
+				
+			
+				
+			<tr class="commint-btn">
 				<td colspan="12"><button type="button" @click="commitModify">确定修改</button></td>
 			</tr>
 		</table>
 	</div>
 </div>
 </body>
-<script src="js/abw-query.js?v=0.13" type="text/javascript" charset="utf-8"></script>
+<script src="js/abw-query.js?v=0.2" type="text/javascript" charset="utf-8"></script>
 </html>

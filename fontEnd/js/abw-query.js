@@ -2,15 +2,16 @@ var vm = new Vue({
 	el:'#app',
 	data:{
 		// 修改记录的每个数据绑定
-		customTime: '',
-		taskType:'',
-		title:'',
-		sponsor:'',
-		appliedOrg:'',
-		applicant:'',
-		link:'',
-		swissCoin:'',
-		note:'haha',
+		// customTime: '',
+		// taskType:'',
+		// title:'',
+		// sponsor:'',
+		// appliedOrg:'',
+		// applicant:'',
+		// link:'',
+		// swissCoin:'',
+		// allowance:'',
+		// note:'',
 		showDoloading: true,
 		modifyRid:0,
 		modifyingRecord: false,
@@ -57,19 +58,8 @@ var vm = new Vue({
 				}
 				requirePage = this.currentPage + 1;
 			};
-			// 发起请求数据
-			this.showDoloading = true;
-			var localThis = this;
-			var hostServer = host + 'abnormal-work/?page='+ requirePage+'&pagesize=30&utoken=' + token; 
-			axios.get(hostServer)
-			.then(function(resp){
-				console.log(resp)
-				localThis.currentWorks = resp.data.abworks;
-				localThis.currentPage = resp.data.current_page;
-				localThis.totalPage = resp.data.total_page;
-				localThis.showDoloading = false;
-			})
-			.catch(function(){localThis.showDoloading = false;})
+			this.updateCurrentPage(this.currentPage);
+			
 		},
 		// 导出数据
 		dbclickedRecord(e){
@@ -79,15 +69,16 @@ var vm = new Vue({
 			var rid = e.currentTarget.dataset.rid;
 			this.modifyingRecord= true;
 			this.showModifyTable=true;
-			console.log(rid);
+			// console.log(rid);
 			// 请求记录
 			var server_url = host + 'abnormal-work/' + rid + '/'
 			var localThis = this;
 			this.modifyRid = rid;
 			axios.get(server_url)
 			.then(function(resp){
-				console.log(resp.data);
+				// console.log(resp.data);
 				localThis.modifyWork = resp.data;
+				// localThis.customTime = localThis.modifyWork.custom_time;
 			})
 			.catch(function(error){
 				
@@ -99,26 +90,50 @@ var vm = new Vue({
 			this.showModifyTable=false;
 		},
 		commitModify(){
+			// var modfyData = {
+			// 	customTime:this.customTime,
+			// 	taskType:this.taskType,
+			// 	title:this.title,
+			// 	sponsor:this.sponsor,
+			// 	appliedOrg:this.appliedOrg,
+			// 	applicant:this.applicant,
+			// 	link:this.link,
+			// 	swissCoin:this.swissCoin,
+			// 	note:this.note
+			// }
 			var modfyData = {
-				customTime:this.customTime,
-				taskType:this.taskType,
-				title:this.title,
-				sponsor:this.sponsor,
-				appliedOrg:this.appliedOrg,
-				applicant:this.applicant,
-				link:this.link,
-				swissCoin:this.swissCoin,
-				note:this.note
+				record_data: this.modifyWork,
+				utoken: token
 			}
+			var localThis = this;
 			var server_url = host + 'abnormal-work/' + this.modifyRid + '/'
 			axios.put(server_url, data=modfyData)
 			.then(function(resp){
-				console.log(resp);
+				alert(resp.data);
+				localThis.closeModify();
+				localThis.updateCurrentPage(localThis.currentPage);
 			})
 			.catch(function(error){
-				
+				alert(error.response.data);
 			})
-			
-		}
+		},
+		
+		// 刷新当前页
+		updateCurrentPage(cPage){
+			// 发起请求数据
+			this.showDoloading = true;
+			var localThis = this;
+			var hostServer = host + 'abnormal-work/?page='+ cPage+'&pagesize=30&utoken=' + token; 
+			axios.get(hostServer)
+			.then(function(resp){
+				localThis.currentWorks = resp.data.abworks;
+				localThis.currentPage = resp.data.current_page;
+				localThis.totalPage = resp.data.total_page;
+				localThis.showDoloading = false;
+			})
+			.catch(function(){localThis.showDoloading = false;})
+		},
+		
+		
 	}
 })

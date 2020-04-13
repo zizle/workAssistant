@@ -45,18 +45,26 @@ var vm = new Vue({
 		}
 		// 发送token的请求登录状态保持
 		var localThis = this;
-		axios.get(host + 'login/',{params:{'token':token}})
+		axios.get(host + 'login/',{params:{'token':token}, timeout:3000})
 		.then(function(resp){
 			localThis.accessModules = resp.data;
+			if(resp.data.length <= 0)
+			{
+				alert('系统暂不可用...');
+				window.location.href='login.html'
+			}
 			// console.log(resp.data);
 			// if (resp.data.length > 0){
 			// 	localThis.framePage = resp.data[0].page_url;
 			// }
 		})
 		.catch(function(error){
+			if (error && error.response){
 			localStorage.clear();
 			sessionStorage.clear();
-			window.location.href='login.html'
+			}
+			else{alert("连接服务器失败...")}
+			window.location.href='login.html';
 		})
 	},
 	// 创建对象之前窗口监听事件(iframe发来的消息事件)

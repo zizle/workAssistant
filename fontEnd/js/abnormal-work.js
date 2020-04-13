@@ -86,7 +86,7 @@ var vm = new Vue({
 			param.append("work_date", this.currentDate);
 			param.append("task_type", this.selectedTaskType);
 			param.append("work_title", this.workTitle);
-			param.append("sponser", this.sponser);
+			param.append("sponsor", this.sponser);
 			param.append("applicat_org", this.applicantOrg);
 			param.append("application_person", this.applicationPerson);
 			param.append("link_number", this.linkNumber);

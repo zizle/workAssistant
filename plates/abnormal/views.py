@@ -94,7 +94,7 @@ class AbnormalWorkView(MethodView):
         # 组织信息
         custom_time = datetime.datetime.strptime(body_data.get('work_date'), '%Y-%m-%d')
         worker = user_obj['id']
-        sponsor = body_data.get('sponser', '')
+        sponsor = body_data.get('sponsor', '')
         applied_org = body_data.get('applicat_org', '')
         applicant = body_data.get('application_person', '')
         tel_number = body_data.get('link_number', '')
@@ -242,7 +242,6 @@ class ExportAbnormalWorkView(MethodView):
     def get(self):
         utoken = request.args.get('utoken')
         user_info = verify_json_web_token(utoken)
-        print(user_info)
         if not user_info:
             return jsonify("登录已过期!刷新网页重新登录."), 400
         # 查询当前用户的非常态工作记录
@@ -292,9 +291,9 @@ class ExportAbnormalWorkView(MethodView):
                                    )
 
 
+# 修改记录
 class RetrieveAbWorkView(MethodView):
     def get(self, work_id):
-        print(work_id)
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         select_statement = "SELECT usertb.name,usertb.org_id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
@@ -302,28 +301,55 @@ class RetrieveAbWorkView(MethodView):
                            "abworktb.id=%s AND abworktb.author_id=usertb.id;"
         cursor.execute(select_statement, work_id)
         work_item = cursor.fetchone()
-        print(work_item)
         work_item['custom_time'] = work_item['custom_time'].strftime('%Y-%m-%d')
         work_item['allowance'] = int(work_item['allowance'])
         work_item['org_name'] = ORGANIZATIONS.get(int(work_item['org_id']), '')
+        work_item['task_type_name'] = ABNORMAL_WORK.get(int(work_item['task_type']), '')
+        work_item['work_types'] = ABNORMAL_WORK
         return jsonify(work_item)
-
 
     def put(self, work_id):
         body_json = request.json
-        print(body_json)
-
-        return jsonify('ok')
-
-
-
-
-
-
-
-
-
-
-
-
-
+        record_info = body_json.get('record_data')
+        utoken = body_json.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        user_id = user_info['uid']
+        # 不为空的信息判断
+        task_type = record_info.get('task_type', 0)
+        task_type_text = ABNORMAL_WORK.get(int(task_type), 0)
+        title = record_info.get('title', False)
+        if not task_type_text or not title:
+            return jsonify("参数错误,NOT FOUND TASKTYPE AND TITLE"), 400
+        # 组织信息
+        custom_time = datetime.datetime.strptime(record_info.get('custom_time'), '%Y-%m-%d')
+        task_type = record_info.get('task_type', 0)
+        sponsor = record_info.get('sponsor', '')
+        applied_org = record_info.get('applied_org', '')
+        applicant = record_info.get('applicant', '')
+        tel_number = record_info.get('tel_number', '')
+        swiss_coin = record_info.get('swiss_coin', 0)
+        allowance = record_info.get('allowance', 0)
+        note = record_info.get('note', '')
+        partner = record_info.get('partner_name', '')
+        # 存入数据库
+        update_statement = "UPDATE `abnormal_work` SET " \
+                            "`custom_time`=%s,`task_type`=%s,`title`=%s,`sponsor`=%s,`applied_org`=%s," \
+                            "`applicant`=%s,`tel_number`=%s,`swiss_coin`=%s,`allowance`=%s,`note`=%s,`partner`=%s " \
+                            "WHERE `id`=%s AND `author_id`=%s;"
+        try:
+            swiss_coin = int(swiss_coin) if swiss_coin else 0
+            allowance = float(allowance) if allowance else 0
+            db_connection = MySQLConnection()
+            cursor = db_connection.get_cursor()
+            cursor.execute(update_statement,
+                           (custom_time, task_type, title, sponsor, applied_org,
+                            applicant, tel_number, swiss_coin, allowance, note, partner,
+                            work_id, user_id)
+                           )
+            db_connection.commit()
+            db_connection.close()
+        except Exception as e:
+            current_app.logger.error("修改非常态工作记录错误:" + str(e))
+            return jsonify("参数错误!无法修改。"), 400
+        else:
+            return jsonify("修改成功!")
