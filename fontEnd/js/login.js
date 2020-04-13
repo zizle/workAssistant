@@ -159,7 +159,8 @@ var vm = new Vue({
 					name: this.loginUsername,
 					password: md5(this.loginPsd),
 					is_remember: parseInt(remember)
-				}
+				},
+				{timeout:3000}
 			)
 			.then(function(resp){
 				// console.log(resp);
@@ -173,8 +174,12 @@ var vm = new Vue({
 				window.location.href = "index.html";
 			})
 			.catch(function(error){
-				// console.log(error);
-				localThis.loginErrorMsg = error.response.data;
+				if (error && error.response){
+					localThis.loginErrorMsg = error.response.data;
+				}else{
+					localThis.loginErrorMsg = "连接服务器失败!";
+				}
+				
 			})
 		},
 		// 点击注册

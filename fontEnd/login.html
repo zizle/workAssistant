@@ -8,9 +8,18 @@
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/md5.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+	<style type="text/css">
+		.system-name{
+			font-size: 26px;
+			padding-left: 10px;
+			color: #FFFFFF;
+			text-shadow : rgba(240,240,240,0.5) 0 5px 6px, rgba(240,240,240,0.2) 1px 3px 3px;
+		}
+	</style>
 </head>
 <body>
 <div id="app">
+	<div class="system-name">研究院工作记录系统</div>
 	<transition name="lrfade">
 	<!-- 登录表单 -->
 	<div v-if="showLogin" class="login-div">
