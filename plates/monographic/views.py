@@ -1,14 +1,20 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import os
+import codecs
+import csv
 import datetime
-from flask import jsonify,request,current_app
+import hashlib
+import os
+import time
+
+from flask import jsonify, request, current_app, send_from_directory
 from flask.views import MethodView
+
 from db import MySQLConnection
-from utils.psd_handler import verify_json_web_token
-from utils.file_handler import hash_file_name
-from vlibs import ORGANIZATIONS
 from settings import BASE_DIR
+from utils.file_handler import hash_file_name
+from utils.psd_handler import verify_json_web_token
+from vlibs import ORGANIZATIONS
 
 
 class MonographicView(MethodView):
@@ -30,9 +36,9 @@ class MonographicView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
-        inner_join_statement = "SELECT usertb.name,usertb.org_id,mgpctb.custom_time,mgpctb.title,mgpctb.words,mgpctb.is_publish,mgpctb.level,mgpctb.score,mgpctb.note " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,mgpctb.id,mgpctb.custom_time,mgpctb.title,mgpctb.words,mgpctb.is_publish,mgpctb.level,mgpctb.score,mgpctb.note " \
                                "FROM `user_info` AS usertb INNER JOIN `monographic` AS mgpctb ON " \
-                               "usertb.id=%d AND usertb.id=mgpctb.author_id " \
+                               "usertb.id=%d AND usertb.id=mgpctb.author_id ORDER BY mgpctb.custom_time DESC " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
@@ -59,7 +65,6 @@ class MonographicView(MethodView):
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
         response_data['current_count'] = len(result_records)
-
         return jsonify(response_data)
 
     def post(self):
@@ -128,5 +133,117 @@ class MonographicView(MethodView):
             return jsonify("参数错误!无法保存。"), 400
         else:
             return jsonify("保存成功!"), 201
+        
+
+# 导出数据到文件
+class MonographicExportView(MethodView):
+    def get(self):
+        utoken = request.args.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        if not user_info:
+            return jsonify("登录已过期!刷新网页重新登录."), 400
+        # 查询当前用户的专题研究记录
+        query_statement = "SELECT usertb.name,usertb.org_id,mgpctb.custom_time,mgpctb.title,mgpctb.words,mgpctb.is_publish,mgpctb.level,mgpctb.score,mgpctb.note " \
+                          "FROM `user_info` AS usertb INNER JOIN `monographic` AS mgpctb ON " \
+                          "usertb.id=%s AND usertb.id=mgpctb.author_id ORDER BY mgpctb.custom_time ASC;"
+
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        cursor.execute(query_statement, user_info['uid'])
+        records_all = cursor.fetchall()
+        # 生成承载数据的文件
+        t = "%.4f" % time.time()
+        md5_hash = hashlib.md5()
+        md5_hash.update(t.encode('utf-8'))
+        md5_hash.update(user_info['name'].encode('utf-8'))
+        md5_str = md5_hash.hexdigest()
+        file_folder = os.path.join(BASE_DIR, 'fileStore/exports/')
+        if not os.path.exists(file_folder):
+            os.makedirs(file_folder)
+        csv_file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+
+        file_records = list()
+        for record_item in records_all:
+            row_content = list()
+            row_content.append(record_item['custom_time'].strftime("%Y-%m-%d"))
+            row_content.append(ORGANIZATIONS.get(record_item['org_id'], '未知'))
+            row_content.append(record_item['name'])
+            row_content.append(record_item['title'])
+            row_content.append(record_item['words'])
+            row_content.append("是" if record_item['is_publish'] else "否")
+            row_content.append(record_item['level'])
+            row_content.append(record_item['score'])
+            row_content.append(record_item['note'])
+            file_records.append(row_content)
+        with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
+            writer = csv.writer(f, dialect='excel')
+            writer.writerow(['日期', '部门小组','姓名', '专题题目','字数', '外发情况', '等级', '得分','备注'])
+            writer.writerows(file_records)
+        # 将文件返回
+        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+                                   )
+    
+
+# 具体记录详情(修改记录)
+class RetrieveMonographicView(MethodView):
+    def get(self, rid):
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        select_statement = "SELECT usertb.name,usertb.org_id,mgpctb.custom_time,mgpctb.title,mgpctb.words,mgpctb.is_publish,mgpctb.level,mgpctb.score,mgpctb.partner,mgpctb.note " \
+                           "FROM `user_info` AS usertb INNER JOIN `monographic` AS mgpctb ON " \
+                           "mgpctb.id=%s AND mgpctb.author_id=usertb.id;"
+        cursor.execute(select_statement, rid)
+        record_item = cursor.fetchone()
+        record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
+        record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
+        record_item['is_publish'] = 1 if record_item['is_publish'] else 0
+        record_item['level_types'] = ["A", "B", "C"]
+        return jsonify(record_item)
+
+    def put(self, rid):
+        body_json = request.json
+        record_info = body_json.get('record_data')
+        utoken = body_json.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        user_id = user_info['uid']
+        # 不为空的信息判断
+        title = record_info.get('title', False)
+        if not title:
+            return jsonify("参数错误,NOT FOUND TITLE"), 400
+        # 组织信息
+        custom_time = record_info.get('custom_time')
+        words = record_info.get('words', 0)
+        is_publish = record_info.get('is_publish', False)
+        level = record_info.get('level', 'D')
+        score = record_info.get('score', 0)
+        note = record_info.get('note', '')
+        partner = record_info.get('partner_name', '')
+        save_work_statement = "UPDATE `monographic` SET" \
+                              "`custom_time`=%s,`title`=%s,`words`=%s,`is_publish`=%s,`level`=%s," \
+                              "`score`=%s,`note`=%s,`partner`=%s" \
+                              "WHERE `id`=%s AND `author_id`=%s;"
+        try:
+            # 转换类型
+            custom_time = datetime.datetime.strptime(custom_time, '%Y-%m-%d')
+            words = int(words) if words else 0
+            score = int(score) if score else 0
+            is_publish = 1 if is_publish else 0
+            db_connection = MySQLConnection()
+            cursor = db_connection.get_cursor()
+            cursor.execute(save_work_statement,
+                           (custom_time, title, words, is_publish, level, score, note, partner, rid, user_id)
+                           )
+            db_connection.commit()
+            db_connection.close()
+        except Exception as e:
+            current_app.logger.error("修改专题研究记录错误:" + str(e))
+            # # 保存错误得删除已保存的文件
+            # if file_path and os.path.exists(file_path):
+            #     os.remove(file_path)
+            return jsonify("参数错误!无法保存。"), 400
+        else:
+            return jsonify("修改成功!")
+
 
 

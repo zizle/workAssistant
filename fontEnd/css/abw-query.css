@@ -49,6 +49,7 @@ html,body{
 }
 .paginator button:hover{
 	cursor: pointer;
+	
 	color: #65BAD4;
 }
 .paginator span{
@@ -73,6 +74,7 @@ html,body{
 	border: 1px solid #787878;
 	font-size: 15px;
 	height: 60px;
+	cursor: default;
 }
 
 .record-table .title td{
@@ -119,7 +121,6 @@ html,body{
 	-ms-transition: all .3s;
 	-o-transition: all .3s;
 	transition: all .3s;
-	cursor: pointer;
 }
 .modify-table{
 	z-index: 9;
@@ -178,4 +179,19 @@ html,body{
 }
 .modify-table .commint-btn{
 	border: none;
+}
+.modify-table .commint-btn button{
+	margin: 0 15px;
+	padding: 3px 5px;
+	border-radius: 3px;
+}
+.modify-table .commint-btn .commit{
+	background-color: #006096;
+	color: #FFFFFF;	
+	border: 1px solid #006096;
+}
+.modify-table .commint-btn .cancel{
+	border: 1px solid #006096;
+	color: #006096;
+	background-color: #F4F4F4;
 }

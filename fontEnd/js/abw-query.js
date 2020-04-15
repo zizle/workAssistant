@@ -1,26 +1,16 @@
 var vm = new Vue({
 	el:'#app',
 	data:{
-		// 修改记录的每个数据绑定
-		// customTime: '',
-		// taskType:'',
-		// title:'',
-		// sponsor:'',
-		// appliedOrg:'',
-		// applicant:'',
-		// link:'',
-		// swissCoin:'',
-		// allowance:'',
-		// note:'',
 		showDoloading: true,
 		modifyRid:0,
 		modifyingRecord: false,
 		showModifyTable: false,
 		currentWorks:[],
 		modifyWork:{},
+		currentTaskType:0,  // 当前的任务类型
 		currentPage:1,
 		totalPage:1,
-		exportDataUrl: host + 'abnormal-work/export/?utoken=' + token
+		exportDataUrl: ''
 	},
 	mounted:function(){
 		// 请求当前用户的工作情况,以分页的形式
@@ -28,7 +18,7 @@ var vm = new Vue({
 		var hostServer = host + 'abnormal-work/?page=1&pagesize=30&utoken=' + token; 
 		axios.get(hostServer)
 		.then(function(resp){
-			console.log(resp)
+			// console.log(resp)
 			localThis.currentWorks = resp.data.abworks;
 			localThis.currentPage = resp.data.current_page;
 			localThis.totalPage = resp.data.total_page;
@@ -36,6 +26,11 @@ var vm = new Vue({
 		})
 		.catch(function(){localThis.showDoloading = false;})
 		
+	},
+	watch:{
+		currentTaskType(newVal, oldVal){
+			this.modifyWork.task_type = newVal;
+		}
 	},
 	methods:{
 		goToTargetPage(flag){
@@ -61,7 +56,6 @@ var vm = new Vue({
 			this.updateCurrentPage(this.currentPage);
 			
 		},
-		// 导出数据
 		dbclickedRecord(e){
 			// 弹窗修改
 			// e.target 是当前点击的元素
@@ -78,6 +72,7 @@ var vm = new Vue({
 			.then(function(resp){
 				// console.log(resp.data);
 				localThis.modifyWork = resp.data;
+				localThis.currentTaskType = resp.data.task_type;
 				// localThis.customTime = localThis.modifyWork.custom_time;
 			})
 			.catch(function(error){
@@ -133,7 +128,9 @@ var vm = new Vue({
 			})
 			.catch(function(){localThis.showDoloading = false;})
 		},
-		
+		exportRecord(){
+			this.exportDataUrl = host + 'abnormal-work/export/?utoken=' + token + '&r=' + Math.random();
+		},
 		
 	}
 })

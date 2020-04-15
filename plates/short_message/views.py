@@ -1,14 +1,15 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import os
-import xlrd
 import datetime
-from flask import jsonify,request,current_app, Response
+
+import xlrd
+from flask import jsonify, request, current_app
 from flask.views import MethodView
+
 from db import MySQLConnection
 from utils.psd_handler import verify_json_web_token
 from vlibs import ORGANIZATIONS
-from settings import BASE_DIR
+
 
 class ShortMessageView(MethodView):
     def get(self):
@@ -30,7 +31,7 @@ class ShortMessageView(MethodView):
         # sql内联查询
         inner_join_statement = "SELECT usertb.name,usertb.org_id,smsgtb.custom_time,smsgtb.content,smsgtb.msg_type,smsgtb.effect_variety,smsgtb.note " \
                                "FROM `user_info` AS usertb INNER JOIN `short_message` AS smsgtb ON " \
-                               "usertb.id=%d AND usertb.id=smsgtb.author_id " \
+                               "usertb.id=%d AND usertb.id=smsgtb.author_id ORDER BY smsgtb.custom_time DESC " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
@@ -50,6 +51,7 @@ class ShortMessageView(MethodView):
         response_data = dict()
         response_data['records'] = list()
         for record_item in result_records:
+            print(record_item)
             record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
             record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), "未知")
             response_data['records'].append(record_item)

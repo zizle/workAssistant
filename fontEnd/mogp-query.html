@@ -4,6 +4,7 @@
 	<meta charset="utf-8">
 	<title>非常态工作记录查询</title>
 	<link rel="stylesheet" type="text/css" href="css/mogp-query.css?v=0.13"/>
+	<link rel="stylesheet" type="text/css" href="css/modifytable.css"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -11,7 +12,11 @@
 <body>
 <div id="app">
 	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
-	<div class="paginator"><button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button></div>
+	<div class="cover-div" v-show="modifyingRecord"></div>
+	<div class="paginator">
+		<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
+		<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">数据导出</a></button>
+	</div>
 	<div class="record-table">
 		<table border="" cellspacing="" cellpadding="">
 			<tr class="title">
@@ -25,7 +30,7 @@
 				<td>得分</td>
 				<td>备注</td>
 			</tr>
-			<tr v-for="(recordItem,index) in currentRecords">
+			<tr v-for="(recordItem,index) in currentRecords" @dblclick="dbclickedRecord" :data-rid="recordItem.id">
 				<td>{{ recordItem.custom_time }}</td>
 				<td>{{ recordItem.name }}</td>
 				<td>{{ recordItem.org_name }}</td>
@@ -35,6 +40,57 @@
 				<td>{{ recordItem.level }}</td>
 				<td>{{ recordItem.score }}</td>
 				<td>{{ recordItem.note }}</td>
+			</tr>
+		</table>
+	</div>
+	<div class="modify-table" v-show="showModifyTable">
+		<div class="modify-title">记录修改<span @click="closeModify">关闭</span></div>
+		<table border="" cellspacing="" cellpadding="">
+			<tr class="title">
+				<td>日期</td>
+				<td><input type="date" v-model="recordToModify.custom_time"></td>
+			</tr>
+				<td>部门小组</td>
+				<td><input type="text" readonly="true" :value="recordToModify.org_name"></td>
+			<tr>
+				<td>姓名</td>
+				<td><input type="text" readonly="true" :value="recordToModify.name"></td>
+			</tr>
+			<tr>
+				<td>专题题目</td>
+				<td>
+					<input type="text" v-model="recordToModify.title">
+				</td>
+			</tr>
+			<tr>
+				<td>字数</td>
+				<td><input type="number" v-model="recordToModify.words"></td>
+			</tr>
+			<tr>
+				<td>外发情况</td>
+				<td><input class="open-close-check" type="checkbox" v-model="recordToModify.is_publish"></td>
+			</tr>
+			<tr>
+				<td>等级</td>
+				<td>
+					<select v-model="recordToModify.level">
+						<option v-for="(value,index) in recordToModify.level_types" :value ="value">{{value}}</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>得分</td>
+				<td><input type="number" v-model="recordToModify.score"></td>
+			</tr>
+			<tr>
+				<td>备注</td>
+				<td><input type="text" v-model="recordToModify.note"></td>
+			</tr>
+			<tr class="commint-btn">
+				<td colspan="2">
+					<button class="commit" type="button" @click="commitModify">确定修改</button>
+					<button class="cancel" type="button" @click="closeModify">取消退出</button>
+				</td>
 			</tr>
 		</table>
 	</div>

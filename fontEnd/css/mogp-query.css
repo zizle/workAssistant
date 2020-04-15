@@ -73,9 +73,11 @@ html,body{
 	border: 1px solid #787878;
 	font-size: 15px;
 	height: 60px;
+	cursor: default;
 }
 
-.record-table .title{
+
+.record-table .title td{
 	color: #FFFFFF;
 	background-color: #69cfb8;
 	font-size: 16px;
@@ -101,3 +103,11 @@ html,body{
 }
 /* 控制文字的高度 主要是限制宽度,否则文字不满一行无法居中*/
 .record-table .record-title div span{width: 100%;}
+.record-table tr:hover{
+	background-color: #ffe4e1;
+	-webkit-transition: all .3s;
+	-moz-transition: all .3s;
+	-ms-transition: all .3s;
+	-o-transition: all .3s;
+	transition: all .3s;
+}

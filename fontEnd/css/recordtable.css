@@ -1,0 +1,38 @@
+/* 不设置宽度 */
+.record-table{
+	margin: 5px; 
+}
+/* 设置宽度撑开父div */
+.record-table table{
+	width: 100%;
+	text-align: center;
+	border-collapse: collapse;
+	border: 1px solid #787878;
+	background-color: #F4F4F4;
+}
+/* 所有的td样式 */
+.record-table td{
+	border: 1px solid #787878;
+	font-size: 15px;
+	height: 60px;
+	cursor: default;
+}
+/* 标题td样式 */
+.record-table .title td{
+	color: #FFFFFF;
+	background-color: #69cfb8;
+	font-size: 16px;
+	font-weight: bold;
+	line-height: 42px;
+	height: 42px;
+	border-bottom: 1px solid #787878;
+}
+/* 鼠标悬浮样式 */
+.record-table tr:hover{
+	background-color: #ffe4e1;
+	-webkit-transition: all .3s;
+	-moz-transition: all .3s;
+	-ms-transition: all .3s;
+	-o-transition: all .3s;
+	transition: all .3s;
+}

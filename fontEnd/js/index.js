@@ -99,7 +99,7 @@ var vm = new Vue({
 			var flag = this.pageUrlIsExist(page);
 			if (flag)
 			{
-				console.log(page);
+				// console.log(page);
 				// this.framePage = page;
 				var iframeEle = document.getElementById("rightframe");
 				iframeEle.src=page;
