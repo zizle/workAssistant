@@ -1,16 +1,19 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import os
 import datetime
-from flask import jsonify,request,current_app
+import os
+
+from flask import jsonify, request, current_app
 from flask.views import MethodView
+
 from db import MySQLConnection
-from utils.psd_handler import verify_json_web_token
-from utils.file_handler import hash_file_name
-from vlibs import VARIETY_LIB,ORGANIZATIONS
 from settings import BASE_DIR
+from utils.file_handler import hash_file_name
+from utils.psd_handler import verify_json_web_token
+from vlibs import ORGANIZATIONS
 
 
+# 提交与查询
 class InvestmentView(MethodView):
     def get(self):
         params = request.args
@@ -20,7 +23,6 @@ class InvestmentView(MethodView):
         if not user_info:
             return jsonify("您的登录已过期,请重新登录查看.")
         user_id = user_info['uid']
-        print(user_id)
         try:
             current_page = int(params.get('page', 1)) - 1
             page_size = int(params.get('pagesize', 30))
@@ -30,10 +32,10 @@ class InvestmentView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
-        inner_join_statement = "SELECT usertb.name,usertb.org_id,invstb.custom_time,invstb.title,invstb.variety_id,invstb.contract,invstb.direction,invstb.build_time,invstb.build_price," \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,invstb.id,invstb.custom_time,invstb.title,varietytb.name as variety,invstb.contract,invstb.direction,invstb.build_time,invstb.build_price," \
                                "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit " \
-                               "FROM `user_info` AS usertb INNER JOIN `investment` AS invstb ON " \
-                               "usertb.id=%d AND usertb.id=invstb.author_id " \
+                               "FROM `user_info` AS usertb INNER JOIN `investment` AS invstb INNER JOIN `variety` as varietytb ON " \
+                               "(usertb.id=%d AND usertb.id=invstb.author_id) AND invstb.variety_id=varietytb.id ORDER BY invstb.custom_time DESC " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
@@ -56,7 +58,7 @@ class InvestmentView(MethodView):
             record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
             record_item['build_time'] = record_item['build_time'].strftime('%Y-%m-%d %H:%M')
             record_item['expire_time'] = record_item['expire_time'].strftime('%Y-%m-%d %H:%M')
-            record_item['variety'] = VARIETY_LIB.get(int(record_item['variety_id']), '未知') + str(record_item['contract'])
+            record_item['variety'] = (record_item['variety'] if record_item['variety'] else '') + str(record_item['contract'])
             record_item['is_publish'] = "是" if record_item['is_publish'] else "否"
             record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
             record_item['build_price'] = int(record_item['build_price'])
@@ -93,17 +95,14 @@ class InvestmentView(MethodView):
             return jsonify("参数错误,NOT FOUND TITLE,VARIETY,DIRECTION."), 400
         # 组织信息
         write_time = body_data.get('write_time')
-        custom_time = datetime.datetime.strptime(write_time, '%Y-%m-%d') if write_time else datetime.datetime.now()
         author_id = user_obj['id']
         contract = body_data.get('contract','')
         build_time = body_data.get('build_date_time')
-        build_time = datetime.datetime.strptime(build_time,'%Y-%m-%dT%H:%M') if build_time else datetime.datetime.now()
         build_price = body_data.get('build_price')
         build_hands = body_data.get('build_hands')
         out_price = body_data.get('out_price')
         cutloss_price = body_data.get('cutloss_price')
         expire_time = body_data.get('expire_time')
-        expire_time = datetime.datetime.strptime(expire_time,'%Y-%m-%dT%H:%M') if expire_time else datetime.datetime.now()
         is_publish = 1 if body_data.get('is_publish', False) else 0
         profit = body_data.get('profit')
         note = body_data.get('work_note', '')
@@ -128,6 +127,9 @@ class InvestmentView(MethodView):
                               "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
         try:
             # 转换类型
+            custom_time = datetime.datetime.strptime(write_time, '%Y-%m-%d') if write_time else datetime.datetime.now()
+            build_time = datetime.datetime.strptime(build_time,'%Y-%m-%dT%H:%M') if build_time else datetime.datetime.now()
+            expire_time = datetime.datetime.strptime(expire_time,'%Y-%m-%dT%H:%M') if expire_time else datetime.datetime.now()
             variety_id = int(variety)
             build_price = float(build_price) if build_price else 0
             build_hands = int(build_hands) if build_hands else 0
@@ -148,3 +150,94 @@ class InvestmentView(MethodView):
             return jsonify("参数错误!无法保存。"), 400
         else:
             return jsonify("保存成功!"), 201
+
+
+class RetrieveInvestmentView(MethodView):
+    def get(self, rid):
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        select_statement = "SELECT usertb.name,usertb.org_id,invstb.custom_time,invstb.variety_id,invstb.title,invstb.contract,invstb.direction,invstb.build_time,invstb.build_price, " \
+                           "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit " \
+                           "FROM `user_info` AS usertb INNER JOIN `investment` AS invstb ON " \
+                           "invstb.id=%s AND invstb.author_id=usertb.id;"
+        cursor.execute(select_statement, rid)
+        record_item = cursor.fetchone()
+
+        record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
+        record_item['build_time'] = record_item['build_time'].strftime('%Y-%m-%dT%H:%M:%S')
+        record_item['expire_time'] = record_item['expire_time'].strftime('%Y-%m-%dT%H:%M:%S')
+        record_item['is_publish'] = "是" if record_item['is_publish'] else "否"
+        record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
+        record_item['build_price'] = int(record_item['build_price'])
+        record_item['out_price'] = int(record_item['out_price'])
+        record_item['cutloss_price'] = int(record_item['cutloss_price'])
+        record_item['profit'] = int(record_item['profit'])
+        return jsonify(record_item)
+
+    def put(self, rid):
+        body_json = request.json
+        record_info = body_json.get('record_data')
+        utoken = body_json.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        user_id = user_info['uid']
+        # 不为空的信息判断
+        title = record_info.get('title', False)
+        variety_id = record_info.get('variety_id', False)
+        direction = record_info.get('direction', False)
+        if not title or not variety_id or not direction:
+            return jsonify("参数错误,NOT FOUND TITLE,VARIETY,DIRECTION."), 400
+        # 组织信息
+        write_time = record_info.get('custom_time')
+        contract = record_info.get('contract', '')
+        build_time = record_info.get('build_time')
+        build_price = record_info.get('build_price')
+        build_hands = record_info.get('build_hands')
+        out_price = record_info.get('out_price')
+        cutloss_price = record_info.get('cutloss_price')
+        expire_time = record_info.get('expire_time')
+        is_publish = 1 if record_info.get('is_publish', False) else 0
+        profit = record_info.get('profit')
+        # note = record_info.get('note', '')
+
+        # 存入数据库
+        update_invest_statement = "UPDATE `investment` SET " \
+                                "`custom_time`=%s,`title`=%s,`variety_id`=%s,`contract`=%s,`direction`=%s,`build_time`=%s," \
+                                "`build_price`=%s,`build_hands`=%s,`out_price`=%s,`cutloss_price`=%s,`expire_time`=%s," \
+                                "`is_publish`=%s,`profit`=%s " \
+                                "WHERE `id`=%s AND `author_id`=%s;"
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        try:
+            # 转换类型
+            variety_id = int(variety_id)
+            build_price = float(build_price) if build_price else 0
+            build_hands = int(build_hands) if build_hands else 0
+            out_price = float(out_price) if out_price else 0
+            cutloss_price = float(cutloss_price) if cutloss_price else 0
+            profit = float(profit) if profit else 0
+            expire_time_format = build_time_format = '%Y-%m-%dT%H:%M:%S'
+            if len(build_time) < 19:
+                build_time_format = '%Y-%m-%dT%H:%M'
+            if len(expire_time) < 19:
+                expire_time_format = '%Y-%m-%dT%H:%M'
+            custom_time = datetime.datetime.strptime(write_time, '%Y-%m-%d') if write_time else datetime.datetime.now()
+            build_time = datetime.datetime.strptime(build_time,build_time_format) if build_time else datetime.datetime.now()
+            expire_time = datetime.datetime.strptime(expire_time,expire_time_format) if expire_time else datetime.datetime.now()
+            cursor.execute(update_invest_statement,
+                           (custom_time, title, variety_id, contract, direction, build_time,
+                            build_price, build_hands, out_price, cutloss_price, expire_time, is_publish, profit,
+                            rid, user_id)
+                           )
+            db_connection.commit()
+        except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
+            current_app.logger.error("更新投资方案记录错误:" + str(e))
+            # # 保存错误得删除已保存的文件
+            # if file_path and os.path.exists(file_path):
+            #     os.remove(file_path)
+            return jsonify("参数错误!无法更新。"), 400
+        else:
+            db_connection.close()
+            return jsonify("更新成功!"), 201
+

@@ -1,0 +1,127 @@
+/* 层级位置 */
+.modify-table{
+	z-index: 9;
+	position: absolute;
+	top: 25px;
+	left: 0.5%;
+	width: 99%;
+	border-radius: 5px;
+	background-color: #EBEBE4;
+	overflow-y: auto;
+	box-shadow: 6px 6px 6px #666666;
+}
+/* 表格标题 */
+.modify-table .modify-title{
+	width: 100%;
+	text-align: center;
+	font-size: 20px;
+	border-radius: 5px 5px 0 0;
+}
+/* 【关闭】文字 */
+.modify-table .modify-title span{
+	float: right;
+	margin-right: 8px;
+	font-size: 14px;
+	line-height: 30px;
+	cursor: pointer;
+}
+/* 悬浮在关闭上 */
+.modify-table .modify-title span:hover{
+	color: #FF0000;
+}
+/* 具体table */
+.modify-table table{
+	width: 98%;
+	margin: 10px auto;
+	text-align: center;
+	border-collapse: collapse;
+	border: 1px solid #787878;
+	background-color: #F4F4F4;
+}
+.modify-table td{
+	border: 1px solid #787878;
+	font-size: 15px;
+	height: 40px;
+}
+/* input与select的的大小 */
+.modify-table td input,.modify-table td select{
+	outline: none;
+	height: 100%;
+	width: calc(100% - 4px);
+}
+/* 只读属性的input */
+.modify-table td input[readonly]{
+	border: 0;
+	background-color: #F4F4F4;
+	outline: none;
+}
+/* 标签td */
+.modify-table table td:first-child{
+	width: 120px;
+}
+/* 提交按钮 */
+.modify-table .commint-btn{
+	border: none;
+}
+/* 按钮 */
+.modify-table .commint-btn button{
+	margin: 0 15px;
+	padding: 3px 5px;
+	border-radius: 3px;
+}
+/* 提交按钮 */
+.modify-table .commint-btn .commit{
+	background-color: #006096;
+	color: #FFFFFF;	
+	border: 1px solid #006096;
+}
+/* 取消按钮 */
+.modify-table .commint-btn .cancel{
+	border: 1px solid #006096;
+	color: #006096;
+	background-color: #F4F4F4;
+}
+
+/* 复选框的滑块 */
+.modify-table .open-close-check{
+	-webkit-appearance: none;
+	cursor: pointer;
+	position: relative;
+	width: 55px;
+	height: 26px;
+	line-height: 25px;
+	background: #F9F9F9;
+	border-radius: 25px;
+	outline: none;
+	vertical-align: middle;
+	margin-left: 10px;
+	float: left;
+}
+
+/* 设置关闭时滑块的样式 */
+.modify-table .open-close-check:before{
+	position: absolute;
+	left: 0;
+	content: '否';
+	color:#000000;
+	font-size: 13px;
+	background-color: #FAFAFA;
+	text-align: center;
+	width: 30px;
+	height: 25px;
+	border-radius: 50%;
+	box-shadow: 0 0 5px #ddd;
+	transition: all 0.2s linear;
+}
+/* 滑槽和滑块的样式 */
+.modify-table .open-close-check:checked{
+	background: #18ff0a;
+}
+/* 设置开启时滑块的样式 */
+.modify-table .open-close-check:checked::before{
+	content: '是';
+	left: 29px;
+	color:#666666;
+	background-color: #7FFFD4;
+	transition: all 0.2s linear;
+}

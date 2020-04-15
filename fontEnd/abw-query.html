@@ -14,7 +14,7 @@
 	<div class="cover-div" v-show="modifyingRecord"></div>
 	<div class="paginator">
 		<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
-		<button class="export-data"> <a :href="exportDataUrl">数据导出</a></button>
+		<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">数据导出</a></button>
 	</div>
 	<div class="record-table">
 		<table border="" cellspacing="" cellpadding="">
@@ -64,8 +64,7 @@
 			<tr>
 				<td>任务类型</td>
 				<td>
-					<select >
-						<option :value ="modifyWork.task_type">{{modifyWork.task_type_name}}</option>
+					<select v-model="currentTaskType">
 						<option v-for="(key,value) in modifyWork.work_types" :value ="value">{{key}}</option>
 					</select>
 				</td>
@@ -112,11 +111,15 @@
 			
 				
 			<tr class="commint-btn">
-				<td colspan="12"><button type="button" @click="commitModify">确定修改</button></td>
+				<td colspan="2">
+					<button class="commit" type="button" @click="commitModify">确定修改</button>
+					<button class="cancel" type="button" @click="closeModify">取消退出</button>
+				</td>
+				
 			</tr>
 		</table>
 	</div>
 </div>
 </body>
-<script src="js/abw-query.js?v=0.2" type="text/javascript" charset="utf-8"></script>
+<script src="js/abw-query.js?v=0.21" type="text/javascript" charset="utf-8"></script>
 </html>

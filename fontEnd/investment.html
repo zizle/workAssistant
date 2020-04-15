@@ -4,6 +4,7 @@
 	<meta charset="utf-8">
 	<title>投资方案撰写</title>
 	<link rel="stylesheet" type="text/css" href="css/investment.css?v=0.13"/>
+	<link rel="stylesheet" type="text/css" href="css/edittable.css"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -14,23 +15,23 @@
 	<div class="edit-table">
 		<table border="0" cellspacing="" cellpadding="">
 			<tr>
-				<td class="label-td">日期</td>
+				<td>日期</td>
 				<td class="input-td"><input type="date" format="%yyyy-%MM-%dd" v-model="currentDate"></td>
 			</tr>
 			<tr>
-				<td class="label-td">部门小组</td>
+				<td>部门小组</td>
 				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.org_name"></td>
 			</tr>
 			<tr>
-				<td class="label-td">姓名</td>
+				<td>姓名</td>
 				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.name"></td>
 			</tr>
 			<tr>
-				<td class="label-td">方案标题</td>
+				<td>方案标题</td>
 				<td class="input-td"><input type="text" placeholder="在此输入标题,此项不支持为空" v-model="articleTitle"></td>
 			</tr>
 			<tr>
-				<td class="label-td">品种</td>
+				<td >品种</td>
 				<td class="input-td">
 					<select v-model="variety" class="variety-select">
 						<template v-for="(groupItem,index) in varietyInfoArray">
@@ -42,7 +43,7 @@
 				</td>
 			</tr>
 			<tr>
-				<td class="label-td">方向</td>
+				<td>方向</td>
 				<td class="input-td">
 					<select v-model="direction">
 						<option value="多头">多头</option>
@@ -52,50 +53,49 @@
 				</td>
 			</tr>
 			<tr>
-				<td class="label-td">实建日期</td>
+				<td>实建日期</td>
 				<td class="input-td"><input type="datetime-local" v-model="buildDateTime"></td>
 			</tr>
 			<tr>
-				<td class="label-td">实建均价</td>
+				<td>实建均价</td>
 				<td class="input-td"><input type="number" placeholder="请在此输入价格" v-model="buildAvgPrice"></td>
 			</tr>
 			<tr>
-				<td class="label-td">实建手数</td>
+				<td>实建手数</td>
 				<td class="input-td"><input type="number" placeholder="仅支持整数" v-model="buildHands"></td>
 			</tr>
 			<tr>
-				<td class="label-td">实出均价</td>
+				<td>实出均价</td>
 				<td class="input-td"><input type="number" placeholder="请在此输入价格" v-model="outAvgPrice"></td>
 			</tr>
 			<tr>
-				<td class="label-td">止损均价</td>
+				<td>止损均价</td>
 				<td class="input-td"><input type="number" placeholder="请在此输入价格" v-model="cutLossAvgPrice"></td>
 			</tr>
 			<tr>
-				<td class="label-td">有效期止</td>
+				<td>有效期止</td>
 				<td class="input-td"><input type="datetime-local" v-model="expireDateTime"></td>
 			</tr>
 			<tr>
-				<td class="label-td">是否外发</td>
+				<td>是否外发</td>
 				<td class="input-td-checked"><input class="open-close-check" type="checkbox" v-model="isPublish"></td>
 			</tr>
 			<tr>
-				<td class="label-td">方案结果</td>
+				<td>方案结果</td>
 				<td class="input-td"><input type="number" placeholder="用'+'号和'-'表示盈利或亏损" v-model="profit"></td>
 			</tr>
 			<tr>
-				<td class="label-td">备注</td>
+				<td>备注</td>
 				<td class="input-td"><input type="text" v-model="note"></input></td>
 			</tr>
 			<tr>
-				<td class="label-td">附件</td>
+				<td>附件</td>
 				<td class="input-td input-annex"><input type="file" @change="annexChanged"></input></td>
 			</tr>
 			<tr>
 				<td></td>
 				<td class="submit-td"><button type="submit" class="submit-btn" @click="submitRecord">确认提交</button></td>
 			</tr>
-		
 		</table>
 		
 	</div>

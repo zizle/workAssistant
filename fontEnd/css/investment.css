@@ -16,49 +16,6 @@ html,body{
 		opacity: 1;
 	}
 }
-
-.open-close-check{
-	-webkit-appearance: none;
-	cursor: pointer;
-	position: relative;
-	width: 55px;
-	height: 26px;
-	line-height: 25px;
-	background: #F9F9F9;
-	border-radius: 25px;
-	outline: none;
-	vertical-align: middle;
-	margin-left: 10px;
-}
-
-/* 设置关闭时滑块的样式 */
-.open-close-check:before{
-	position: absolute;
-	left: 0;
-	content: '否';
-	color:#000000;
-	font-size: 13px;
-	background-color: #FAFAFA;
-	text-align: center;
-	width: 30px;
-	height: 25px;
-	border-radius: 50%;
-	box-shadow: 0 0 5px #ddd;
-	transition: all 0.2s linear;
-}
-/* 滑槽和滑块的样式 */
-.open-close-check:checked{
-	background: #18ff0a;
-}
-/* 设置开启时滑块的样式 */
-.open-close-check:checked::before{
-	content: '是';
-	left: 29px;
-	color:#666666;
-	background-color: #7FFFD4;
-	transition: all 0.2s linear;
-}
-
 .page-title{
 	font-size: 18px;
 	height: 32px;
@@ -75,46 +32,6 @@ html,body{
 	color: #EFEFEF;
 	text-shadow: #000 0 0 3px;
 }
-.edit-table{
-	width: 70%;
-	margin: 0 auto;
-	margin-bottom: 50px;
-}
-.edit-table table{
-	margin: 0 auto;
-	border-collapse: collapse;
-	width: 100%;
-}
-.edit-table table td{
-	height: 50px;
-}
-
-.edit-table .label-td{
-	width: 10%;
-	height: 40px;
-	font-size: 18px;
-	text-align: center;
-	text-align: justify;
-	text-justify: distribute-all-lines;
-	text-align-last: justify;
-}
-.edit-table .input-partner .partner-edit{
-	height: 40px;
-	outline: none;
-	font-size: 15px;
-	width: calc(90% - 65px) !important;
-}
-
-.edit-table .input-td input,.edit-table .input-td select{
-	width: calc(100% - 14px);
-	height: 40px;
-	margin-left: 10px;
-	outline: none;
-	font-size: 15px;
-}
-.edit-table table td input[readonly]{
-	color: #04A9FF;
-}
 .edit-table .input-td .variety-select{
 	width: 30%;
 }
@@ -124,23 +41,8 @@ html,body{
 .edit-table .input-td .contract-input{
 	width:calc(60% - 55px) !important;
 }
-.edit-table .submit-td{
-	width: 90%;
-	height: 45px;
-}
-.edit-table .submit-btn{
-	width: 60%;
-	height: 45px;
-	margin-left: 15%;
-	background-color: #008B8B;
-	border: none;
-	border-radius: 5px;
-	color: #EFEFEF;
-	font-size: 18px;
-	margin-top: 20px;
-}
+/* 附件选择 */
 .edit-table .input-annex input{
 	width: 300px;
 	line-height: 40px;
 }
-
