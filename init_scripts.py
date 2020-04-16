@@ -175,6 +175,7 @@ def create_others_table():
                    "`words` INT(11) DEFAULT 0,"
                    "`checker` VARCHAR(128) DEFAULT '',"
                    "`allowance` INT(11) DEFAULT 0,"
+                   "`partner` VARCHAR (128) DEFAULT '',"
                    "`note` VARCHAR(512) DEFAULT '',"
                    "`annex` VARCHAR (512) DEFAULT '',"
                    "`annex_url` VARCHAR (512) DEFAULT ''"
