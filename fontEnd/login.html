@@ -26,7 +26,7 @@
 		<table>
 			<tr><th colspan="2">用户登录</th></tr>
 			<tr>
-				<td class="login-label">用户名</td>
+				<td class="login-label">姓名</td>
 				<td><input type="text" class="login-input" @focus="loginUsernameFocus" @blur="loginUsernameBlur" v-model="loginUsername"></td>
 			</tr>
 			<tr><td colspan="2" class="error-msg">{{ loginUsernameError }}</td></tr>
@@ -50,7 +50,7 @@
 		<table>
 			<tr><th colspan="2">提交信息</th></tr>
 			<tr>
-				<td class="register-label">用户名</td>
+				<td class="register-label">姓名</td>
 				<td ><input type="text" class="register-input" @focus="registerNameFocus" @blur="registerNameBlur" v-model="registerName"></td>
 			</tr>
 			<tr><td colspan="2" class="error-msg">{{ registerNameError }}</td></tr>

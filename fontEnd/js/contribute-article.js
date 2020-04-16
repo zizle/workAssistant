@@ -10,8 +10,16 @@ var vm = new Vue({
 		checker:"",
 		allowance:"",
 		note:"",
+		isPartner: false,
+		showPartner:false,
+		partnerName:'',
 		annexFile: "", // 附件
 		uploadFileProgress: 0,
+	},
+	watch:{
+		isPartner(){
+			if (this.isPartner != 0){this.showPartner = true;}else{this.showPartner = false;this.partnerName=""}
+		},
 	},
 	mounted:function(){
 		// 日期默认
@@ -72,6 +80,7 @@ var vm = new Vue({
 			param.append("words", this.words);
 			param.append("checker", this.checker);
 			param.append("allowance", this.allowance);
+			param.append("partner", this.partnerName);
 			param.append("note", this.note);
 			param.append("annex_file", this.annexFile);
 			var request_config = {

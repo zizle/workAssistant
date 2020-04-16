@@ -57,6 +57,13 @@
 				<td class="input-td"><input type="number" placeholder="仅支持整数,默认为0" v-model="allowance"></td>
 			</tr>
 			<tr>
+				<td class="label-td">协作完成</td>
+				<td class="input-partner">
+					<input class="open-close-check" type="checkbox" v-model="isPartner">
+					<input class="partner-edit" v-show="showPartner" placeholder="在这里键入合作者的姓名,多人用;隔开" type="text" style="display: inline-block; width: 45%;" v-model="partnerName">
+				</td>
+			</tr>
+			<tr>
 				<td class="label-td">备注</td>
 				<td class="input-td"><input type="text" v-model="note"></input></td>
 			</tr>
@@ -74,5 +81,5 @@
 	</div>
 </div>
 </body>
-<script src="js/contribute-article.js?v=0.13" type="text/javascript" charset="utf-8"></script>
+<script src="js/contribute-article.js?v=0.2" type="text/javascript" charset="utf-8"></script>
 </html>

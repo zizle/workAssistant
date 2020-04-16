@@ -24,6 +24,7 @@ html,body{
 	background-color: rgba(200, 200,200, 0.4);
 	border: 3px solid rgba(200, 200, 180.0.2);
 	border-radius: 8px;
+	box-shadow: 2px 2px 2px #777777;
 }
 .register-div{
 	position: absolute;
@@ -36,6 +37,7 @@ html,body{
 	background-color: rgba(200, 200,200, 0.4);
 	border: 3px solid rgba(200, 200, 180.0.2);
 	border-radius: 8px;
+	box-shadow: 2px 2px 2px #777777;
 }
 
 .login-div table, .register-div table{

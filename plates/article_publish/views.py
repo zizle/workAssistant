@@ -1,14 +1,16 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import os
 import datetime
-from flask import jsonify,request,current_app
+import os
+
+from flask import jsonify, request, current_app
 from flask.views import MethodView
+
 from db import MySQLConnection
-from utils.psd_handler import verify_json_web_token
-from utils.file_handler import hash_file_name
-from vlibs import ORGANIZATIONS
 from settings import BASE_DIR
+from utils.file_handler import hash_file_name
+from utils.psd_handler import verify_json_web_token
+from vlibs import ORGANIZATIONS
 
 
 class ArticlePublishView(MethodView):
@@ -30,7 +32,8 @@ class ArticlePublishView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
-        inner_join_statement = "SELECT usertb.name,usertb.org_id,atltb.custom_time,atltb.title,atltb.media_name,atltb.rough_type,atltb.words,atltb.checker,atltb.allowance " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,atltb.custom_time,atltb.title,atltb.media_name,atltb.rough_type,atltb.words,atltb.checker,atltb.allowance, " \
+                               "atltb.partner,atltb.note " \
                                "FROM `user_info` AS usertb INNER JOIN `article_publish` AS atltb ON " \
                                "usertb.id=%d AND usertb.id=atltb.author_id " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
@@ -90,6 +93,7 @@ class ArticlePublishView(MethodView):
         words = body_data.get('words', 0)
         checker = body_data.get('checker', '')
         allowance = body_data.get('allowance', 0)
+        partner = body_data.get('partner', '')
         note = body_data.get('note', '')
         # 读取文件
         annex_file = request.files.get('annex_file', None)
@@ -108,15 +112,15 @@ class ArticlePublishView(MethodView):
         # 存入数据库
         save_invest_statement = "INSERT INTO `article_publish`" \
                               "(`custom_time`,`author_id`,`title`,`media_name`,`rough_type`,`words`,`checker`," \
-                              "`allowance`,`note`,`annex`,`annex_url`)" \
-                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+                              "`allowance`,`partner`,`note`,`annex`,`annex_url`)" \
+                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
         try:
             # 转换类型
             words = int(words) if words else 0
             allowance = int(allowance) if allowance else 0
             cursor.execute(save_invest_statement,
                            (custom_time, author_id, title, media_name, rough_type, words,checker,
-                            allowance, note,filename,annex_url)
+                            allowance, partner, note,filename,annex_url)
                            )
             db_connection.commit()
             db_connection.close()
