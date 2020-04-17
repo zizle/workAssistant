@@ -241,3 +241,35 @@ class RetrieveInvestmentView(MethodView):
             db_connection.close()
             return jsonify("更新成功!"), 201
 
+    def delete(self, rid):
+        utoken = request.args.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        db_connection = MySQLConnection()
+        annex_file_path = None
+        try:
+            cursor = db_connection.get_cursor()
+            annex_query_statement = "SELECT `annex_url` FROM `investment` WHERE `id`=%d;" % rid
+            cursor.execute(annex_query_statement)
+            annex_file = cursor.fetchone()
+            if annex_file:
+                annex_file_path = annex_file['annex_url']
+            user_id = int(user_info['uid'])
+            delete_statement = "DELETE FROM `investment` " \
+                               "WHERE `id`=%d AND `author_id`=%d AND DATEDIFF(NOW(), `create_time`) < 3;" % (
+                               rid, user_id)
+            lines_changed = cursor.execute(delete_statement)
+            db_connection.commit()
+            if lines_changed <= 0:
+                raise ValueError("较早的记录.已经无法删除了>…<")
+        except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
+            return jsonify(str(e))
+        else:
+            db_connection.close()
+            if annex_file_path:
+                file_local_path = os.path.join(BASE_DIR, annex_file_path)
+                if os.path.isfile(file_local_path):
+                    os.remove(file_local_path)
+            return jsonify("删除成功^.^!")
+

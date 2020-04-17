@@ -5,6 +5,7 @@
 	<title>非常态工作记录查询</title>
 	<link rel="stylesheet" type="text/css" href="css/mogp-query.css?v=0.2"/>
 	<link rel="stylesheet" type="text/css" href="css/modifytable.css?v=0.2"/>
+	<link rel="stylesheet" type="text/css" href="css/rightmenu.css"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -12,12 +13,12 @@
 <body>
 <div id="app">
 	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
-	<div class="cover-div" v-show="modifyingRecord"></div>
+	<div class="cover-div" v-show="modifyingRecord" @click="closeModify"></div>
 	<div class="paginator">
 		<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
 		<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">数据导出</a></button>
 	</div>
-	<div class="record-table">
+	<div class="record-table" @click="hideContextMenu">
 		<table border="" cellspacing="" cellpadding="">
 			<tr class="title">
 				<td>日期</td>
@@ -30,7 +31,7 @@
 				<td>得分</td>
 				<td>备注</td>
 			</tr>
-			<tr v-for="(recordItem,index) in currentRecords" @dblclick="dbclickedRecord" :data-rid="recordItem.id">
+			<tr v-for="(recordItem,index) in currentRecords" @contextmenu.prevent="mouseRightClicked($event, recordItem.id)">
 				<td>{{ recordItem.custom_time }}</td>
 				<td>{{ recordItem.name }}</td>
 				<td>{{ recordItem.org_name }}</td>
@@ -94,6 +95,13 @@
 			</tr>
 		</table>
 	</div>
+	<div id="contextmenu" v-show="showContextMenu" @contextmenu.prevent>
+		<ul>
+			<li @click="modifyCurrentRecord"><img src="img/edit_ico.png" >编辑</li>
+			<li @click="deleteCurrentRecord"><img src="img/delete.png" >删除</li>
+		</ul>
+	</div>
+	
 </div>
 </body>
 <script src="js/mogp-query.js?v=0.2" type="text/javascript" charset="utf-8"></script>

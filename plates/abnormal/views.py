@@ -1,19 +1,21 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import os
-import csv
-import xlrd
-import datetime
-import time
-import hashlib
 import codecs
-from flask import jsonify, current_app, request, Response, send_from_directory
+import csv
+import datetime
+import hashlib
+import os
+import time
+
+import xlrd
+from flask import jsonify, current_app, request, send_from_directory
 from flask.views import MethodView
+
 from db import MySQLConnection
-from vlibs import ABNORMAL_WORK, ORGANIZATIONS
-from utils.psd_handler import verify_json_web_token
-from utils.file_handler import hash_file_name
 from settings import BASE_DIR
+from utils.file_handler import hash_file_name
+from utils.psd_handler import verify_json_web_token
+from vlibs import ABNORMAL_WORK, ORGANIZATIONS
 
 
 # 数据提交与查询
@@ -353,3 +355,34 @@ class RetrieveAbWorkView(MethodView):
             return jsonify("参数错误!无法修改。"), 400
         else:
             return jsonify("修改成功!")
+
+    def delete(self, work_id):
+        utoken = request.args.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        db_connection = MySQLConnection()
+        annex_file_path = None
+        try:
+            cursor = db_connection.get_cursor()
+            # 查询当前记录是否有附件
+            annex_query_statement = "SELECT `annex_url` FROM `abnormal_work` WHERE `id`=%d;" % work_id
+            cursor.execute(annex_query_statement)
+            annex_file = cursor.fetchone()
+            if annex_file:
+                annex_file_path = annex_file['annex_url']
+            user_id = int(user_info['uid'])
+            delete_statement = "DELETE FROM `abnormal_work` WHERE `id`=%d AND `author_id`=%d AND DATEDIFF(NOW(), `create_time`) < 3;" % (work_id, user_id)
+            lines_changed = cursor.execute(delete_statement)
+            db_connection.commit()
+            if lines_changed <= 0:
+                raise ValueError("较早的记录.已经无法删除了>…<")
+        except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
+            return jsonify(str(e))
+        else:
+            db_connection.close()
+            if annex_file_path:
+                file_local_path = os.path.join(BASE_DIR, annex_file_path)
+                if os.path.isfile(file_local_path):
+                    os.remove(file_local_path)
+            return jsonify("删除成功^.^!")

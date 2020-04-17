@@ -4,6 +4,7 @@
 	<meta charset="utf-8">
 	<title>短讯通记录</title>
 	<link rel="stylesheet" href="css/short-message.css?v=0.13">
+	<link rel="stylesheet" type="text/css" href="css/edittable.css"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -39,13 +40,7 @@
 			<tr>
 				<td class="label-td">影响品种</td>
 				<td class="input-td">
-					<input type="text" readonly="true" placeholder="点击选择影响的品种" @click="selectVariety" v-model="effectVariety">
-					<div class="choose-variety-div" v-show="showVarietyChecks">
-						<template v-for="(groupItem,index) in variettInfoArray">
-							<span class="check-item" v-for="(varietyItem,index) in groupItem.subs"><input type="checkbox" :id="'v' + index" :value="varietyItem.name" v-model="effectVariety"><label :for="'v' + index">{{varietyItem.name}}</label></span>
-						</template>
-						<div class="confirm-variety"><button type="button" @click="slideUpVairetyDiv">确定</button></div>
-					</div>
+					<input type="text" placeholder="在此输入影响的品种" v-model="effectVariety">
 				</td>
 			</tr>
 			

@@ -4,6 +4,7 @@
 	<meta charset="utf-8">
 	<title>专题研究</title>
 	<link rel="stylesheet" type="text/css" href="css/monographic.css?v=0.2"/>
+	<link rel="stylesheet" type="text/css" href="css/edittable.css"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -14,31 +15,31 @@
 	<div class="edit-table">
 		<table border="0" cellspacing="" cellpadding="">
 			<tr>
-				<td class="label-td">日期</td>
+				<td>日期</td>
 				<td class="input-td"><input type="date" format="%yyyy-%MM-%dd" v-model="currentDate"></td>
 			</tr>
 			<tr>
-				<td class="label-td">部门小组</td>
+				<td>部门小组</td>
 				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.org_name"></td>
 			</tr>
 			<tr>
-				<td class="label-td">姓名</td>
+				<td>姓名</td>
 				<td class="input-td"><input type="text" readonly="true" :value="userInfoDict.name"></td>
 			</tr>
 			<tr>
-				<td class="label-td">专题题目</td>
+				<td>专题题目</td>
 				<td class="input-td"><input type="text" placeholder="请输入题目,不能为空" v-model="articleTitle"></td>
 			</tr>
 			<tr>
-				<td class="label-td">字数</td>
+				<td>字数</td>
 				<td class="input-td"><input type="number" placeholder="输入文章字数,默认为0" v-model="articleWord"></input></td>
 			</tr>
 			<tr>
-				<td class="label-td">是否外发</td>
+				<td>是否外发</td>
 				<td class="input-td-checked"><input class="open-close-check" type="checkbox" v-model="isOpened"></td>
 			</tr>
 			<tr>
-				<td class="label-td">等级</td>
+				<td>等级</td>
 				<td class="input-td">
 					<select name="" v-model="articleLevel">
 						<option value="A">A</option>
@@ -48,22 +49,22 @@
 				</td>
 			</tr>
 			<tr>
-				<td class="label-td">得分</td>
+				<td>得分</td>
 				<td class="input-td"><input type="number" placeholder="仅支持输入整数,默认为0" v-model="articleScore"></td>
 			</tr>
 			<tr>
-				<td class="label-td">协作者</td>
+				<td>协作者</td>
 				<td class="input-partner">
 					<input class="open-close-check" type="checkbox" v-model="isPartner">
 					<input class="partner-edit" v-show="showPartner" placeholder="在这里键入合作者的姓名,多人用;隔开" type="text" style="display: inline-block; width: 45%;" v-model="partnerName">
 				</td>
 			</tr>
 			<tr>
-				<td class="label-td">备注</td>
+				<td>备注</td>
 				<td class="input-td"><input type="text" v-model="note"></input></td>
 			</tr>
 			<tr>
-				<td class="label-td">附件</td>
+				<td>附件</td>
 				<td class="input-td input-annex"><input type="file" @change="annexChanged"></input></td>
 			</tr>
 			<tr>

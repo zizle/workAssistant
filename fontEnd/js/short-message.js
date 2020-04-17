@@ -8,7 +8,7 @@ var vm = new Vue({
 		variettInfoArray:[],
 		content:"",
 		messageType:"",
-		effectVariety:[],
+		effectVariety:'',
 		note:"",
 		showVarietyChecks:false,  // 是否显示品种选择框
 		
@@ -78,7 +78,7 @@ var vm = new Vue({
 				effect_variety:this.effectVariety,
 				note:this.note,
 			};
-			console.log(recordMsg)
+			// console.log(recordMsg)
 			// 提交数据
 			axios.post(host + 'short-message/',data=recordMsg)
 			.then(function(resp){

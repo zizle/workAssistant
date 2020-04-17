@@ -4,6 +4,9 @@
 	<meta charset="utf-8">
 	<title>短讯通记录查询</title>
 	<link rel="stylesheet" type="text/css" href="css/shortmsg-query.css?v=0.13"/>
+	<link rel="stylesheet" type="text/css" href="css/recordtable.css"/>
+	<link rel="stylesheet" type="text/css" href="css/modifytable.css"/>
+	<link rel="stylesheet" type="text/css" href="css/rightmenu.css"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -11,9 +14,10 @@
 <body>
 <div id="app">
 	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
+	<div class="cover-div" v-show="modifyingRecord" @click="closeModify"></div>
 	<div class="paginator"><button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button></div>
 	<div class="record-table">
-		<table border="" cellspacing="" cellpadding="">
+		<table border="" cellspacing="" cellpadding="" @click="hideContextMenu">
 			<tr class="title">
 				<td>日期</td>
 				<td>姓名</td>
@@ -23,16 +27,69 @@
 				<td>影响品种</td>
 				<td>备注</td>
 			</tr>
-			<tr v-for="(recordItem,index) in currentRecords">
+			<tr v-for="(recordItem,index) in currentRecords" @contextmenu.prevent="mouseRightClicked($event, recordItem.id)">
 				<td>{{ recordItem.custom_time }}</td>
 				<td>{{ recordItem.name }}</td>
 				<td>{{ recordItem.org_name }}</td>
-				<td  class="record-content"><div><span>{{ recordItem.content }}</span></div></td>
+				<td  class="record-content"><div class="withscroll"><span>{{ recordItem.content }}</span></div></td>
 				<td>{{ recordItem.msg_type }}</td>
 				<td>{{ recordItem.effect_variety }}</td>
 				<td>{{ recordItem.note }}</td>
 			</tr>
 		</table>
+	</div>
+	<div class="modify-table" v-show="showModifyTable">
+		<div class="modify-title">记录修改<span @click="closeModify">关闭</span></div>
+		<table border="" cellspacing="" cellpadding="">
+			<tr class="title">
+				<td>日期</td>
+				<td><input type="date" v-model="recordToModify.custom_time" :value="recordToModify.custom_time"></td>
+			</tr>
+				<td>部门小组</td>
+				<td><input type="text" readonly="true" :value="recordToModify.org_name"></td>
+			<tr>
+				<td>姓名</td>
+				<td><input type="text" readonly="true" :value="recordToModify.name"></td>
+			</tr>
+			<tr>
+				<td>信息内容</td>
+				<td>
+					<input type="text" v-model="recordToModify.content">
+				</td>
+			</tr>
+			<tr>
+				<td>类别</td>
+				<td>
+					<input type="text" v-model="recordToModify.msg_type">
+				</td>
+			</tr>
+			<tr>
+				<td>影响品种</td>
+				<td>
+					<input type="text" v-model="recordToModify.effect_variety">
+				</td>
+				
+			</tr>
+			<tr>
+				<td>备注</td>
+				<td><input type="text" v-model="recordToModify.note"></td>
+				
+			</tr>
+			
+			<tr class="commint-btn">
+				<td colspan="2">
+					<button class="commit" type="button" @click="commitModify">确定修改</button>
+					<button class="cancel" type="button" @click="closeModify">取消退出</button>
+				</td>
+				
+			</tr>
+		</table>
+	</div>
+	<div id="contextmenu" v-show="showContextMenu" @contextmenu.prevent>
+		<ul>
+			<li @click="modifyCurrentRecord"><img src="img/edit_ico.png" >编辑</li>
+			<li @click="deleteCurrentRecord"><img src="img/delete.png" >删除</li>
+		</ul>
 	</div>
 </div>
 </body>

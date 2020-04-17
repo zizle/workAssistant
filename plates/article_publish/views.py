@@ -32,7 +32,7 @@ class ArticlePublishView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
-        inner_join_statement = "SELECT usertb.name,usertb.org_id,atltb.custom_time,atltb.title,atltb.media_name,atltb.rough_type,atltb.words,atltb.checker,atltb.allowance, " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,atltb.id,atltb.custom_time,atltb.title,atltb.media_name,atltb.rough_type,atltb.words,atltb.checker,atltb.allowance, " \
                                "atltb.partner,atltb.note " \
                                "FROM `user_info` AS usertb INNER JOIN `article_publish` AS atltb ON " \
                                "usertb.id=%d AND usertb.id=atltb.author_id " \
@@ -132,3 +132,102 @@ class ArticlePublishView(MethodView):
             return jsonify("参数错误!无法保存。"), 400
         else:
             return jsonify("保存成功!"), 201
+
+
+class RetrieveArticlePublishView(MethodView):
+
+    def get(self, rid):
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        select_statement = "SELECT usertb.name,usertb.org_id,atltb.id,atltb.custom_time,atltb.title,atltb.media_name,atltb.rough_type,atltb.words,atltb.checker,atltb.allowance, " \
+                           "atltb.partner,atltb.note " \
+                           "FROM `user_info` AS usertb INNER JOIN `article_publish` AS atltb ON " \
+                           "atltb.id=%d AND usertb.id=atltb.author_id;" % rid
+        cursor.execute(select_statement)
+        record_item = cursor.fetchone()
+        if record_item:
+            record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
+            record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), "未知")
+        else:
+            record_item = {}
+        return jsonify(record_item)
+
+    def put(self, rid):
+        body_json = request.json
+        record_info = body_json.get('record_data')
+        utoken = body_json.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        user_id = user_info['uid']
+        # 不为空的信息判断
+        title = record_info.get('title', False)
+        if not title:
+            return jsonify("参数错误,NOT FOUND TITLE."), 400
+
+        # 组织信息
+        custom_time = record_info.get('custom_time')
+        media_name = record_info.get('media_name', '')
+        rough_type = record_info.get('rough_type', '')
+        words = record_info.get('words', 0)
+        checker = record_info.get('checker', '')
+        allowance = record_info.get('allowance', 0)
+        partner = record_info.get('partner', '')
+        note = record_info.get('note', '')
+
+        # 更新数据库
+        update_artile_statement = "UPDATE `article_publish` SET " \
+                                "`custom_time`=%s,`title`=%s,`media_name`=%s,`rough_type`=%s,`words`=%s,`checker`=%s," \
+                                "`allowance`=%s,`partner`=%s,`note`=%s " \
+                                "WHERE `id`=%s AND `author_id`=%s;"
+        try:
+            # 转换类型
+            user_id = int(user_id)
+            custom_time = datetime.datetime.strptime(custom_time,'%Y-%m-%d') if custom_time else datetime.datetime.now()
+            words = int(words) if words else 0
+            allowance = int(allowance) if allowance else 0
+            db_connection = MySQLConnection()
+            cursor = db_connection.get_cursor()
+            cursor.execute(update_artile_statement,
+                           (custom_time, title, media_name, rough_type, words, checker,
+                            allowance, partner, note, rid, user_id)
+                           )
+            db_connection.commit()
+            db_connection.close()
+        except Exception as e:
+            current_app.logger.error("修改文章审核记录错误:" + str(e))
+            # 保存错误得删除已保存的文件
+            # if file_path and os.path.exists(file_path):
+            #     os.remove(file_path)
+            return jsonify("参数错误!无法修改。"), 400
+        else:
+            return jsonify("修改成功!")
+
+    def delete(self, rid):
+        utoken = request.args.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        db_connection = MySQLConnection()
+        annex_file_path = None
+        try:
+            cursor = db_connection.get_cursor()
+            annex_query_statement = "SELECT `annex_url` FROM `article_publish` WHERE `id`=%d;" % rid
+            cursor.execute(annex_query_statement)
+            annex_file = cursor.fetchone()
+            if annex_file:
+                annex_file_path = annex_file['annex_url']
+            user_id = int(user_info['uid'])
+            delete_statement = "DELETE FROM `article_publish` " \
+                               "WHERE `id`=%d AND `author_id`=%d AND DATEDIFF(NOW(), `create_time`) < 3;" % (rid, user_id)
+            lines_changed = cursor.execute(delete_statement)
+            db_connection.commit()
+            if lines_changed <=0:
+                raise ValueError("较早的记录.已经无法删除了>…<")
+        except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
+            return jsonify(str(e))
+        else:
+            db_connection.close()
+            if annex_file_path:
+                file_local_path = os.path.join(BASE_DIR, annex_file_path)
+                if os.path.isfile(file_local_path):
+                    os.remove(file_local_path)
+            return jsonify("删除成功^.^!")
