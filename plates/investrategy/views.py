@@ -1,12 +1,14 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import xlrd
 import datetime
-from flask import jsonify,request,current_app
+
+import xlrd
+from flask import jsonify, request, current_app
 from flask.views import MethodView
+
 from db import MySQLConnection
 from utils.psd_handler import verify_json_web_token
-from vlibs import VARIETY_LIB,ORGANIZATIONS
+from vlibs import VARIETY_LIB, ORGANIZATIONS
 
 
 class InvestrategyView(MethodView):
@@ -27,17 +29,16 @@ class InvestrategyView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
-        inner_join_statement = "SELECT usertb.name,usertb.org_id,invstb.custom_time,invstb.content,invstb.variety_id,invstb.contract,invstb.direction,invstb.hands,invstb.open_position," \
-                               "invstb.close_position,invstb.profit " \
-                               "FROM `user_info` AS usertb INNER JOIN `investrategy` AS invstb ON " \
-                               "usertb.id=%d AND usertb.id=invstb.author_id " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,invsgytb.id,invsgytb.custom_time,invsgytb.content,invsgytb.variety_id, varietytb.name AS variety, invsgytb.contract,invsgytb.direction,invsgytb.hands,invsgytb.open_position," \
+                               "invsgytb.close_position,invsgytb.profit " \
+                               "FROM `user_info` AS usertb INNER JOIN `investrategy` AS invsgytb INNER JOIN `variety` as varietytb ON " \
+                               "(usertb.id=%d AND usertb.id=invsgytb.author_id) AND invsgytb.variety_id=varietytb.id ORDER BY invsgytb.custom_time DESC " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
         # print("内连接查投顾策略自方案结果", result_records)
-
         # 查询总条数
-        count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `investrategy`AS invstb ON usertb.id=%s AND usertb.id=invstb.author_id;"
+        count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `investrategy`AS invsgytb ON usertb.id=%s AND usertb.id=invsgytb.author_id;"
         cursor.execute(count_statement, user_id)
         # print("条目记录：", cursor.fetchone()) 打开注释下行将无法解释编译
 
@@ -51,7 +52,7 @@ class InvestrategyView(MethodView):
         response_data['records'] = list()
         for record_item in result_records:
             record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
-            record_item['variety'] = VARIETY_LIB.get(int(record_item['variety_id']), '未知') + str(record_item['contract'])
+            record_item['variety'] = (record_item['variety'] if record_item['variety'] else '') + str(record_item['contract'])
             record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
             record_item['profit'] = int(record_item['profit'])
             response_data['records'].append(record_item)
@@ -207,3 +208,88 @@ class FileHandlerInvestrategyView(MethodView):
         return jsonify("数据上传成功!")
 
 
+class RetrieveInvestrategyView(MethodView):
+    def get(self, rid):
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        select_statement = "SELECT usertb.name,usertb.org_id,invsgytb.id,invsgytb.custom_time,invsgytb.content,invsgytb.variety_id,invsgytb.contract,invsgytb.direction,invsgytb.hands,invsgytb.open_position," \
+                           "invsgytb.close_position,invsgytb.profit " \
+                           "FROM `user_info` AS usertb INNER JOIN `investrategy` AS invsgytb ON " \
+                           "invsgytb.id=%s AND usertb.id=invsgytb.author_id;"
+        cursor.execute(select_statement, rid)
+        record_item = cursor.fetchone()
+        record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
+        record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
+        record_item['profit'] = int(record_item['profit'])
+        return jsonify(record_item)
+
+    def put(self, rid):
+        body_json = request.json
+        record_info = body_json.get('record_data')
+        utoken = body_json.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        user_id = user_info['uid']
+        # 不为空的信息判断
+        content = record_info.get('content', False)
+        variety_id = record_info.get('variety_id', False)
+        direction = record_info.get('direction', False)
+        if not content or not variety_id or not direction:
+            return jsonify("参数错误,NOT FOUND CONTENT,VARIETY,DIRECTION."), 400
+
+        # 组织信息
+        custom_time = record_info.get('custom_time')
+        contract = record_info.get('contract', '')
+        hands = record_info.get('hands', 0)
+        open_position = record_info.get('open_position', 0)
+        close_position = record_info.get('close_position', 0)
+        profit = record_info.get('profit')
+        # 存入数据库
+        save_invest_statement = "UPDATE `investrategy` SET " \
+                                "`custom_time`=%s,`content`=%s,`variety_id`=%s,`contract`=%s,`direction`=%s,`hands`=%s," \
+                                "`open_position`=%s,`close_position`=%s,`profit`=%s " \
+                                "WHERE `id`=%s AND `author_id`=%s;"
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        try:
+            # 转换类型
+            custom_time = datetime.datetime.strptime(custom_time,'%Y-%m-%d') if custom_time else datetime.datetime.now()
+            variety_id = int(variety_id)
+            hands = int(hands) if hands else 0
+            open_position = int(open_position) if open_position else 0
+            close_position = int(close_position) if close_position else 0
+            profit = float(profit) if profit else 0
+            cursor.execute(save_invest_statement,
+                           (custom_time, content, variety_id, contract, direction, hands,
+                            open_position, close_position, profit, rid, user_id)
+                           )
+            db_connection.commit()
+
+        except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
+            current_app.logger.error("更新投顾策略记录错误:" + str(e))
+            return jsonify("参数错误!无法修改。"), 400
+        else:
+            db_connection.close()
+            return jsonify("修改成功!"), 201
+
+    def delete(self, rid):
+        utoken = request.args.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        db_connection = MySQLConnection()
+        try:
+            user_id = int(user_info['uid'])
+            delete_statement = "DELETE FROM `investrategy` " \
+                               "WHERE `id`=%d AND `author_id`=%d AND DATEDIFF(NOW(), `create_time`) < 3;" % (rid, user_id)
+            cursor = db_connection.get_cursor()
+            lines_changed = cursor.execute(delete_statement)
+            db_connection.commit()
+            if lines_changed <= 0:
+                raise ValueError("较早的记录.已经无法删除了>…<")
+        except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
+            return jsonify(str(e))
+        else:
+            db_connection.close()
+            return jsonify("删除成功^.^!")

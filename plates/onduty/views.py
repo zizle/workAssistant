@@ -1,9 +1,11 @@
 # _*_ coding:utf-8 _*_
 # __Author__： zizle
-import xlrd
 import datetime
-from flask import jsonify,request,current_app
+
+import xlrd
+from flask import jsonify, request, current_app
 from flask.views import MethodView
+
 from db import MySQLConnection
 from utils.psd_handler import verify_json_web_token
 from vlibs import ORGANIZATIONS
@@ -28,9 +30,9 @@ class OnDutyView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
-        inner_join_statement = "SELECT usertb.name,usertb.org_id,ondmsgtb.custom_time,ondmsgtb.content,ondmsgtb.note " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,ondmsgtb.id,ondmsgtb.custom_time,ondmsgtb.content,ondmsgtb.note " \
                                "FROM `user_info` AS usertb INNER JOIN `onduty_message` AS ondmsgtb ON " \
-                               "usertb.id=%d AND usertb.id=ondmsgtb.author_id " \
+                               "usertb.id=%d AND usertb.id=ondmsgtb.author_id ORDER BY ondmsgtb.custom_time DESC " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
         cursor.execute(inner_join_statement)
         result_records = cursor.fetchall()
@@ -177,3 +179,76 @@ class FileHandlerOnDutyMsgView(MethodView):
             return jsonify(message), 400
         else:
             return jsonify("数据保存成功!")
+
+
+class RetrieveOnDutyView(MethodView):
+    def get(self, rid):
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        select_statement = "SELECT usertb.name,usertb.org_id,ondmsgtb.id,ondmsgtb.custom_time,ondmsgtb.content,ondmsgtb.note " \
+                           "FROM `user_info` AS usertb INNER JOIN `onduty_message` AS ondmsgtb ON " \
+                           "ondmsgtb.id=%d AND usertb.id=ondmsgtb.author_id;" % rid
+        cursor.execute(select_statement)
+        record_item = cursor.fetchone()
+        if record_item:
+            record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
+            record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), "未知")
+        else:
+            record_item = {}
+        return jsonify(record_item)
+
+    def put(self, rid):
+        body_json = request.json
+        record_info = body_json.get('record_data')
+        utoken = body_json.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        user_id = user_info['uid']
+        # 不为空的信息判断
+        content = record_info.get('content', False)
+        if not content:
+            return jsonify("参数错误,NOT FOUND CONTENT"), 400
+        # 组织信息
+        custom_time = record_info.get('custom_time')
+        note = record_info.get('note', '')
+        # 存入数据库
+        update_statement = "UPDATE `onduty_message` SET " \
+                              "`custom_time`=%s,`content`=%s,`note`=%s" \
+                              "WHERE `id`=%s AND `author_id`=%s;"
+        try:
+            user_id = int(user_id)
+            custom_time = datetime.datetime.strptime(custom_time,'%Y-%m-%d') if custom_time else datetime.datetime.now()
+            db_connection = MySQLConnection()
+            cursor = db_connection.get_cursor()
+            cursor.execute(update_statement,
+                           (custom_time, content, note, rid, user_id)
+                           )
+            db_connection.commit()
+            db_connection.close()
+        except Exception as e:
+            current_app.logger.error("修改值班记录错误:" + str(e))
+            return jsonify("参数错误!无法修改。"), 400
+        else:
+            return jsonify("修改成功!")
+
+    def delete(self, rid):
+        utoken = request.args.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        db_connection = MySQLConnection()
+        try:
+            user_id = int(user_info['uid'])
+            delete_statement = "DELETE FROM `onduty_message` " \
+                               "WHERE `id`=%d AND `author_id`=%d AND DATEDIFF(NOW(), `create_time`) < 3;" % (
+                               rid, user_id)
+            cursor = db_connection.get_cursor()
+            lines_changed = cursor.execute(delete_statement)
+            db_connection.commit()
+            if lines_changed <= 0:
+                raise ValueError("较早的记录.已经无法删除了>…<")
+        except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
+            return jsonify(str(e))
+        else:
+            db_connection.close()
+            return jsonify("删除成功^.^!")
+

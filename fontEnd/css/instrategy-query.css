@@ -58,32 +58,7 @@ html,body{
 	color: #666666;
 	
 }
-.record-table{
-	margin: 5px;
-}
-.record-table table{
-	width: 100%;
-	text-align: center;
-	border-collapse: collapse;
-	border: 1px solid #787878;
-	background-color: #F4F4F4;
-	
-}
-.record-table td{
-	border: 1px solid #787878;
-	font-size: 15px;
-	height: 100px;
-}
 
-.record-table .title td{
-	color: #FFFFFF;
-	background-color: #69cfb8;
-	font-size: 16px;
-	font-weight: bold;
-	line-height: 42px;
-	height: 42px;
-	border-bottom: 1px solid #787878;
-}
 .record-table .record-content{
 	width: 300px;
 }
@@ -96,3 +71,13 @@ html,body{
 	flex-wrap: wrap;
 }
 .record-table .record-content div span{width: 100%;}
+
+.modify-table .variety-select{
+	width: 30%;
+}
+.modify-table label{
+	width: 25px;
+}
+.modify-table .contract-input{
+	width:calc(70% - 55px) !important;
+}

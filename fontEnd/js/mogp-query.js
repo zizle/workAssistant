@@ -8,22 +8,12 @@ var vm = new Vue({
 		exportDataUrl: '',
 		modifyingRecord: false,
 		showModifyTable: false,
+		showContextMenu: false,
 		recordToModify:{},
+		operateRecordId:0
 	},
 	mounted:function(){
-		// 请求当前用户的专题研究数据,以分页的形式
-		var localThis = this;
-		var hostServer = host + 'monographic/?page=1&pagesize=30&utoken=' + token; 
-		axios.get(hostServer)
-		.then(function(resp){
-			// console.log(resp)
-			localThis.currentRecords = resp.data.records;
-			localThis.currentPage = resp.data.current_page;
-			localThis.totalPage = resp.data.total_page;
-			localThis.showDoloading = false;
-		})
-		.catch(function(){localThis.showDoloading = false;})
-		
+		this.getCurrentPageRecord(1);
 	},
 	methods:{
 		goToTargetPage(flag){
@@ -55,48 +45,7 @@ var vm = new Vue({
 			this.modifyingRecord = false;
 			this.showModifyTable=false;
 		},
-		commitModify(){
-			var modfyData = {
-				record_data: this.recordToModify,
-				utoken: token
-			}
-			var localThis = this;
-			var server_url = host + 'monographic/' + this.modifyRid + '/'
-			axios.put(server_url, data=modfyData)
-			.then(function(resp){
-				alert(resp.data);
-				localThis.closeModify();
-				localThis.updateCurrentPage(localThis.currentPage);
-			})
-			.catch(function(error){
-				alert(error.response.data);
-			})
-		},
-		dbclickedRecord(e){
-			// 弹窗修改
-			// e.target 是当前点击的元素
-			// e.currentTarget 是绑定事件的元素
-			var rid = e.currentTarget.dataset.rid;
-			this.modifyingRecord= true;
-			this.showModifyTable=true;
-			// console.log(rid);
-			// 请求记录
-			var server_url = host + 'monographic/' + rid + '/'
-			var localThis = this;
-			this.modifyRid = rid;
-			axios.get(server_url)
-			.then(function(resp){
-				// console.log(resp.data);
-				localThis.recordToModify = resp.data;
-				// localThis.customTime = localThis.modifyWork.custom_time;
-			})
-			.catch(function(error){
-				
-			})
-			// console.log(e.target.parentElement('tr').dataset.rid)
-		},
-		updateCurrentPage(cPage){
-			// 发起请求数据
+		getCurrentPageRecord(cPage){
 			this.showDoloading = true;
 			var localThis = this;
 			var hostServer = host + 'monographic/?page='+ cPage+'&pagesize=30&utoken=' + token; 
@@ -109,5 +58,81 @@ var vm = new Vue({
 			})
 			.catch(function(){localThis.showDoloading = false;})
 		},
+		mouseRightClicked(evt, rid){
+			this.operateRecordId = rid;
+			var drawing = document.getElementsByClassName('record-table')[0];
+			var menu = document.getElementById('contextmenu');
+			var rightedge = drawing.clientWidth-evt.clientX;
+			var bottomedge = drawing.clientHeight-evt.clientY;
+			var scrollLeftPx = document.documentElement.scrollLeft;
+			var scrollTopPx = document.documentElement.scrollTop;
+			if (rightedge < menu.offsetWidth)               
+				menu.style.left = scrollLeftPx + evt.clientX - menu.offsetWidth + "px";            
+			else{
+				menu.style.left = scrollLeftPx + evt.clientX + "px";
+			 }
+			if (bottomedge < menu.offsetHeight)
+				menu.style.top = scrollTopPx + evt.clientY - menu.offsetHeight + "px";
+			else{
+			menu.style.top = scrollTopPx + evt.clientY + "px";
+			}
+			this.showContextMenu = true;
+		},
+		modifyCurrentRecord(){
+			this.showContextMenu = false;
+			var recordTable = document.getElementsByClassName('record-table')[0];
+			var modifyTable = document.getElementsByClassName('modify-table')[0];
+			var coverDiv = document.getElementsByClassName('cover-div')[1];
+			var scrollTopPx = document.documentElement.scrollTop;
+			modifyTable.style.top = scrollTopPx  + 25 + "px";
+			if (document.documentElement.clientHeight < recordTable.clientHeight){
+				coverDiv.style.height = recordTable.clientHeight + 40+ "px";
+			}
+			this.modifyingRecord= true;
+			this.showModifyTable=true;
+			var server_url = host + 'monographic/' + this.operateRecordId + '/'
+			var localThis = this;
+			axios.get(server_url)
+			.then(function(resp){
+				localThis.recordToModify = resp.data;
+			})
+			.catch(function(error){})
+		},
+		commitModify(){
+			var modfyData = {
+				record_data: this.recordToModify,
+				utoken: token
+			}
+			var localThis = this;
+			var server_url = host + 'monographic/' + this.operateRecordId + '/'
+			axios.put(server_url, data=modfyData)
+			.then(function(resp){
+				localThis.getCurrentPageRecord(localThis.currentPage);
+				alert(resp.data);
+				localThis.closeModify();
+			})
+			.catch(function(error){
+				alert(error.response.data);
+			})
+		},
+		deleteCurrentRecord(){
+			this.showContextMenu = false;
+			if(confirm("删除是不可恢复的,您确定要删除吗?")){
+				var localThis = this;
+				var server_url = host + 'monographic/' + this.operateRecordId + '/?utoken=' + token;
+				axios.delete(server_url)
+				.then(function(resp){
+					localThis.getCurrentPageRecord(localThis.currentPage); // 删除完刷新
+					alert(resp.data);
+				})
+				.catch(function(error){
+					if (error && error.response)
+					{
+						alert(error.response.data);
+					}
+				})
+			}
+		},
+		hideContextMenu(){this.showContextMenu = false;},
 	}
 })

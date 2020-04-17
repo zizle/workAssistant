@@ -4,6 +4,9 @@
 	<meta charset="utf-8">
 	<title>非常态工作记录查询</title>
 	<link rel="stylesheet" type="text/css" href="css/abw-query.css?v=0.13"/>
+	<link rel="stylesheet" type="text/css" href="css/recordtable.css"/>
+	<link rel="stylesheet" type="text/css" href="css/modifytable.css"/>
+	<link rel="stylesheet" type="text/css" href="css/rightmenu.css"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
@@ -11,12 +14,12 @@
 <body>
 <div id="app">
 	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
-	<div class="cover-div" v-show="modifyingRecord"></div>
+	<div class="cover-div" v-show="modifyingRecord" @click="closeModify"></div>
 	<div class="paginator">
 		<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
 		<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">数据导出</a></button>
 	</div>
-	<div class="record-table">
+	<div class="record-table" @click="hideContextMenu">
 		<table border="" cellspacing="" cellpadding="">
 			<tr class="title">
 				<td>日期</td>
@@ -32,7 +35,7 @@
 				<td>收入补贴</td>
 				<td>备注</td>
 			</tr>
-			<tr v-for="(abworkItem,index) in currentWorks" @dblclick="dbclickedRecord" :data-rid="abworkItem.id">
+			<tr v-for="(abworkItem,index) in currentWorks" @contextmenu.prevent="mouseRightClicked($event, abworkItem.id)">
 				<td>{{ abworkItem.custom_time}}</td>
 				<td>{{abworkItem.org_name}}</td>
 				<td>{{abworkItem.name}}</td>
@@ -107,9 +110,6 @@
 				<td>备注</td>
 				<td><input type="text" v-model="modifyWork.note"></td>
 			</tr>
-				
-			
-				
 			<tr class="commint-btn">
 				<td colspan="2">
 					<button class="commit" type="button" @click="commitModify">确定修改</button>
@@ -118,6 +118,13 @@
 				
 			</tr>
 		</table>
+	</div>
+	
+	<div id="contextmenu" v-show="showContextMenu" @contextmenu.prevent>
+		<ul>
+			<li @click="modifyClickedRecord"><img src="img/edit_ico.png" >编辑</li>
+			<li @click="deleteCurrentRecord"><img src="img/delete.png" >删除</li>
+		</ul>
 	</div>
 </div>
 </body>
