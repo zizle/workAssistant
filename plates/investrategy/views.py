@@ -8,7 +8,7 @@ from flask.views import MethodView
 
 from db import MySQLConnection
 from utils.psd_handler import verify_json_web_token
-from vlibs import VARIETY_LIB, ORGANIZATIONS
+from vlibs import ORGANIZATIONS
 
 
 class InvestrategyView(MethodView):
@@ -134,12 +134,17 @@ class FileHandlerInvestrategyView(MethodView):
         select_user_statement = "SELECT `id`,`name`,`is_admin` FROM `user_info` WHERE `id`=%s;"
         cursor.execute(select_user_statement, user_id)
         user_obj = cursor.fetchone()
-        db_connection.close()
+
         # 管理员不给添加信息
         if user_obj['is_admin']:
             return jsonify('请不要使用用管理员用户添加记录.')
         # 准备品种信息
-        variety_dict = {value: key for key, value in VARIETY_LIB.items()}
+        # variety_dict = {value: key for key, value in VARIETY_LIB.items()}
+        query_variety = "SELECT `id`,`name` FROM `variety` WHERE `parent_id` IS NOT NULL;"
+        cursor.execute(query_variety)
+        variety_all = cursor.fetchall()
+        variety_dict = {variety_item["name"]:variety_item['id'] for variety_item in variety_all}
+        db_connection.close()
         # 文件内容
         file_contents = file.read()
         file_contents = xlrd.open_workbook(file_contents=file_contents)
@@ -186,7 +191,7 @@ class FileHandlerInvestrategyView(MethodView):
                     except Exception as e:
                         message = "系统中没有【" + str(row_content[2]) + "】品种信息."
                         raise ValueError(e)
-                    record_row.append(str(row_content[3]))
+                    record_row.append(str(int(row_content[3])))
                     record_row.append(str(row_content[4]))
                     record_row.append(int(row_content[5]) if row_content[5] else 0)
                     record_row.append(int(row_content[6]) if row_content[6] else 0)

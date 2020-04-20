@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>数据查询</title>
+	<link rel="stylesheet" type="text/css" href="css/recordtable.css"/>
+	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+	<style type="text/css">
+		html,body{
+			width: 100%;
+			height: 100%;
+			min-height: max-content;
+			margin: 0px;
+			opacity: 0;
+			animation: page-fade-in 0.7s forwards;
+			background-color: #EBEBE4;
+			/* background:-webkit-gradient(linear, 0% 0%, 0% 100%,from(#EBEBE4), to(#fff));/*谷歌*/
+		}
+		
+		@keyframes page-fade-in{
+			from{
+				opacity: 0;
+			}
+			to{
+				opacity: 1;
+			}
+		}
+		.page-title{
+			font-size: 18px;
+			height: 32px;
+			line-height: 32px;
+			padding-left: 60px;
+			background: linear-gradient(to right,#7FFFD4,#F0F8FF);
+			color: #444444;
+			/* text-shadow: #000 0 0 3px; */
+			box-shadow: 1px 1px 3px #008B8B;
+			margin-bottom: 5px;
+		}
+		.page-title span{
+			font-size: 19px;
+			color: #EFEFEF;
+			text-shadow: #000 0 0 3px;
+		}
+		.options .options-block{
+			display: inline-block;
+			margin-right: 20px;
+		}
+		.paginator{
+		}
+		.paginator button{
+			height: 20px;
+			line-height: 20xp;
+			border: none;
+			margin: 0px 5px;
+			background-color: #EBEBE4;
+			outline: none;
+		}
+		.paginator button:hover{
+			cursor: pointer;
+			color: #65BAD4;
+		}
+		.paginator span{
+			font-size: 12px;
+			color: #666666;
+			
+		}
+	</style>
+</head>
+<body>
+<div id="app">
+	<div class="page-title"><span>职员工作</span>记录查询</div>
+	<div class="options">
+		<div class="options-block">
+			<span>工作类型:</span>
+			<select v-model="workUuid">
+				<option value ="1">非常态工作</option>
+				<option value ="2">专题研究</option>
+				<option value ="3">投资方案撰写</option>
+				<option value ="4">投顾策略</option>
+				<option value ="5">文章发表</option>
+				<option value ="6">短讯通</option>
+				<option value ="7">值班信息</option>
+			</select>
+		</div>
+		<div class="options-block">
+			<span>人员:</span>
+			<select v-model="currentUserId">
+				<option v-for="(userItem,index) in stuffs" :value="userItem.id" v-if="userItem.id > 1">{{userItem.name}}</option>
+			</select>
+		</div>
+		<div class="options-block">
+			<span>起始日期:</span>
+			<input type="date" format="%yyyy-%MM-%dd" v-model="startDate"/>
+		</div>
+		<div class="options-block">
+			<span>截止日期:</span>
+			<input type="date" format="%yyyy-%MM-%dd" v-model="endDate"/>
+		</div>
+		<div class="options-block">
+			<button type="button" @click="getCurrentOptionsResults">查询</button>
+		</div>
+	</div>
+	<div class="paginator">
+		<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
+		<span>查询结果: {{totalCount}}</span>
+	</div>
+	<div class="record-table">
+		<table border="" cellspacing="" cellpadding="">
+			<tr class="title">
+				<td v-for="(headerText,index) in tableHeaders">{{headerText}}</td>
+			</tr>
+			<tr v-for="(recordItem,index) in tableRecords" @contextmenu.prevent="mouseRightClicked($event, recordItem.id)">
+				<td v-for="(key,index) in tableHeaderKeys">{{recordItem[key]}}</td>
+			</tr>
+		</table>
+	</div>
+</div>
+</body>
+<script type="text/javascript">
+	var vm = new Vue({
+		el:"#app",
+		data:{
+			startDate:'',
+			endDate:'',
+			stuffs:[],
+			workUuid:1,
+			currentUserId: 0,
+			currentPage: 1,
+			totalPage: 1,
+			totalCount: 0,
+			tableHeaders:[],
+			tableRecords:[],
+			tableHeaderKeys:[],
+		},
+		mounted:function(){
+			// 截止日期
+			var time = new Date();
+			var year = time.getFullYear()
+			var month = time.getMonth() + 1
+			var date = time.getDate()
+			if (month < 10){month = '0' + month;}
+			if (date < 10){(date = '0' + date)};
+			var today = year + '-' + month + '-' + date;
+			this.endDate = today;
+			// 起始日期
+			this.startDate = "2020-01-01";
+			this.getStuffs();
+		},
+		
+		methods:{
+			getStuffs(){
+				var localThis = this;
+				axios.get(host + 'users/?utoken=' + token)
+				.then(function(resp){
+					localThis.stuffs = resp.data;
+					// 设置第一个人员选项
+					for (var i = 0; i < localThis.stuffs.length; i++) {
+						console.log(i);
+						if(localThis.stuffs[i].id >1){
+							localThis.currentUserId = localThis.stuffs[i].id;
+							break;
+						}
+					}
+				})
+				.catch(function(error){
+					
+				})
+			},
+			goToTargetPage(flag){
+				console.log(flag);
+				var requirePage = this.currentPage;
+				// 上一页
+				if (flag=="pre"){
+					if (this.currentPage == 1){
+						console.log('已经是第一页了')
+						return;
+					}
+					requirePage = this.currentPage - 1;
+					
+				};
+				// 下一页
+				if(flag=="next"){
+					if (this.currentPage >= this.totalPage){
+						console.log("已经是最后一页了");
+						return;
+					}
+					requirePage = this.currentPage + 1;
+				};
+				this.getTargetPageResults(requirePage);
+				
+			},
+			getCurrentOptionsResults(){
+				this.getTargetPageResults(1);
+			},
+			getTargetPageResults(cPage){
+				var localThis = this;
+				var serverUrl = host + 'statistics/query-stuff/?workuuid=' + this.workUuid + '&userid=' + this.currentUserId + 
+				'&startDate=' + this.startDate + '&endDate=' + this.endDate+ '&page='+ cPage+'&pagesize=1' + '&utoken=' + token;
+				axios.get(serverUrl)
+				.then(function(resp){
+					console.log(resp.data);
+					localThis.tableHeaderKeys = resp.data.header_keys;
+					localThis.tableHeaders = resp.data.table_headers;
+					localThis.tableRecords = resp.data.records;
+					localThis.totalCount = resp.data.total_count;
+					localThis.totalPage = resp.data.total_page;
+					localThis.currentPage = resp.data.current_page;
+				})
+				.catch(function(error){
+					
+				})
+			},
+			mouseRightClicked(){
+				
+			},
+		},
+	})
+</script>
+</html>
