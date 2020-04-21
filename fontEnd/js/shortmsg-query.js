@@ -9,8 +9,8 @@ var vm = new Vue({
 		showModifyTable: false,
 		showContextMenu: false,
 		recordToModify:{},
-		operateRecordId:0
-		
+		operateRecordId:0,
+		exportDataUrl:'',
 	},
 	mounted:function(){
 		// 请求当前用户的工作情况,以分页的形式
@@ -64,6 +64,9 @@ var vm = new Vue({
 				localThis.showDoloading = false;
 			})
 			.catch(function(){localThis.showDoloading = false;})
+		},
+		exportRecord(){
+			this.exportDataUrl = host + 'short-message/export/?utoken=' + token + '&r=' + Math.random();
 		},
 		closeModify(){
 			this.modifyingRecord = false;

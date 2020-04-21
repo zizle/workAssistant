@@ -11,6 +11,7 @@ var vm = new Vue({
 		modifyingRecord: false,
 		showModifyTable: false,
 		showContextMenu: false,
+		exportDataUrl:'',
 	},
 	mounted:function(){
 		//品种
@@ -68,6 +69,9 @@ var vm = new Vue({
 				localThis.showDoloading = false;
 			})
 			.catch(function(){localThis.showDoloading = false;})
+		},
+		exportRecord(){
+			this.exportDataUrl = host + 'investrategy/export/?utoken=' + token + '&r=' + Math.random();
 		},
 		closeModify(){
 			this.modifyingRecord = false;

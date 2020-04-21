@@ -1,17 +1,15 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
 from flask import Blueprint
+
 from .abnormal_work import StuffAbnormalWorkAmount
-from .monographic import MonographicWorkAmount
+from .contribute_article import DistributeArticleAmount
 from .investment import InvestmentAmount
 from .investrategy import InvestrategyAmount
-from .contribute_article import DistributeArticleAmount
-from .shormessage import ShortMessageAmount
+from .monographic import MonographicWorkAmount
 from .ondutymsg import OnDutyMessageAmount
-
-"""
-非常态工作任务功能模块
-"""
+from .query_stuff import QueryStuffRecordView
+from .shormessage import ShortMessageAmount
 
 statistics_blp = Blueprint(name='statistics', import_name=__name__, url_prefix='/')
 statistics_blp.add_url_rule('statistics/abwork/', view_func=StuffAbnormalWorkAmount.as_view(name="abwm"))
@@ -21,4 +19,7 @@ statistics_blp.add_url_rule('statistics/investrategy/', view_func=InvestrategyAm
 statistics_blp.add_url_rule('statistics/distribute-article/', view_func=DistributeArticleAmount.as_view(name="disartcount"))
 statistics_blp.add_url_rule('statistics/shortmessage/', view_func=ShortMessageAmount.as_view(name="srtmsgcount"))
 statistics_blp.add_url_rule('statistics/ondutymsg/', view_func=OnDutyMessageAmount.as_view(name="ondmsgcount"))
+
+statistics_blp.add_url_rule('statistics/query-stuff/', view_func=QueryStuffRecordView.as_view(name="querystuff"))
+statistics_blp.add_url_rule('statistics/query-export/', vaiew_func=ExportStuffRecordView.as_view(name="exportstuff"))
 

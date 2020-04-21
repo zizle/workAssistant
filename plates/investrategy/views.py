@@ -1,14 +1,20 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
+import codecs
+import csv
 import datetime
+import hashlib
+import os
+import time
 
 import xlrd
-from flask import jsonify, request, current_app
+from flask import jsonify, request, current_app, send_from_directory
 from flask.views import MethodView
 
 from db import MySQLConnection
+from settings import BASE_DIR
 from utils.psd_handler import verify_json_web_token
-from vlibs import VARIETY_LIB, ORGANIZATIONS
+from vlibs import ORGANIZATIONS
 
 
 class InvestrategyView(MethodView):
@@ -54,7 +60,9 @@ class InvestrategyView(MethodView):
             record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
             record_item['variety'] = (record_item['variety'] if record_item['variety'] else '') + str(record_item['contract'])
             record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
-            record_item['profit'] = int(record_item['profit'])
+            record_item['open_position'] = float(record_item['open_position'])
+            record_item['close_position'] = float(record_item['close_position'])
+            record_item['profit'] = float(record_item['profit'])
             response_data['records'].append(record_item)
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
@@ -134,12 +142,17 @@ class FileHandlerInvestrategyView(MethodView):
         select_user_statement = "SELECT `id`,`name`,`is_admin` FROM `user_info` WHERE `id`=%s;"
         cursor.execute(select_user_statement, user_id)
         user_obj = cursor.fetchone()
-        db_connection.close()
+
         # 管理员不给添加信息
         if user_obj['is_admin']:
             return jsonify('请不要使用用管理员用户添加记录.')
         # 准备品种信息
-        variety_dict = {value: key for key, value in VARIETY_LIB.items()}
+        # variety_dict = {value: key for key, value in VARIETY_LIB.items()}
+        query_variety = "SELECT `id`,`name` FROM `variety` WHERE `parent_id` IS NOT NULL;"
+        cursor.execute(query_variety)
+        variety_all = cursor.fetchall()
+        variety_dict = {variety_item["name"]:variety_item['id'] for variety_item in variety_all}
+        db_connection.close()
         # 文件内容
         file_contents = file.read()
         file_contents = xlrd.open_workbook(file_contents=file_contents)
@@ -186,16 +199,19 @@ class FileHandlerInvestrategyView(MethodView):
                     except Exception as e:
                         message = "系统中没有【" + str(row_content[2]) + "】品种信息."
                         raise ValueError(e)
-                    record_row.append(str(row_content[3]))
+                    try:
+                        contract = int(row_content[3])
+                    except Exception:
+                        contract = row_content[3]
+                    record_row.append(str(contract))
                     record_row.append(str(row_content[4]))
                     record_row.append(int(row_content[5]) if row_content[5] else 0)
-                    record_row.append(int(row_content[6]) if row_content[6] else 0)
-                    record_row.append(int(row_content[7]) if row_content[7] else 0)
+                    record_row.append(float(row_content[6]) if row_content[6] else 0)
+                    record_row.append(float(row_content[7]) if row_content[7] else 0)
                     record_row.append(float(row_content[8]) if row_content[8] else 0)
                     ready_to_save.append(record_row)
         except Exception as e:
             return jsonify(message), 400
-
         insert_statement = "INSERT INTO `investrategy`" \
                             "(`custom_time`,`author_id`,`content`,`variety_id`,`contract`,`direction`,`hands`," \
                             "`open_position`,`close_position`,`profit`)" \
@@ -293,3 +309,59 @@ class RetrieveInvestrategyView(MethodView):
         else:
             db_connection.close()
             return jsonify("删除成功^.^!")
+
+
+class InvestrategyExportView(MethodView):
+    def get(self):
+        utoken = request.args.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        if not user_info:
+            return jsonify("登录已过期!刷新网页重新登录."), 400
+        query_statement = "SELECT usertb.name,usertb.org_id,invsgytb.custom_time,invsgytb.content,invsgytb.variety_id,invsgytb.contract,invsgytb.direction,invsgytb.hands," \
+                          "invsgytb.open_position,invsgytb.close_position,invsgytb.profit,invsgytb.note " \
+                          "FROM `user_info` AS usertb INNER JOIN `investrategy` AS invsgytb ON " \
+                          "usertb.id=%s AND usertb.id=invsgytb.author_id ORDER BY invsgytb.custom_time ASC;"
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        # 查询品种
+        query_variety = "SELECT `id`,`name` FROM `variety` WHERE `parent_id` IS NOT NULL;"
+        cursor.execute(query_variety)
+        variety_all = cursor.fetchall()
+        variety_dict = {variety_item["id"]: variety_item['name'] for variety_item in variety_all}
+        cursor.execute(query_statement, user_info['uid'])
+        records_all = cursor.fetchall()
+        # 生成承载数据的文件
+        t = "%.4f" % time.time()
+        md5_hash = hashlib.md5()
+        md5_hash.update(t.encode('utf-8'))
+        md5_hash.update(user_info['name'].encode('utf-8'))
+        md5_str = md5_hash.hexdigest()
+        file_folder = os.path.join(BASE_DIR, 'fileStore/exports/')
+        if not os.path.exists(file_folder):
+            os.makedirs(file_folder)
+        csv_file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+
+        file_records = list()
+        for record_item in records_all:
+            row_content = list()
+            row_content.append(record_item['custom_time'].strftime("%Y-%m-%d"))
+            row_content.append(ORGANIZATIONS.get(record_item['org_id'], '未知'))
+            row_content.append(record_item['name'])
+            row_content.append(record_item['content'])
+            row_content.append(variety_dict.get(record_item['variety_id'], ''))
+            row_content.append(record_item['contract'])
+            row_content.append(record_item['direction'])
+            row_content.append(record_item['hands'])
+            row_content.append(float(record_item['open_position']))
+            row_content.append(float(record_item['close_position']))
+            row_content.append(float(record_item['profit']))
+            row_content.append(record_item['note'])
+            file_records.append(row_content)
+        with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
+            writer = csv.writer(f, dialect='excel')
+            writer.writerow(['日期', '部门小组', '姓名', '策略内容', '品种', '合约', '方向', '手数', '策略开仓', '策略平仓', '策略结果','备注'])
+            writer.writerows(file_records)
+        # 将文件返回
+        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+                                   )

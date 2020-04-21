@@ -15,7 +15,10 @@
 <div id="app">
 	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
 	<div class="cover-div" v-show="modifyingRecord" @click="closeModify"></div>
-	<div class="paginator"><button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button></div>
+	<div class="paginator">
+		<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
+		<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">数据导出</a></button>
+	</div>
 	<div class="record-table">
 		<table border="" cellspacing="" cellpadding="">
 			<tr class="title">

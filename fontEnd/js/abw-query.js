@@ -44,7 +44,7 @@ var vm = new Vue({
 				}
 				requirePage = this.currentPage + 1;
 			};
-			this.updateCurrentPage(this.currentPage);
+			this.getCurrentPageRecord(requirePage);
 			
 		},
 		// 获取当前页

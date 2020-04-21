@@ -31,7 +31,8 @@ var vm = new Vue({
 			'statistics-investrategy.html',
 			'statistics-contributearticle.html',
 			'statistics-shortmessage.html',
-			'statistics-onduty.html'
+			'statistics-onduty.html',
+			'statistics-query.html'
 		],
 		showCover:false,
 		accessModules:[],
