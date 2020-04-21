@@ -9,7 +9,8 @@ var vm = new Vue({
 		showModifyTable: false,
 		showContextMenu: false,
 		recordToModify:{},
-		operateRecordId:0
+		operateRecordId:0,
+		exportDataUrl:'',
 	},
 	mounted:function(){
 		this.getCurrentPageRecord(1);
@@ -61,6 +62,9 @@ var vm = new Vue({
 				localThis.showDoloading = false;
 			})
 			.catch(function(){localThis.showDoloading = false;})
+		},
+		exportRecord(){
+			this.exportDataUrl = host + 'article-publish/export/?utoken=' + token + '&r=' + Math.random();
 		},
 		closeModify(){
 			this.modifyingRecord = false;

@@ -1,9 +1,13 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
+import codecs
+import csv
 import datetime
+import hashlib
 import os
+import time
 
-from flask import jsonify, request, current_app
+from flask import jsonify, request, current_app, send_from_directory
 from flask.views import MethodView
 
 from db import MySQLConnection
@@ -272,4 +276,67 @@ class RetrieveInvestmentView(MethodView):
                 if os.path.isfile(file_local_path):
                     os.remove(file_local_path)
             return jsonify("删除成功^.^!")
+
+
+class InvestmentExportView(MethodView):
+    def get(self):
+        utoken = request.args.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        if not user_info:
+            return jsonify("登录已过期!刷新网页重新登录."), 400
+        query_statement = "SELECT usertb.name,usertb.org_id,invstb.custom_time,invstb.title,invstb.variety_id,invstb.contract,invstb.direction,invstb.build_time,invstb.build_price," \
+                          "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit " \
+                          "FROM `user_info` AS usertb INNER JOIN `investment` AS invstb ON " \
+                          "usertb.id=%s AND usertb.id=invstb.author_id ORDER BY invstb.custom_time ASC;"
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        # 查询品种
+        query_variety = "SELECT `id`,`name` FROM `variety` WHERE `parent_id` IS NOT NULL;"
+        cursor.execute(query_variety)
+        variety_all = cursor.fetchall()
+        variety_dict = {variety_item["id"]: variety_item['name'] for variety_item in variety_all}
+        cursor.execute(query_statement, user_info['uid'])
+        records_all = cursor.fetchall()
+        # 生成承载数据的文件
+        t = "%.4f" % time.time()
+        md5_hash = hashlib.md5()
+        md5_hash.update(t.encode('utf-8'))
+        md5_hash.update(user_info['name'].encode('utf-8'))
+        md5_str = md5_hash.hexdigest()
+        file_folder = os.path.join(BASE_DIR, 'fileStore/exports/')
+        if not os.path.exists(file_folder):
+            os.makedirs(file_folder)
+        csv_file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+
+        file_records = list()
+        for record_item in records_all:
+            row_content = list()
+            row_content.append(record_item['custom_time'].strftime("%Y-%m-%d"))
+            row_content.append(ORGANIZATIONS.get(record_item['org_id'], '未知'))
+            row_content.append(record_item['name'])
+            row_content.append(record_item['title'])
+            row_content.append(variety_dict.get(record_item['variety_id'],''))
+            row_content.append(record_item['contract'])
+            row_content.append(record_item['direction'])
+            row_content.append(record_item['build_time'].strftime("%Y-%m-%d %H:%M"))
+            row_content.append(float(record_item['build_price']))
+            row_content.append(record_item['build_hands'])
+            row_content.append(float(record_item['out_price']))
+            row_content.append(float(record_item['cutloss_price']))
+            row_content.append(record_item['expire_time'].strftime("%Y-%m-%d %H:%M"))
+            row_content.append("是" if record_item['is_publish'] else "否")
+            row_content.append(float(record_item['profit']))
+            file_records.append(row_content)
+        with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
+            writer = csv.writer(f, dialect='excel')
+            writer.writerow(['日期', '部门小组', '姓名', '标题', '品种', '合约','方向', '实建日期','实建均价','实建手数','实出均价','止损均价',
+                             '有效期','外发情况','方案结果'])
+            writer.writerows(file_records)
+        # 将文件返回
+        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+                                   )
+
+
+
 

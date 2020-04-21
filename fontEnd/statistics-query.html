@@ -66,6 +66,12 @@
 			color: #666666;
 			
 		}
+		.record-table table td:first-child{
+			width: 100px;
+		}
+		.record-table table td:nth-child(2){
+			width: 320px;
+		}
 	</style>
 </head>
 <body>
@@ -105,6 +111,7 @@
 	<div class="paginator">
 		<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
 		<span>查询结果: {{totalCount}}</span>
+		<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">导出结果</a></button>
 	</div>
 	<div class="record-table">
 		<table border="" cellspacing="" cellpadding="">
@@ -133,6 +140,7 @@
 			tableHeaders:[],
 			tableRecords:[],
 			tableHeaderKeys:[],
+			exportDataUrl:'',
 		},
 		mounted:function(){
 			// 截止日期
@@ -148,7 +156,12 @@
 			this.startDate = "2020-01-01";
 			this.getStuffs();
 		},
-		
+		watch:{
+			workUuid(){
+				this.currentPage = 1;
+				this.getTargetPageResults(1);
+			}
+		},
 		methods:{
 			getStuffs(){
 				var localThis = this;
@@ -197,7 +210,7 @@
 			getTargetPageResults(cPage){
 				var localThis = this;
 				var serverUrl = host + 'statistics/query-stuff/?workuuid=' + this.workUuid + '&userid=' + this.currentUserId + 
-				'&startDate=' + this.startDate + '&endDate=' + this.endDate+ '&page='+ cPage+'&pagesize=1' + '&utoken=' + token;
+				'&startDate=' + this.startDate + '&endDate=' + this.endDate+ '&page='+ cPage+'&pagesize=50' + '&utoken=' + token;
 				axios.get(serverUrl)
 				.then(function(resp){
 					console.log(resp.data);
@@ -207,10 +220,14 @@
 					localThis.totalCount = resp.data.total_count;
 					localThis.totalPage = resp.data.total_page;
 					localThis.currentPage = resp.data.current_page;
+					
 				})
 				.catch(function(error){
 					
 				})
+			},
+			exportRecord(){
+				
 			},
 			mouseRightClicked(){
 				

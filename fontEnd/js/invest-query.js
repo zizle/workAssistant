@@ -11,6 +11,7 @@ var vm = new Vue({
 		recordToModify:{},
 		operateRecordId:0,
 		varietyInfoArray:[],
+		exportDataUrl:'',
 	},
 	mounted:function(){
 		this.getCurrentPageRecord(1);
@@ -74,6 +75,9 @@ var vm = new Vue({
 				localThis.showDoloading = false;
 			})
 			.catch(function(){localThis.showDoloading = false;})
+		},
+		exportRecord(){
+			this.exportDataUrl = host + 'investment/export/?utoken=' + token + '&r=' + Math.random();
 		},
 		mouseRightClicked(evt, rid){
 			this.operateRecordId = rid;

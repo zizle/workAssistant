@@ -1,12 +1,18 @@
 # _*_ coding:utf-8 _*_
 # __Author__： zizle
+import codecs
+import csv
 import datetime
+import hashlib
+import os
+import time
 
 import xlrd
-from flask import jsonify, request, current_app
+from flask import jsonify, request, current_app, send_from_directory
 from flask.views import MethodView
 
 from db import MySQLConnection
+from settings import BASE_DIR
 from utils.psd_handler import verify_json_web_token
 from vlibs import ORGANIZATIONS
 
@@ -252,3 +258,45 @@ class RetrieveOnDutyView(MethodView):
             db_connection.close()
             return jsonify("删除成功^.^!")
 
+
+class OnDutyMsgExportView(MethodView):
+    def get(self):
+        utoken = request.args.get('utoken')
+        user_info = verify_json_web_token(utoken)
+        if not user_info:
+            return jsonify("登录已过期!刷新网页重新登录."), 400
+        query_statement = "SELECT usertb.name,usertb.org_id,ondmsgtb.custom_time,ondmsgtb.content,ondmsgtb.note " \
+                          "FROM `user_info` AS usertb INNER JOIN `onduty_message` AS ondmsgtb ON " \
+                          "usertb.id=%s AND usertb.id=ondmsgtb.author_id ORDER BY ondmsgtb.custom_time ASC;"
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        cursor.execute(query_statement, user_info['uid'])
+        records_all = cursor.fetchall()
+        # 生成承载数据的文件
+        t = "%.4f" % time.time()
+        md5_hash = hashlib.md5()
+        md5_hash.update(t.encode('utf-8'))
+        md5_hash.update(user_info['name'].encode('utf-8'))
+        md5_str = md5_hash.hexdigest()
+        file_folder = os.path.join(BASE_DIR, 'fileStore/exports/')
+        if not os.path.exists(file_folder):
+            os.makedirs(file_folder)
+        csv_file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+
+        file_records = list()
+        for record_item in records_all:
+            row_content = list()
+            row_content.append(record_item['custom_time'].strftime("%Y-%m-%d"))
+            row_content.append(ORGANIZATIONS.get(record_item['org_id'], '未知'))
+            row_content.append(record_item['name'])
+            row_content.append(record_item['content'])
+            row_content.append(record_item['note'])
+            file_records.append(row_content)
+        with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
+            writer = csv.writer(f, dialect='excel')
+            writer.writerow(['日期', '部门小组', '姓名', '信息内容', '备注'])
+            writer.writerows(file_records)
+        # 将文件返回
+        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+                                   )

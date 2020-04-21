@@ -21,4 +21,5 @@ statistics_blp.add_url_rule('statistics/shortmessage/', view_func=ShortMessageAm
 statistics_blp.add_url_rule('statistics/ondutymsg/', view_func=OnDutyMessageAmount.as_view(name="ondmsgcount"))
 
 statistics_blp.add_url_rule('statistics/query-stuff/', view_func=QueryStuffRecordView.as_view(name="querystuff"))
+statistics_blp.add_url_rule('statistics/query-export/', vaiew_func=ExportStuffRecordView.as_view(name="exportstuff"))
 
