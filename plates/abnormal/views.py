@@ -37,7 +37,8 @@ class AbnormalWorkView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # 原生sql内联查询
-        inner_join_statement = "SELECT usertb.name,usertb.org_id,abworktb.id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,abworktb.id,abworktb.custom_time,abworktb.task_type," \
+                               "abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
                                "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
                                "usertb.id=%d AND usertb.id=abworktb.author_id ORDER BY abworktb.custom_time DESC " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
@@ -222,6 +223,7 @@ class FileHandlerAbnormalWorkView(MethodView):
                     record_row.append(str(row_content[9]))
                     ready_to_save.append(record_row)
         except Exception as e:
+            current_app.logger.error('{}上传非常态工作错误:{}'.format(user_obj['name'], e))
             return jsonify(message), 400
 
         insert_statement = "INSERT INTO `abnormal_work`" \

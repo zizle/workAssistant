@@ -236,6 +236,8 @@ class RetrieveInvestrategyView(MethodView):
         record_item = cursor.fetchone()
         record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
         record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
+        record_item['open_position'] = float(record_item['open_position'])
+        record_item['close_position'] = float(record_item['close_position'])
         record_item['profit'] = int(record_item['profit'])
         return jsonify(record_item)
 
@@ -271,8 +273,8 @@ class RetrieveInvestrategyView(MethodView):
             custom_time = datetime.datetime.strptime(custom_time,'%Y-%m-%d') if custom_time else datetime.datetime.now()
             variety_id = int(variety_id)
             hands = int(hands) if hands else 0
-            open_position = int(open_position) if open_position else 0
-            close_position = int(close_position) if close_position else 0
+            open_position = float(open_position) if open_position else 0
+            close_position = float(close_position) if close_position else 0
             profit = float(profit) if profit else 0
             cursor.execute(save_invest_statement,
                            (custom_time, content, variety_id, contract, direction, hands,
