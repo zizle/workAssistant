@@ -172,10 +172,10 @@ class RetrieveInvestmentView(MethodView):
         record_item['expire_time'] = record_item['expire_time'].strftime('%Y-%m-%dT%H:%M:%S')
         record_item['is_publish'] = "是" if record_item['is_publish'] else "否"
         record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), '未知')
-        record_item['build_price'] = int(record_item['build_price'])
-        record_item['out_price'] = int(record_item['out_price'])
-        record_item['cutloss_price'] = int(record_item['cutloss_price'])
-        record_item['profit'] = int(record_item['profit'])
+        record_item['build_price'] = float(record_item['build_price'])
+        record_item['out_price'] = float(record_item['out_price'])
+        record_item['cutloss_price'] = float(record_item['cutloss_price'])
+        record_item['profit'] = float(record_item['profit'])
         return jsonify(record_item)
 
     def put(self, rid):
