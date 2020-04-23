@@ -36,7 +36,8 @@ class MonographicView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
-        inner_join_statement = "SELECT usertb.name,usertb.org_id,mgpctb.id,mgpctb.custom_time,mgpctb.title,mgpctb.words,mgpctb.is_publish,mgpctb.level,mgpctb.score,mgpctb.note " \
+        inner_join_statement = "SELECT usertb.name,usertb.org_id,mgpctb.id,mgpctb.custom_time,mgpctb.title,mgpctb.words," \
+                               "mgpctb.is_publish,mgpctb.level,mgpctb.score,mgpctb.note,mgpctb.annex,mgpctb.annex_url " \
                                "FROM `user_info` AS usertb INNER JOIN `monographic` AS mgpctb ON " \
                                "usertb.id=%d AND usertb.id=mgpctb.author_id ORDER BY mgpctb.custom_time DESC " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
@@ -190,7 +191,8 @@ class RetrieveMonographicView(MethodView):
     def get(self, rid):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        select_statement = "SELECT usertb.name,usertb.org_id,mgpctb.custom_time,mgpctb.title,mgpctb.words,mgpctb.is_publish,mgpctb.level,mgpctb.score,mgpctb.partner,mgpctb.note " \
+        select_statement = "SELECT usertb.name,usertb.org_id,mgpctb.custom_time,mgpctb.title,mgpctb.words,mgpctb.is_publish," \
+                           "mgpctb.level,mgpctb.score,mgpctb.partner,mgpctb.note,mgpctb.annex,mgpctb.annex_url " \
                            "FROM `user_info` AS usertb INNER JOIN `monographic` AS mgpctb ON " \
                            "mgpctb.id=%s AND mgpctb.author_id=usertb.id;"
         cursor.execute(select_statement, rid)
@@ -202,45 +204,62 @@ class RetrieveMonographicView(MethodView):
         return jsonify(record_item)
 
     def put(self, rid):
-        body_json = request.json
-        record_info = body_json.get('record_data')
-        utoken = body_json.get('utoken')
+        body_data = request.form
+        utoken = body_data.get('utoken')
         user_info = verify_json_web_token(utoken)
         user_id = user_info['uid']
         # 不为空的信息判断
-        title = record_info.get('title', False)
+        title = body_data.get('title', False)
         if not title:
             return jsonify("参数错误,NOT FOUND TITLE"), 400
         # 组织信息
-        custom_time = record_info.get('custom_time')
-        words = record_info.get('words', 0)
-        is_publish = record_info.get('is_publish', False)
-        level = record_info.get('level', 'D')
-        score = record_info.get('score', 0)
-        note = record_info.get('note', '')
-        partner = record_info.get('partner_name', '')
-        save_work_statement = "UPDATE `monographic` SET" \
-                              "`custom_time`=%s,`title`=%s,`words`=%s,`is_publish`=%s,`level`=%s," \
-                              "`score`=%s,`note`=%s,`partner`=%s" \
-                              "WHERE `id`=%s AND `author_id`=%s;"
+        custom_time = body_data.get('custom_time')
+        words = body_data.get('words', 0)
+        is_publish = body_data.get('is_publish', False)
+        level = body_data.get('level', 'D')
+        score = body_data.get('score', 0)
+        note = body_data.get('note', '')
+        partner = body_data.get('partner_name', '')
+
+        filename = body_data.get('annex', '')
+        annex_url = body_data.get('annex_url', '')
+        old_annex_url = annex_url
+        annex_file = request.files.get('annex_file',None)
+        file_path = ''
+        if annex_file:
+            filename = annex_file.filename
+            hash_name = hash_file_name(filename)
+            file_path = os.path.join(BASE_DIR, "fileStore/monographic/" + hash_name)
+            annex_url = "fileStore/monographic/" + hash_name  # 数据库路径
+            annex_file.save(file_path)
+        update_statement = "UPDATE `monographic` SET " \
+                            "`custom_time`=%s,`title`=%s,`words`=%s,`is_publish`=%s,`level`=%s," \
+                            "`score`=%s,`note`=%s,`partner`=%s,`annex`=%s,`annex_url`=%s " \
+                            "WHERE `id`=%s AND `author_id`=%s;"
+        db_connection = MySQLConnection()
         try:
             # 转换类型
             custom_time = datetime.datetime.strptime(custom_time, '%Y-%m-%d')
             words = int(words) if words else 0
             score = int(score) if score else 0
             is_publish = 1 if is_publish else 0
-            db_connection = MySQLConnection()
+
             cursor = db_connection.get_cursor()
-            cursor.execute(save_work_statement,
-                           (custom_time, title, words, is_publish, level, score, note, partner, rid, user_id)
+            cursor.execute(update_statement,
+                           (custom_time, title, words, is_publish, level,
+                            score, note, partner,filename,annex_url, rid, user_id)
                            )
             db_connection.commit()
-            db_connection.close()
+            old_file_path = os.path.join(BASE_DIR, old_annex_url)
+            if os.path.isfile(old_file_path):
+                os.remove(old_file_path)
         except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
             current_app.logger.error("修改专题研究记录错误:" + str(e))
-            # # 保存错误得删除已保存的文件
-            # if file_path and os.path.exists(file_path):
-            #     os.remove(file_path)
+            # 保存错误得删除已保存的文件
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
             return jsonify("参数错误!无法保存。")
         else:
             return jsonify("修改成功!")

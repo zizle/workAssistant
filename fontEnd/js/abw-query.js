@@ -11,7 +11,8 @@ var vm = new Vue({
 		currentPage:1,
 		totalPage:1,
 		exportDataUrl: '',
-		operateRecordId:0
+		operateRecordId:0,
+		annexFile: "", // 新的附件
 	},
 	mounted:function(){
 		// 请求当前用户的工作情况,以分页的形式
@@ -22,7 +23,12 @@ var vm = new Vue({
 			this.modifyWork.task_type = newVal;
 		}
 	},
+	
 	methods:{
+		// 选择了新附件
+		annexChanged(e){
+			this.annexFile=e.target.files[0];
+		},
 		// 前往页
 		goToTargetPage(flag){
 			console.log(flag);
@@ -54,6 +60,7 @@ var vm = new Vue({
 			var hostServer = host + 'abnormal-work/?page='+ cPage+'&pagesize=30&utoken=' + token; 
 			axios.get(hostServer)
 			.then(function(resp){
+				console.log(resp);
 				localThis.currentWorks = resp.data.abworks;
 				localThis.currentPage = resp.data.current_page;
 				localThis.totalPage = resp.data.total_page;
@@ -126,16 +133,35 @@ var vm = new Vue({
 		closeModify(){
 			this.modifyingRecord = false;
 			this.showModifyTable=false;
+			var annexInput = document.getElementById('annexFile');
+			annexInput.value='';
+			this.annexFile = '';
 		},
 		// 提交修改
 		commitModify(){
-			var modfyData = {
-				record_data: this.modifyWork,
-				utoken: token
+			var param = new FormData();
+			for (var key in this.modifyWork){
+				param.append(key, this.modifyWork[key])
 			}
+			param.append("annex_file", this.annexFile);
+			param.append('utoken', token);
+			var request_config = {
+				headers:{ "Content-Type": "multipart/form-data"},
+				// // 上传进度监听
+				// onUploadProgress: e => {
+				// 	var completeProgress = ((e.loaded / e.total * 100) | 0) + "%";
+				// 	this.uploadFileProgress = completeProgress;
+				// }
+			};
+			
+			
+			// var modfyData = {
+			// 	record_data: this.modifyWork,
+			// 	utoken: token
+			// }
 			var localThis = this;
 			var server_url = host + 'abnormal-work/' + this.operateRecordId + '/';
-			axios.put(server_url, data=modfyData)
+			axios.put(server_url, param, request_config)
 			.then(function(resp){
 				localThis.getCurrentPageRecord(localThis.currentPage); // 修改完刷新
 				alert(resp.data);

@@ -1,12 +1,13 @@
 # _*_ coding:utf-8 _*_
 # __Author__： zizle
-import json
 import datetime
+import json
+
+import pandas as pd
 
 
 # 处理查询结果date_array与amount_all内的日期格式对应
 def query_result_into_stuffs(date_array, amount_all):
-    import pandas as pd
     stuffs = ['日期']
     # 获取职员的集合数组，第一个值为日期（表头）
     for work_count_item in amount_all:

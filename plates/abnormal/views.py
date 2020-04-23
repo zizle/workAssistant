@@ -38,7 +38,8 @@ class AbnormalWorkView(MethodView):
         cursor = db_connection.get_cursor()
         # 原生sql内联查询
         inner_join_statement = "SELECT usertb.name,usertb.org_id,abworktb.id,abworktb.custom_time,abworktb.task_type," \
-                               "abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
+                               "abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number," \
+                               "abworktb.swiss_coin,abworktb.allowance,abworktb.note,abworktb.annex,abworktb.annex_url " \
                                "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
                                "usertb.id=%d AND usertb.id=abworktb.author_id ORDER BY abworktb.custom_time DESC " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
@@ -300,7 +301,9 @@ class RetrieveAbWorkView(MethodView):
     def get(self, work_id):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        select_statement = "SELECT usertb.name,usertb.org_id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
+        select_statement = "SELECT usertb.name,usertb.org_id,abworktb.custom_time,abworktb.task_type,abworktb.title," \
+                           "abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin," \
+                           "abworktb.allowance,abworktb.note,abworktb.annex,abworktb.annex_url " \
                            "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
                            "abworktb.id=%s AND abworktb.author_id=usertb.id;"
         cursor.execute(select_statement, work_id)
@@ -313,49 +316,71 @@ class RetrieveAbWorkView(MethodView):
         return jsonify(work_item)
 
     def put(self, work_id):
-        body_json = request.json
-        record_info = body_json.get('record_data')
-        utoken = body_json.get('utoken')
+        body_data = request.form
+        utoken = body_data.get('utoken')
         user_info = verify_json_web_token(utoken)
         user_id = user_info['uid']
         # 不为空的信息判断
-        task_type = record_info.get('task_type', 0)
+        task_type = body_data.get('task_type', 0)
         task_type_text = ABNORMAL_WORK.get(int(task_type), 0)
-        title = record_info.get('title', False)
+        title = body_data.get('title', False)
         if not task_type_text or not title:
             return jsonify("参数错误,NOT FOUND TASKTYPE AND TITLE"), 400
         # 组织信息
-        custom_time = datetime.datetime.strptime(record_info.get('custom_time'), '%Y-%m-%d')
-        task_type = record_info.get('task_type', 0)
-        sponsor = record_info.get('sponsor', '')
-        applied_org = record_info.get('applied_org', '')
-        applicant = record_info.get('applicant', '')
-        tel_number = record_info.get('tel_number', '')
-        swiss_coin = record_info.get('swiss_coin', 0)
-        allowance = record_info.get('allowance', 0)
-        note = record_info.get('note', '')
-        partner = record_info.get('partner_name', '')
+        custom_time = datetime.datetime.strptime(body_data.get('custom_time'), '%Y-%m-%d')
+        task_type = body_data.get('task_type', 0)
+        sponsor = body_data.get('sponsor', '')
+        applied_org = body_data.get('applied_org', '')
+        applicant = body_data.get('applicant', '')
+        tel_number = body_data.get('tel_number', '')
+        swiss_coin = body_data.get('swiss_coin', 0)
+        allowance = body_data.get('allowance', 0)
+        note = body_data.get('note', '')
+        partner = body_data.get('partner_name', '')
+        filename = body_data.get('annex','')
+        annex_url = body_data.get('annex_url','')
+        old_annex_url = annex_url  # 保存旧文件路径待删除文件
+        # 读取文件
+        annex_file = request.files.get('annex_file', None)
+        file_path = ''
+        if annex_file:
+            filename = annex_file.filename
+            hash_name = hash_file_name(filename)
+            # 获取保存的位置
+            file_path = os.path.join(BASE_DIR, "fileStore/abwork/" + hash_name)
+            annex_url = "fileStore/abwork/" + hash_name  # 数据库路径
+            annex_file.save(file_path)
         # 存入数据库
         update_statement = "UPDATE `abnormal_work` SET " \
                             "`custom_time`=%s,`task_type`=%s,`title`=%s,`sponsor`=%s,`applied_org`=%s," \
-                            "`applicant`=%s,`tel_number`=%s,`swiss_coin`=%s,`allowance`=%s,`note`=%s,`partner`=%s " \
+                            "`applicant`=%s,`tel_number`=%s,`swiss_coin`=%s,`allowance`=%s,`note`=%s,`partner`=%s," \
+                            "`annex`=%s,`annex_url`=%s " \
                             "WHERE `id`=%s AND `author_id`=%s;"
+        db_connection = MySQLConnection()
         try:
             swiss_coin = int(swiss_coin) if swiss_coin else 0
             allowance = float(allowance) if allowance else 0
-            db_connection = MySQLConnection()
             cursor = db_connection.get_cursor()
             cursor.execute(update_statement,
                            (custom_time, task_type, title, sponsor, applied_org,
                             applicant, tel_number, swiss_coin, allowance, note, partner,
+                            filename,annex_url,
                             work_id, user_id)
                            )
             db_connection.commit()
-            db_connection.close()
+            # 删除原来的文件
+            old_file_path = os.path.join(BASE_DIR, old_annex_url)
+            if os.path.isfile(old_file_path):
+                os.remove(old_file_path)
         except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
             current_app.logger.error("修改非常态工作记录错误:" + str(e))
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
             return jsonify("参数错误!无法修改。"), 400
         else:
+            db_connection.close()
             return jsonify("修改成功!")
 
     def delete(self, work_id):

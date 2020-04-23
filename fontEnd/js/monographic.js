@@ -63,6 +63,10 @@ var vm = new Vue({
 				alert("请填写完整信息");
 				return;
 			}
+			if(!this.annexFile){
+				if(confirm("确定不上传附件吗?")){
+				}else{return;}
+			}
 			var param = new FormData();
 			param.append("worker_id", this.userInfoDict.uid);
 			param.append("org_id", this.userInfoDict.org_id);

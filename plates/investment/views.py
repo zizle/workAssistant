@@ -37,7 +37,7 @@ class InvestmentView(MethodView):
         cursor = db_connection.get_cursor()
         # sql内联查询
         inner_join_statement = "SELECT usertb.name,usertb.org_id,invstb.id,invstb.custom_time,invstb.title,varietytb.name as variety,invstb.contract,invstb.direction,invstb.build_time,invstb.build_price," \
-                               "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit " \
+                               "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit,invstb.annex_url " \
                                "FROM `user_info` AS usertb INNER JOIN `investment` AS invstb INNER JOIN `variety` as varietytb ON " \
                                "(usertb.id=%d AND usertb.id=invstb.author_id) AND invstb.variety_id=varietytb.id ORDER BY invstb.custom_time DESC " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
@@ -161,7 +161,7 @@ class RetrieveInvestmentView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         select_statement = "SELECT usertb.name,usertb.org_id,invstb.custom_time,invstb.variety_id,invstb.title,invstb.contract,invstb.direction,invstb.build_time,invstb.build_price, " \
-                           "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit " \
+                           "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit,invstb.annex,invstb.annex_url " \
                            "FROM `user_info` AS usertb INNER JOIN `investment` AS invstb ON " \
                            "invstb.id=%s AND invstb.author_id=usertb.id;"
         cursor.execute(select_statement, rid)
@@ -179,36 +179,46 @@ class RetrieveInvestmentView(MethodView):
         return jsonify(record_item)
 
     def put(self, rid):
-        body_json = request.json
-        record_info = body_json.get('record_data')
-        utoken = body_json.get('utoken')
+        body_data = request.form
+        utoken = body_data.get('utoken')
         user_info = verify_json_web_token(utoken)
         user_id = user_info['uid']
         # 不为空的信息判断
-        title = record_info.get('title', False)
-        variety_id = record_info.get('variety_id', False)
-        direction = record_info.get('direction', False)
+        title = body_data.get('title', False)
+        variety_id = body_data.get('variety_id', False)
+        direction = body_data.get('direction', False)
         if not title or not variety_id or not direction:
             return jsonify("参数错误,NOT FOUND TITLE,VARIETY,DIRECTION."), 400
         # 组织信息
-        write_time = record_info.get('custom_time')
-        contract = record_info.get('contract', '')
-        build_time = record_info.get('build_time')
-        build_price = record_info.get('build_price')
-        build_hands = record_info.get('build_hands')
-        out_price = record_info.get('out_price')
-        cutloss_price = record_info.get('cutloss_price')
-        expire_time = record_info.get('expire_time')
-        is_publish = 1 if record_info.get('is_publish', False) else 0
-        profit = record_info.get('profit')
+        write_time = body_data.get('custom_time')
+        contract = body_data.get('contract', '')
+        build_time = body_data.get('build_time')
+        build_price = body_data.get('build_price')
+        build_hands = body_data.get('build_hands')
+        out_price = body_data.get('out_price')
+        cutloss_price = body_data.get('cutloss_price')
+        expire_time = body_data.get('expire_time')
+        is_publish = 1 if body_data.get('is_publish', False) else 0
+        profit = body_data.get('profit')
         # note = record_info.get('note', '')
+        filename=body_data.get('annex', '')
+        annex_url = body_data.get('annex_url', '')
+        old_annex_url = annex_url
+        annex_file = request.files.get('annex_file', None)
+        file_path = ''
+        if annex_file:
+            filename = annex_file.filename
+            hash_name = hash_file_name(filename)
+            file_path = os.path.join(BASE_DIR, "fileStore/investment/" + hash_name)
+            annex_url = "fileStore/investment/" + hash_name  # 数据库路径
+            annex_file.save(file_path)
 
         # 存入数据库
-        update_invest_statement = "UPDATE `investment` SET " \
-                                "`custom_time`=%s,`title`=%s,`variety_id`=%s,`contract`=%s,`direction`=%s,`build_time`=%s," \
-                                "`build_price`=%s,`build_hands`=%s,`out_price`=%s,`cutloss_price`=%s,`expire_time`=%s," \
-                                "`is_publish`=%s,`profit`=%s " \
-                                "WHERE `id`=%s AND `author_id`=%s;"
+        update_statement = "UPDATE `investment` SET " \
+                            "`custom_time`=%s,`title`=%s,`variety_id`=%s,`contract`=%s,`direction`=%s,`build_time`=%s," \
+                            "`build_price`=%s,`build_hands`=%s,`out_price`=%s,`cutloss_price`=%s,`expire_time`=%s," \
+                            "`is_publish`=%s,`profit`=%s,`annex`=%s,`annex_url`=%s " \
+                            "WHERE `id`=%s AND `author_id`=%s;"
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         try:
@@ -227,19 +237,21 @@ class RetrieveInvestmentView(MethodView):
             custom_time = datetime.datetime.strptime(write_time, '%Y-%m-%d') if write_time else datetime.datetime.now()
             build_time = datetime.datetime.strptime(build_time,build_time_format) if build_time else datetime.datetime.now()
             expire_time = datetime.datetime.strptime(expire_time,expire_time_format) if expire_time else datetime.datetime.now()
-            cursor.execute(update_invest_statement,
+            cursor.execute(update_statement,
                            (custom_time, title, variety_id, contract, direction, build_time,
-                            build_price, build_hands, out_price, cutloss_price, expire_time, is_publish, profit,
+                            build_price, build_hands, out_price, cutloss_price, expire_time, is_publish, profit,filename, annex_url,
                             rid, user_id)
                            )
             db_connection.commit()
+            old_file_path = os.path.join(BASE_DIR, old_annex_url)
+            if os.path.isfile(old_file_path):
+                os.remove(old_file_path)
         except Exception as e:
             db_connection.rollback()
             db_connection.close()
             current_app.logger.error("更新投资方案记录错误:" + str(e))
-            # # 保存错误得删除已保存的文件
-            # if file_path and os.path.exists(file_path):
-            #     os.remove(file_path)
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
             return jsonify("参数错误!无法更新。"), 400
         else:
             db_connection.close()
@@ -336,7 +348,3 @@ class InvestmentExportView(MethodView):
         return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
                                    as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
                                    )
-
-
-
-

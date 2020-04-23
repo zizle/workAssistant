@@ -34,6 +34,7 @@
 				<td>瑞币情况</td>
 				<td>收入补贴</td>
 				<td>备注</td>
+				<td>附件</td>
 			</tr>
 			<tr v-for="(abworkItem,index) in currentWorks" @contextmenu.prevent="mouseRightClicked($event, abworkItem.id)">
 				<td>{{ abworkItem.custom_time}}</td>
@@ -48,6 +49,9 @@
 				<td>{{abworkItem.swiss_coin}}</td>
 				<td>{{abworkItem.allowance}}</td>
 				<td>{{abworkItem.note}}</td>
+				
+				<td v-if="abworkItem.annex"><a :href="host + abworkItem.annex_url">下载</a></td>
+				<td v-else>无</td>
 			</tr>
 		</table>
 	</div>
@@ -109,6 +113,17 @@
 			<tr>
 				<td>备注</td>
 				<td><input type="text" v-model="modifyWork.note"></td>
+			</tr>
+			<tr>
+				<td>附件</td>
+				<td v-if="modifyWork.annex_url"><a :href="host + modifyWork.annex_url">{{modifyWork.annex}}</a></td>
+				<td v-else>无</td>
+			</tr>
+			<tr>
+				<td>附件重置</td>
+				<td>
+					<input id="annexFile" type="file" @change="annexChanged" ></input>
+				</td>
 			</tr>
 			<tr class="commint-btn">
 				<td colspan="2">
