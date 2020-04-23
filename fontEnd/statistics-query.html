@@ -69,7 +69,7 @@
 		.record-table table td:first-child{
 			width: 100px;
 		}
-		.record-table table td:nth-child(2){
+		.record-table table td:nth-child(3){
 			width: 320px;
 		}
 	</style>
@@ -93,6 +93,7 @@
 		<div class="options-block">
 			<span>人员:</span>
 			<select v-model="currentUserId">
+				<option value ="0">所有人</option>
 				<option v-for="(userItem,index) in stuffs" :value="userItem.id" v-if="userItem.id > 1">{{userItem.name}}</option>
 			</select>
 		</div>
@@ -119,7 +120,16 @@
 				<td v-for="(headerText,index) in tableHeaders">{{headerText}}</td>
 			</tr>
 			<tr v-for="(recordItem,index) in tableRecords" @contextmenu.prevent="mouseRightClicked($event, recordItem.id)">
-				<td v-for="(key,index) in tableHeaderKeys">{{recordItem[key]}}</td>
+				<template v-for="(key,index) in tableHeaderKeys">
+					<template v-if=key=='annex_url'>
+						<td v-if="recordItem[key]"><a :href="host+recordItem[key]">下载</a></td>
+						<td v-else>无</td>
+					</template>
+					<template v-else>
+						<td>{{recordItem[key]}}</td>
+					</template>
+					<!-- <td v-for="(key,index) in tableHeaderKeys">{{recordItem[key]}}</td> -->
+				</template>
 			</tr>
 		</table>
 	</div>

@@ -42,6 +42,7 @@
 	border: 1px solid #787878;
 	font-size: 15px;
 	height: 40px;
+	text-align: left;
 }
 /* input与select的的大小 */
 .modify-table td input,.modify-table td select{
@@ -62,6 +63,9 @@
 /* 提交按钮 */
 .modify-table .commint-btn{
 	border: none;
+}
+.modify-table .commint-btn td{
+	text-align: center;
 }
 /* 按钮 */
 .modify-table .commint-btn button{

@@ -32,6 +32,10 @@ var vm = new Vue({
 			workUuid(){
 				this.currentPage = 1;
 				this.getTargetPageResults(1);
+			},
+			currentUserId(){
+				this.currentPage = 1;
+				this.getTargetPageResults(1);
 			}
 		},
 		methods:{
@@ -41,13 +45,13 @@ var vm = new Vue({
 				.then(function(resp){
 					localThis.stuffs = resp.data;
 					// 设置第一个人员选项
-					for (var i = 0; i < localThis.stuffs.length; i++) {
-						console.log(i);
-						if(localThis.stuffs[i].id >1){
-							localThis.currentUserId = localThis.stuffs[i].id;
-							break;
-						}
-					}
+					// for (var i = 0; i < localThis.stuffs.length; i++) {
+					// 	console.log(i);
+					// 	if(localThis.stuffs[i].id >1){
+					// 		localThis.currentUserId = localThis.stuffs[i].id;
+					// 		break;
+					// 	}
+					// }
 				})
 				.catch(function(error){
 					

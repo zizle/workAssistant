@@ -12,6 +12,7 @@ var vm = new Vue({
 		operateRecordId:0,
 		varietyInfoArray:[],
 		exportDataUrl:'',
+		annexFile:'',
 	},
 	mounted:function(){
 		this.getCurrentPageRecord(1);
@@ -24,6 +25,9 @@ var vm = new Vue({
 		
 	},
 	methods:{
+		annexChanged(e){
+			this.annexFile=e.target.files[0];
+		},
 		goToTargetPage(flag){
 			console.log(flag);
 			var requirePage = this.currentPage;
@@ -61,6 +65,9 @@ var vm = new Vue({
 		closeModify(){
 			this.modifyingRecord = false;
 			this.showModifyTable=false;
+			var annexInput = document.getElementById('annexFile');
+			annexInput.value='';
+			this.annexFile = '';
 		},
 		getCurrentPageRecord(cPage){
 			// 请求当前用户的工作情况,以分页的形式
@@ -120,13 +127,19 @@ var vm = new Vue({
 			.catch(function(error){})
 		},
 		commitModify(){
-			var modfyData = {
-				record_data: this.recordToModify,
-				utoken: token
+			var param = new FormData();
+			for (var key in this.recordToModify){
+				param.append(key, this.recordToModify[key])
 			}
+			param.append("annex_file", this.annexFile);
+			param.append('utoken', token);
+			var request_config = {
+				headers:{ "Content-Type": "multipart/form-data"},
+			};
+			
 			var localThis = this;
 			var server_url = host + 'investment/' + this.operateRecordId + '/'
-			axios.put(server_url, data=modfyData)
+			axios.put(server_url, param, request_config)
 			.then(function(resp){
 				localThis.getCurrentPageRecord(localThis.currentPage);
 				alert(resp.data);

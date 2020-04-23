@@ -36,6 +36,7 @@
 				<td>有效期</td>
 				<td>外发情况</td>
 				<td>方案结果</td>
+				<td>附件</td>
 			</tr>
 			<tr v-for="(recordItem,index) in currentRecords" @contextmenu.prevent="mouseRightClicked($event, recordItem.id)">
 				<td>{{ recordItem.custom_time }}</td>
@@ -52,6 +53,8 @@
 				<td>{{ recordItem.expire_time }}</td>
 				<td>{{ recordItem.is_publish }}</td>
 				<td>{{ recordItem.profit }}</td>
+				<td v-if="recordItem.annex_url"><a :href="host + recordItem.annex_url">下载</a></td>
+				<td v-else>无</td>
 			</tr>
 		</table>
 	</div>
@@ -129,12 +132,24 @@
 				<td>方案结果</td>
 				<td><input type="number" v-model="recordToModify.profit"></td>
 			</tr>
+			<tr>
+				<td>附件</td>
+				<td v-if="recordToModify.annex_url"><a :href="host + recordToModify.annex_url">{{recordToModify.annex}}</a></td>
+				<td v-else>无</td>
+			</tr>
+			<tr>
+				<td>附件重置</td>
+				<td>
+					<input id="annexFile" type="file" @change="annexChanged" ></input>
+				</td>
+			</tr>
 			<tr class="commint-btn">
 				<td colspan="2">
 					<button class="commit" type="button" @click="commitModify">确定修改</button>
 					<button class="cancel" type="button" @click="closeModify">取消退出</button>
 				</td>
 			</tr>
+			
 		</table>
 	</div>
 	<div id="contextmenu" v-show="showContextMenu" @contextmenu.prevent>
