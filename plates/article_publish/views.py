@@ -37,7 +37,7 @@ class ArticlePublishView(MethodView):
         cursor = db_connection.get_cursor()
         # sql内联查询
         inner_join_statement = "SELECT usertb.name,usertb.org_id,atltb.id,atltb.custom_time,atltb.title,atltb.media_name,atltb.rough_type,atltb.words,atltb.checker,atltb.allowance, " \
-                               "atltb.partner,atltb.note " \
+                               "atltb.partner,atltb.note,atltb.annex,atltb.annex_url " \
                                "FROM `user_info` AS usertb INNER JOIN `article_publish` AS atltb ON " \
                                "usertb.id=%d AND usertb.id=atltb.author_id " \
                                "limit %d,%d;" % (user_id, start_id, page_size)
@@ -144,7 +144,7 @@ class RetrieveArticlePublishView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         select_statement = "SELECT usertb.name,usertb.org_id,atltb.id,atltb.custom_time,atltb.title,atltb.media_name,atltb.rough_type,atltb.words,atltb.checker,atltb.allowance, " \
-                           "atltb.partner,atltb.note " \
+                           "atltb.partner,atltb.note,atltb.annex,atltb.annex_url " \
                            "FROM `user_info` AS usertb INNER JOIN `article_publish` AS atltb ON " \
                            "atltb.id=%d AND usertb.id=atltb.author_id;" % rid
         cursor.execute(select_statement)
@@ -157,52 +157,68 @@ class RetrieveArticlePublishView(MethodView):
         return jsonify(record_item)
 
     def put(self, rid):
-        body_json = request.json
-        record_info = body_json.get('record_data')
-        utoken = body_json.get('utoken')
+        body_data = request.form
+        utoken = body_data.get('utoken')
         user_info = verify_json_web_token(utoken)
         user_id = user_info['uid']
         # 不为空的信息判断
-        title = record_info.get('title', False)
+        title = body_data.get('title', False)
         if not title:
             return jsonify("参数错误,NOT FOUND TITLE."), 400
 
         # 组织信息
-        custom_time = record_info.get('custom_time')
-        media_name = record_info.get('media_name', '')
-        rough_type = record_info.get('rough_type', '')
-        words = record_info.get('words', 0)
-        checker = record_info.get('checker', '')
-        allowance = record_info.get('allowance', 0)
-        partner = record_info.get('partner', '')
-        note = record_info.get('note', '')
+        custom_time = body_data.get('custom_time')
+        media_name = body_data.get('media_name', '')
+        rough_type = body_data.get('rough_type', '')
+        words = body_data.get('words', 0)
+        checker = body_data.get('checker', '')
+        allowance = body_data.get('allowance', 0)
+        partner = body_data.get('partner', '')
+        note = body_data.get('note', '')
 
+        filename = body_data.get('annex', '')
+        annex_url = body_data.get('annex_url', '')
+        old_annex_url = annex_url
+        annex_file = request.files.get('annex_file', None)
+        file_path = ''
+        if annex_file:
+            filename = annex_file.filename
+            hash_name = hash_file_name(filename)
+            file_path = os.path.join(BASE_DIR, "fileStore/artpublish/" + hash_name)
+            annex_url = "fileStore/artpublish/" + hash_name  # 数据库路径
+            annex_file.save(file_path)
         # 更新数据库
-        update_artile_statement = "UPDATE `article_publish` SET " \
-                                "`custom_time`=%s,`title`=%s,`media_name`=%s,`rough_type`=%s,`words`=%s,`checker`=%s," \
-                                "`allowance`=%s,`partner`=%s,`note`=%s " \
-                                "WHERE `id`=%s AND `author_id`=%s;"
+        update_statement = "UPDATE `article_publish` SET " \
+                            "`custom_time`=%s,`title`=%s,`media_name`=%s,`rough_type`=%s,`words`=%s,`checker`=%s," \
+                            "`allowance`=%s,`partner`=%s,`note`=%s,`annex`=%s,`annex_url`=%s " \
+                            "WHERE `id`=%s AND `author_id`=%s;"
+        db_connection = MySQLConnection()
         try:
             # 转换类型
             user_id = int(user_id)
             custom_time = datetime.datetime.strptime(custom_time,'%Y-%m-%d') if custom_time else datetime.datetime.now()
             words = int(words) if words else 0
             allowance = int(allowance) if allowance else 0
-            db_connection = MySQLConnection()
+
             cursor = db_connection.get_cursor()
-            cursor.execute(update_artile_statement,
+            cursor.execute(update_statement,
                            (custom_time, title, media_name, rough_type, words, checker,
-                            allowance, partner, note, rid, user_id)
+                            allowance, partner, note,filename, annex_url, rid, user_id)
                            )
             db_connection.commit()
-            db_connection.close()
+            old_file_path = os.path.join(BASE_DIR, old_annex_url)
+            if annex_file and os.path.isfile(old_file_path):
+                os.remove(old_file_path)
+
         except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
             current_app.logger.error("修改文章审核记录错误:" + str(e))
-            # 保存错误得删除已保存的文件
-            # if file_path and os.path.exists(file_path):
-            #     os.remove(file_path)
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
             return jsonify("参数错误!无法修改。"), 400
         else:
+            db_connection.close()
             return jsonify("修改成功!")
 
     def delete(self, rid):

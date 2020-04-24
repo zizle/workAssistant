@@ -11,11 +11,16 @@ var vm = new Vue({
 		recordToModify:{},
 		operateRecordId:0,
 		exportDataUrl:'',
+		annexFile:'',
+		annexUrl: '',
 	},
 	mounted:function(){
 		this.getCurrentPageRecord(1);
 	},
 	methods:{
+		annexChanged(e){
+			this.annexFile=e.target.files[0];
+		},
 		goToTargetPage(flag){
 			console.log(flag);
 			var requirePage = this.currentPage;
@@ -26,7 +31,6 @@ var vm = new Vue({
 					return;
 				}
 				requirePage = this.currentPage - 1;
-				
 			};
 			// 下一页
 			if(flag=="next"){
@@ -66,9 +70,15 @@ var vm = new Vue({
 		exportRecord(){
 			this.exportDataUrl = host + 'article-publish/export/?utoken=' + token + '&r=' + Math.random();
 		},
+		downloadAnnex(annex){
+			this.annexUrl = host + annex + '?r=' + Math.random();
+		},
 		closeModify(){
 			this.modifyingRecord = false;
 			this.showModifyTable=false;
+			var annexInput = document.getElementById('annexFile');
+			annexInput.value='';
+			this.annexFile = '';
 		},
 		mouseRightClicked(evt, rid){
 			this.operateRecordId = rid;
@@ -91,13 +101,18 @@ var vm = new Vue({
 			this.showContextMenu = true;
 		},
 		commitModify(){
-			var modfyData = {
-				record_data: this.recordToModify,
-				utoken: token
+			var param = new FormData();
+			for (var key in this.recordToModify){
+				param.append(key, this.recordToModify[key])
 			}
+			param.append("annex_file", this.annexFile);
+			param.append('utoken', token);
+			var request_config = {
+				headers:{ "Content-Type": "multipart/form-data"},
+			};
 			var localThis = this;
 			var server_url = host + 'article-publish/' + this.operateRecordId + '/'
-			axios.put(server_url, data=modfyData)
+			axios.put(server_url, param, request_config)
 			.then(function(resp){
 				localThis.getCurrentPageRecord(localThis.currentPage);
 				alert(resp.data);

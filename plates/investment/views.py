@@ -244,7 +244,7 @@ class RetrieveInvestmentView(MethodView):
                            )
             db_connection.commit()
             old_file_path = os.path.join(BASE_DIR, old_annex_url)
-            if os.path.isfile(old_file_path):
+            if annex_file and os.path.isfile(old_file_path):
                 os.remove(old_file_path)
         except Exception as e:
             db_connection.rollback()

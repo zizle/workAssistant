@@ -33,6 +33,7 @@
 				<td>收入奖励</td>
 				<td>合作人</td>
 				<td>备注</td>
+				<td>附件</td>
 			</tr>
 			<tr v-for="(recordItem,index) in currentRecords" @contextmenu.prevent="mouseRightClicked($event, recordItem.id)">
 				<td>{{ recordItem.custom_time }}</td>
@@ -46,6 +47,8 @@
 				<td>{{ recordItem.allowance}}</td>
 				<td>{{ recordItem.partner}}</td>
 				<td>{{ recordItem.note }}</td>
+				<td v-if="recordItem.annex_url"><a :href="host + recordItem.annex_url">下载</a></td>
+				<td v-else>无</td>
 			</tr>
 		</table>
 	</div>
@@ -107,6 +110,17 @@
 			<tr>
 				<td>备注</td>
 				<td><input type="text" v-model="recordToModify.note"></td>
+			</tr>
+			<tr>
+				<td>附件</td>
+				<td v-if="recordToModify.annex_url"><a :href="host + recordToModify.annex_url">{{recordToModify.annex}}</a></td>
+				<td v-else>无</td>
+			</tr>
+			<tr>
+				<td>附件重置</td>
+				<td>
+					<input id="annexFile" type="file" @change="annexChanged" ></input>
+				</td>
 			</tr>
 			<tr class="commint-btn">
 				<td colspan="2">

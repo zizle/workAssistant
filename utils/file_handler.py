@@ -9,5 +9,7 @@ def hash_file_name(filename):
     t = "%.4f" % time.time()
     md5_hash = md5()
     md5_hash.update(t.encode('utf-8'))
+    t2 = "%.4f" % time.time()
+    md5_hash.update(t2.encode('utf-8'))
     md5_hash.update(filename_list[0].encode('utf-8'))
     return md5_hash.hexdigest() + '.' + filename_list[1]

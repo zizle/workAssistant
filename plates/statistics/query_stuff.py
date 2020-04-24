@@ -372,35 +372,48 @@ class QueryStuffRecordView(MethodView):
                                    )
 
     def get_investrategy(self, userid, start_date, end_date, current_page, page_size):
-        print("投顾策略")
         start_id = current_page * page_size
-        table_headers = ['日期', '策略内容', '品种', '方向', '手数', '策略开仓', '策略平仓', '结果']
-        header_keys = ['custom_time', 'content', 'variety', 'direction', 'hands', 'open_position', 'close_position',
-                       'profit']
-        query_statement = "SELECT DATE_FORMAT(`custom_time`,'%%Y-%%m-%%d') AS `custom_time`, " \
-                          "`content`,`variety_id`,`contract`,`direction`,`hands`,`open_position`,`close_position`,`profit` " \
-                          "FROM `investrategy` WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s " \
-                          "LIMIT %s,%s;"
+        table_headers = ['日期', '姓名','策略内容', '品种', '方向', '手数', '策略开仓', '策略平仓', '结果']
+        header_keys = ['custom_time', 'name','content', 'variety', 'direction', 'hands', 'open_position', 'close_position','profit']
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-
         # 准备品种信息
         query_variety = "SELECT `id`,`name` FROM `variety` WHERE `parent_id` IS NOT NULL;"
         cursor.execute(query_variety)
         variety_all = cursor.fetchall()
         variety_dict = {variety_item["id"]: variety_item['name'] for variety_item in variety_all}
-        cursor.execute(query_statement, (userid, start_date, end_date, start_id, page_size))
-        query_result = cursor.fetchall()
-        # 总数
-        total_count_statement = "SELECT COUNT(`id`) AS `total` FROM `investrategy` " \
-                                "WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
-        cursor.execute(total_count_statement, (userid, start_date, end_date))
-        total_count = cursor.fetchone()['total']  # 计算总页数
+        if userid == 0:
+            query_statement = "SELECT usertb.name, sgytb.* " \
+                              "FROM `investrategy` AS sgytb INNER JOIN `user_info` AS usertb " \
+                              "ON sgytb.author_id=usertb.id AND (sgytb.custom_time BETWEEN %s AND %s) " \
+                              "ORDER BY sgytb.custom_time DESC " \
+                              "LIMIT %s,%s;"
+            cursor.execute(query_statement, (start_date, end_date, start_id, page_size))
+            query_result = cursor.fetchall()
+            total_count_statement = "SELECT COUNT(sgytb.id) AS `total` " \
+                                    "FROM `investrategy` AS sgytb INNER JOIN `user_info` AS usertb " \
+                                    "ON sgytb.author_id=usertb.id AND (sgytb.custom_time BETWEEN %s AND %s);"
+            cursor.execute(total_count_statement, (start_date, end_date))
+            total_count = cursor.fetchone()['total']
+        else:
+            query_statement = "SELECT usertb.name, sgytb.* " \
+                              "FROM `investrategy` AS sgytb INNER JOIN `user_info` AS usertb " \
+                              "ON sgytb.author_id=usertb.id AND sgytb.author_id=%s AND (sgytb.custom_time BETWEEN %s AND %s) " \
+                              "ORDER BY sgytb.custom_time DESC " \
+                              "LIMIT %s,%s;"
+            cursor.execute(query_statement, (userid, start_date, end_date, start_id, page_size))
+            query_result = cursor.fetchall()
+            total_count_statement = "SELECT COUNT(`id`) AS `total` FROM `investrategy` " \
+                                    "WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
+            cursor.execute(total_count_statement, (userid, start_date, end_date))
+            total_count = cursor.fetchone()['total']
+
         total_page = int((total_count + page_size - 1) / page_size)
         db_connection.close()
         response_data = dict()
         records = list()
         for record_item in query_result:
+            record_item['custom_time'] = record_item['custom_time'].strftime("%Y-%m-%d")
             record_item['variety'] = variety_dict.get(record_item['variety_id'], '') + str(record_item['contract'])
             record_item['profit'] = int(record_item['profit'])
             record_item['open_position'] = float(record_item['open_position'])
@@ -460,30 +473,45 @@ class QueryStuffRecordView(MethodView):
 
     def get_article_publish(self, userid, start_date, end_date, current_page, page_size):
         start_id = current_page * page_size
-        table_headers = ['日期', '题目', '发表/采访媒体', '稿件形式', '字数', '审核人', '收入奖励', '合作人', '备注']
-        header_keys = ['custom_time', 'title', 'media_name', 'rough_type', 'words', 'checker', 'allowance', 'partner',
-                       'note']
-        query_statement = "SELECT DATE_FORMAT(`custom_time`,'%%Y-%%m-%%d') AS `custom_time`, " \
-                          "`title`,`media_name`,`rough_type`,`words`,`checker`,`allowance`,`partner`,`note` " \
-                          "FROM `article_publish` WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s " \
-                          "LIMIT %s,%s;"
+        table_headers = ['日期', '姓名','题目', '发表/采访媒体', '稿件形式', '字数', '审核人', '收入奖励', '合作人', '备注','附件']
+        header_keys = ['custom_time', 'name','title', 'media_name', 'rough_type', 'words', 'checker', 'allowance', 'partner','note','annex_url']
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        cursor.execute(query_statement, (userid, start_date, end_date, start_id, page_size))
-        query_result = cursor.fetchall()
-        # 总数
-        total_count_statement = "SELECT COUNT(`id`) AS `total` FROM `article_publish` " \
-                                "WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
-        cursor.execute(total_count_statement, (userid, start_date, end_date))
-        total_count = cursor.fetchone()['total']  # 计算总页数
+        if userid == 0:
+            query_statement = "SELECT usertb.name, arptb.* " \
+                              "FROM `article_publish` AS arptb INNER JOIN `user_info` AS usertb " \
+                              "ON arptb.author_id=usertb.id AND (arptb.custom_time BETWEEN %s AND %s) " \
+                              "ORDER BY arptb.custom_time DESC " \
+                              "LIMIT %s,%s;"
+            cursor.execute(query_statement, (start_date, end_date, start_id, page_size))
+            query_result = cursor.fetchall()
+            total_count_statement = "SELECT COUNT(arptb.id) AS `total` " \
+                                    "FROM `article_publish` AS arptb INNER JOIN `user_info` AS usertb " \
+                                    "ON arptb.author_id=usertb.id AND (arptb.custom_time BETWEEN %s AND %s);"
+            cursor.execute(total_count_statement, (start_date, end_date))
+            total_count = cursor.fetchone()['total']
+        else:
+            query_statement = "SELECT usertb.name, arptb.* " \
+                              "FROM `article_publish` AS arptb INNER JOIN `user_info` AS usertb " \
+                              "ON arptb.author_id=usertb.id AND arptb.author_id=%s AND (arptb.custom_time BETWEEN %s AND %s) " \
+                              "ORDER BY arptb.custom_time DESC " \
+                              "LIMIT %s,%s;"
+            cursor.execute(query_statement, (userid,start_date, end_date, start_id, page_size))
+            query_result = cursor.fetchall()
+            total_count_statement = "SELECT COUNT(`id`) AS `total` FROM `article_publish` " \
+                                    "WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
+            cursor.execute(total_count_statement, (userid,start_date, end_date))
+            total_count = cursor.fetchone()['total']
+
         total_page = int((total_count + page_size - 1) / page_size)
         db_connection.close()
         response_data = dict()
-        # records = list()
-        # for record_item in query_result:
-        #
-        #     records.append(record_item)
-        response_data['records'] = query_result
+        records = list()
+        for record_item in query_result:
+            record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
+
+            records.append(record_item)
+        response_data['records'] = records
         response_data['table_headers'] = table_headers
         response_data['header_keys'] = header_keys
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来

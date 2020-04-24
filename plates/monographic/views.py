@@ -93,7 +93,7 @@ class MonographicView(MethodView):
         author_id = user_obj['id']
         words = body_data.get('words', 0)
         is_publish = body_data.get('is_publish', False)
-        level = body_data.get('level', 'D')
+        level = body_data.get('level', 'C')
         score = body_data.get('score', 0)
         note = body_data.get('work_note', '')
         partner = body_data.get('partner_name', '')
@@ -251,14 +251,14 @@ class RetrieveMonographicView(MethodView):
                            )
             db_connection.commit()
             old_file_path = os.path.join(BASE_DIR, old_annex_url)
-            if os.path.isfile(old_file_path):
+            if annex_file and os.path.isfile(old_file_path):  # 有新文件才能删除旧文件
                 os.remove(old_file_path)
         except Exception as e:
             db_connection.rollback()
             db_connection.close()
             current_app.logger.error("修改专题研究记录错误:" + str(e))
             # 保存错误得删除已保存的文件
-            if file_path and os.path.exists(file_path):
+            if file_path and os.path.isfile(file_path):
                 os.remove(file_path)
             return jsonify("参数错误!无法保存。")
         else:

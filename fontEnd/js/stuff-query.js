@@ -103,6 +103,10 @@ var vm = new Vue({
 				})
 			},
 			exportRecord(){
+				if (this.currentUserId == 0){
+					alert('请选择一个职员再进行导出..')
+					return;
+				};
 				this.exportDataUrl = host  + 'statistics/query-stuff/?workuuid=' + this.workUuid + '&userid=' + this.currentUserId +
 				'&startDate=' + this.startDate + '&endDate=' + this.endDate + '&export=1&r=' + Math.random()  + '&utoken=' + token;
 			},
