@@ -13,6 +13,7 @@ var vm = new Vue({
 		varietyInfoArray:[],
 		exportDataUrl:'',
 		annexFile:'',
+		annexUrl: '',
 	},
 	mounted:function(){
 		this.getCurrentPageRecord(1);
@@ -85,6 +86,9 @@ var vm = new Vue({
 		},
 		exportRecord(){
 			this.exportDataUrl = host + 'investment/export/?utoken=' + token + '&r=' + Math.random();
+		},
+		downloadAnnex(annex){
+			this.annexUrl = host + annex + '?r=' + Math.random();
 		},
 		mouseRightClicked(evt, rid){
 			this.operateRecordId = rid;
