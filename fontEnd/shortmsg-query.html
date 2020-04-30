@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>短讯通记录查询</title>
-	<link rel="stylesheet" type="text/css" href="css/shortmsg-query.css?v=0.3"/>
+	<link rel="stylesheet" type="text/css" href="css/shortmsg-query.css?v=0.50"/>
 	<link rel="stylesheet" type="text/css" href="css/recordtable.css"/>
 	<link rel="stylesheet" type="text/css" href="css/modifytable.css"/>
 	<link rel="stylesheet" type="text/css" href="css/rightmenu.css"/>
@@ -16,8 +16,24 @@
 	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
 	<div class="cover-div" v-show="modifyingRecord" @click="closeModify"></div>
 	<div class="paginator">
-		<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
-		<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">数据导出</a></button>
+		<div class="options-block">
+			<div>
+				<span>起始日期:</span>
+				<input type="date" format="%yyyy-%MM-%dd" v-model="startDate"/>
+			</div>
+			<div>
+				<span>截止日期:</span>
+				<input type="date" format="%yyyy-%MM-%dd" v-model="endDate"/>
+			</div>
+			<div>
+				<button type="button" @click="getCurrentRecords">查询</button>
+			</div>
+		</div>
+		<div class="page-block">
+			<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
+			<span>查询结果: {{RecordSum}}</span>
+			<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">结果导出</a></button>
+		</div>
 	</div>
 	<div class="record-table">
 		<table border="" cellspacing="" cellpadding="" @click="hideContextMenu">
@@ -96,5 +112,5 @@
 	</div>
 </div>
 </body>
-<script src="js/shortmsg-query.js?v=0.41" type="text/javascript" charset="utf-8"></script>
+<script src="js/shortmsg-query.js?v=0.50" type="text/javascript" charset="utf-8"></script>
 </html>

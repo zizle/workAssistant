@@ -16,6 +16,7 @@ var vm = new Vue({
 		expireDateTime:"",
 		isPublish:false,
 		profit:"",
+		level:"",
 		note:"",
 		showContactInput: false,  // 是否显示合约编辑框
 		annexFile: "", // 附件
@@ -107,6 +108,7 @@ var vm = new Vue({
 			param.append("expire_time", this.expireDateTime);
 			param.append("is_publish", this.isPublish);
 			param.append("profit", this.profit);
+			param.append("level", this.level);
 			param.append("note", this.note);
 			param.append("annex_file", this.annexFile);
 			var request_config = {

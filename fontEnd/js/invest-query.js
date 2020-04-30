@@ -14,15 +14,31 @@ var vm = new Vue({
 		exportDataUrl:'',
 		annexFile:'',
 		annexUrl: '',
+		startDate:"",
+		endDate:"",
+		RecordSum:0,
+		sumProfit:0,
 	},
 	mounted:function(){
-		this.getCurrentPageRecord(1);
 		//品种
 		var localThis = this;
 		axios.get(host + 'variety/')
 		.then(function(resp){
 			localThis.varietyInfoArray = resp.data;
-		})
+		});
+		// 截止日期
+		var time = new Date();
+		var year = time.getFullYear()
+		var month = time.getMonth() + 1
+		var date = time.getDate()
+		if (month < 10){month = '0' + month;}
+		if (date < 10){(date = '0' + date)};
+		var today = year + '-' + month + '-' + date;
+		this.endDate = today;
+		// 起始日期
+		this.startDate = "2020-01-01";
+		
+		this.getCurrentOptionsRecords(1);
 		
 	},
 	methods:{
@@ -50,18 +66,7 @@ var vm = new Vue({
 				requirePage = this.currentPage + 1;
 			};
 			// 发起请求数据
-			this.showDoloading = true;
-			var localThis = this;
-			var hostServer = host + 'investment/?page='+ requirePage+'&pagesize=30&utoken=' + token; 
-			axios.get(hostServer)
-			.then(function(resp){
-				console.log(resp)
-				localThis.currentRecords = resp.data.records;
-				localThis.currentPage = resp.data.current_page;
-				localThis.totalPage = resp.data.total_page;
-				localThis.showDoloading = false;
-			})
-			.catch(function(){localThis.showDoloading = false;})
+			this.getCurrentOptionsRecords(requirePage);
 		},
 		closeModify(){
 			this.modifyingRecord = false;
@@ -70,22 +75,30 @@ var vm = new Vue({
 			annexInput.value='';
 			this.annexFile = '';
 		},
-		getCurrentPageRecord(cPage){
-			// 请求当前用户的工作情况,以分页的形式
+		getCurrentRecords(){
+			this.getCurrentOptionsRecords(1);
+		},
+		// 获取当前配置条件数据
+		getCurrentOptionsRecords(cPage){
+			this.showDoloading = true;
 			var localThis = this;
-			var hostServer = host + 'investment/?page='+ cPage +'&pagesize=30&utoken=' + token; 
+			var hostServer = host + 'investment/?page='+ cPage+'&pagesize=30'+
+			'&startDate=' + this.startDate + '&endDate=' + this.endDate + '&utoken=' + token; 
 			axios.get(hostServer)
 			.then(function(resp){
-				// console.log(resp)
+				// console.log(resp);
 				localThis.currentRecords = resp.data.records;
 				localThis.currentPage = resp.data.current_page;
 				localThis.totalPage = resp.data.total_page;
+				localThis.RecordSum = resp.data.total_count;
+				localThis.sumProfit = resp.data.sum_profit;
 				localThis.showDoloading = false;
 			})
 			.catch(function(){localThis.showDoloading = false;})
 		},
 		exportRecord(){
-			this.exportDataUrl = host + 'investment/export/?utoken=' + token + '&r=' + Math.random();
+			this.exportDataUrl = host + 'investment/export/?startDate='+ this.startDate +
+			'&endDate=' + this.endDate + '&utoken=' + token + '&r=' + Math.random();
 		},
 		downloadAnnex(annex){
 			this.annexUrl = host + annex + '?r=' + Math.random();
@@ -145,7 +158,7 @@ var vm = new Vue({
 			var server_url = host + 'investment/' + this.operateRecordId + '/'
 			axios.put(server_url, param, request_config)
 			.then(function(resp){
-				localThis.getCurrentPageRecord(localThis.currentPage);
+				localThis.getCurrentOptionsRecords(localThis.currentPage);
 				alert(resp.data);
 				localThis.closeModify();
 			})
@@ -160,7 +173,7 @@ var vm = new Vue({
 				var server_url = host + 'investment/' + this.operateRecordId + '/?utoken=' + token;
 				axios.delete(server_url)
 				.then(function(resp){
-					localThis.getCurrentPageRecord(localThis.currentPage); // 删除完刷新
+					localThis.getCurrentOptionsRecords(localThis.currentPage); // 删除完刷新
 					alert(resp.data);
 				})
 				.catch(function(error){

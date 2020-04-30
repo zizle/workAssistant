@@ -28,6 +28,10 @@ class ArticlePublishView(MethodView):
         user_id = user_info['uid']
         # print(user_id)
         try:
+            start_date = params.get('startDate')
+            end_date = params.get('endDate')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            end_date = (end_date + datetime.timedelta(seconds=-1)).strftime('%Y-%m-%d %H:%M:%S')
             current_page = int(params.get('page', 1)) - 1
             page_size = int(params.get('pagesize', 30))
         except Exception:
@@ -39,19 +43,21 @@ class ArticlePublishView(MethodView):
         inner_join_statement = "SELECT usertb.name,usertb.org_id,atltb.id,atltb.custom_time,atltb.title,atltb.media_name,atltb.rough_type,atltb.words,atltb.checker,atltb.allowance, " \
                                "atltb.partner,atltb.note,atltb.annex,atltb.annex_url " \
                                "FROM `user_info` AS usertb INNER JOIN `article_publish` AS atltb ON " \
-                               "usertb.id=%d AND usertb.id=atltb.author_id " \
-                               "limit %d,%d;" % (user_id, start_id, page_size)
-        cursor.execute(inner_join_statement)
+                               "usertb.id=%s AND usertb.id=atltb.author_id AND (atltb.custom_time BETWEEN %s AND %s) " \
+                               "limit %s,%s;"
+        cursor.execute(inner_join_statement, (user_id, start_date, end_date, start_id, page_size))
         result_records = cursor.fetchall()
         # print("内连接查文章审核记录结果", result_records)
 
         # 查询总条数
-        count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `article_publish`AS atltb ON usertb.id=%s AND usertb.id=atltb.author_id;"
-        cursor.execute(count_statement, user_id)
+        count_statement = "SELECT COUNT(atltb.id) AS total FROM `user_info` AS usertb INNER JOIN `article_publish`AS atltb " \
+                          "ON usertb.id=%s AND usertb.id=atltb.author_id AND (atltb.custom_time BETWEEN %s AND %s);"
+        cursor.execute(count_statement, (user_id, start_date, end_date))
         # print("条目记录：", cursor.fetchone()) 打开注释下行将无法解释编译
 
         # 计算总页数
         total_count = cursor.fetchone()['total']
+        db_connection.close()
         total_page = int((total_count + page_size - 1) / page_size)
 
         # print('total_page',total_page)
@@ -65,6 +71,7 @@ class ArticlePublishView(MethodView):
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
         response_data['current_count'] = len(result_records)
+        response_data['total_count'] = total_count
 
         return jsonify(response_data)
 
@@ -127,14 +134,17 @@ class ArticlePublishView(MethodView):
                             allowance, partner, note,filename,annex_url)
                            )
             db_connection.commit()
-            db_connection.close()
+
         except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
             current_app.logger.error("写入文章审核记录错误:" + str(e))
             # 保存错误得删除已保存的文件
             if file_path and os.path.exists(file_path):
                 os.remove(file_path)
             return jsonify("参数错误!无法保存。"), 400
         else:
+            db_connection.close()
             return jsonify("保存成功!"), 201
 
 
@@ -154,6 +164,7 @@ class RetrieveArticlePublishView(MethodView):
             record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), "未知")
         else:
             record_item = {}
+        db_connection.close()
         return jsonify(record_item)
 
     def put(self, rid):
@@ -255,18 +266,29 @@ class RetrieveArticlePublishView(MethodView):
 
 class ArticlePublishExportView(MethodView):
     def get(self):
-        utoken = request.args.get('utoken')
+        params = request.args
+        utoken = params.get('utoken')
         user_info = verify_json_web_token(utoken)
         if not user_info:
             return jsonify("登录已过期!刷新网页重新登录."), 400
+        try:
+            start_date = params.get('startDate')
+            end_date = params.get('endDate')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            end_date = (end_date + datetime.timedelta(seconds=-1)).strftime('%Y-%m-%d %H:%M:%S')
+        except Exception:
+            return jsonify("参数错误:DATE FORMAT ERROR!")
+
         query_statement = "SELECT usertb.name,usertb.org_id,atltb.custom_time,atltb.title,atltb.media_name,atltb.rough_type,atltb.words,atltb.checker,atltb.allowance," \
                           "atltb.partner,atltb.note " \
                           "FROM `user_info` AS usertb INNER JOIN `article_publish` AS atltb ON " \
-                          "usertb.id=%s AND usertb.id=atltb.author_id ORDER BY atltb.custom_time ASC;"
+                          "usertb.id=%s AND usertb.id=atltb.author_id AND (atltb.custom_time BETWEEN %s AND %s) " \
+                          "ORDER BY atltb.custom_time ASC;"
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        cursor.execute(query_statement, user_info['uid'])
+        cursor.execute(query_statement, (user_info['uid'], start_date, end_date))
         records_all = cursor.fetchall()
+        db_connection.close()
         # 生成承载数据的文件
         t = "%.4f" % time.time()
         md5_hash = hashlib.md5()

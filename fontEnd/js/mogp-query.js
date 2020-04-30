@@ -12,9 +12,23 @@ var vm = new Vue({
 		recordToModify:{},
 		operateRecordId:0,
 		annexFile:'',
+		startDate:"",
+		endDate:"",
+		RecordSum:0,
 	},
 	mounted:function(){
-		this.getCurrentPageRecord(1);
+		// 截止日期
+		var time = new Date();
+		var year = time.getFullYear()
+		var month = time.getMonth() + 1
+		var date = time.getDate()
+		if (month < 10){month = '0' + month;}
+		if (date < 10){(date = '0' + date)};
+		var today = year + '-' + month + '-' + date;
+		this.endDate = today;
+		// 起始日期
+		this.startDate = "2020-01-01";
+		this.getCurrentOptionsRecords(1);
 	},
 	methods:{
 		annexChanged(e){
@@ -40,10 +54,11 @@ var vm = new Vue({
 				}
 				requirePage = this.currentPage + 1;
 			};
-			this.updateCurrentPage(this.currentPage);
+			this.getCurrentOptionsRecords(this.currentPage);
 		},
 		exportRecord(){
-			this.exportDataUrl = host + 'monographic/export/?utoken=' + token + '&r='+  Math.random();
+			this.exportDataUrl = host + 'monographic/export/?startDate='+ this.startDate +
+			'&endDate=' + this.endDate + '&utoken=' + token + '&r=' + Math.random();
 		},
 		closeModify(){
 			this.modifyingRecord = false;
@@ -52,19 +67,27 @@ var vm = new Vue({
 			annexInput.value='';
 			this.annexFile = '';
 		},
-		getCurrentPageRecord(cPage){
+		getCurrentRecords(){
+			this.getCurrentOptionsRecords(1);
+		},
+		// 获取当前配置条件数据
+		getCurrentOptionsRecords(cPage){
 			this.showDoloading = true;
 			var localThis = this;
-			var hostServer = host + 'monographic/?page='+ cPage+'&pagesize=30&utoken=' + token; 
+			var hostServer = host + 'monographic/?page='+ cPage+'&pagesize=30'+
+			'&startDate=' + this.startDate + '&endDate=' + this.endDate + '&utoken=' + token; 
 			axios.get(hostServer)
 			.then(function(resp){
+				// console.log(resp);
 				localThis.currentRecords = resp.data.records;
 				localThis.currentPage = resp.data.current_page;
 				localThis.totalPage = resp.data.total_page;
+				localThis.RecordSum = resp.data.total_count;
 				localThis.showDoloading = false;
 			})
 			.catch(function(){localThis.showDoloading = false;})
 		},
+
 		mouseRightClicked(evt, rid){
 			this.operateRecordId = rid;
 			var drawing = document.getElementsByClassName('record-table')[0];
@@ -119,7 +142,7 @@ var vm = new Vue({
 			var server_url = host + 'monographic/' + this.operateRecordId + '/'
 			axios.put(server_url, param, request_config)
 			.then(function(resp){
-				localThis.getCurrentPageRecord(localThis.currentPage);
+				localThis.getCurrentOptionsRecords(localThis.currentPage);
 				alert(resp.data);
 				localThis.closeModify();
 			})
@@ -134,7 +157,7 @@ var vm = new Vue({
 				var server_url = host + 'monographic/' + this.operateRecordId + '/?utoken=' + token;
 				axios.delete(server_url)
 				.then(function(resp){
-					localThis.getCurrentPageRecord(localThis.currentPage); // 删除完刷新
+					localThis.getCurrentOptionsRecords(localThis.currentPage); // 删除完刷新
 					alert(resp.data);
 				})
 				.catch(function(error){

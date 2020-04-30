@@ -1,17 +1,18 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import re
-import jwt
-import time
 import datetime
+import re
+import time
+
+import jwt
+from flask import current_app
 from flask import request, jsonify
 from flask.views import MethodView
-from flask import current_app
-from settings import SECRET_KEY, JSON_WEB_TOKEN_EXPIRE
-from db import MySQLConnection
 
-from vlibs import ORGANIZATIONS
+from db import MySQLConnection
+from settings import SECRET_KEY, JSON_WEB_TOKEN_EXPIRE
 from utils import psd_handler
+from vlibs import ORGANIZATIONS
 
 
 # 部门小组信息的视图函数
@@ -122,6 +123,7 @@ class LoginView(MethodView):
             if len(module_item['subs']) > 0:
                 response_modules.append(module_item)
         # print(response_modules)
+        db_connection.close()
         return jsonify(response_modules), 200
 
     def post(self):
@@ -213,6 +215,7 @@ class UserView(MethodView):
             user_dict['phone'] = user_item['phone']
             user_dict['email'] = user_item['email']
             user_data.append(user_dict)
+        db_connection.close()
         return jsonify(user_data)
 
 
@@ -285,7 +288,7 @@ class RetrieveUserModuleView(MethodView):
                 response_data['modules'].append(module_item)
 
             # print('最终结果:', response_data)
-
+            db_connection.close()
         except Exception as e:
             logger = current_app.logger
             logger.error("分配用户需工作模块查询时错误:" + str(e))

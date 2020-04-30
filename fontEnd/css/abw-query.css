@@ -39,23 +39,38 @@ html,body{
 }
 .paginator{
 }
-.paginator button{
+.paginator .page-block button{
+	height: 20px;
+	line-height: 20px;
+	border: none;
+	margin: 0px 5px;
+	background-color: #EBEBE4;
+	outline: none;
+}
+.paginator .page-block button:hover{
+	cursor: pointer;
+	color: #65BAD4;
+}
+
+.page-block span{
+	font-size: 12px;
+	color: #666666;
+	
+}
+.options-block{
+	margin-left: 11px;
+}
+.options-block div{
+	display: inline-block;
+}
+
+.export-data{
 	height: 20px;
 	line-height: 20xp;
 	border: none;
 	margin: 0px 5px;
 	background-color: #EBEBE4;
 	outline: none;
-}
-.paginator button:hover{
-	cursor: pointer;
-	
-	color: #65BAD4;
-}
-.paginator span{
-	font-size: 12px;
-	color: #666666;
-	
 }
 
 /* 独立设置某些行的宽度等 */

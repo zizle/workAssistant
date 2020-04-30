@@ -41,26 +41,33 @@ html,body{
 }
 .paginator{
 }
-.paginator button{
+.paginator .page-block button{
 	height: 20px;
-	line-height: 20xp;
+	line-height: 20px;
 	border: none;
 	margin: 0px 5px;
 	background-color: #EBEBE4;
 	outline: none;
 }
-.paginator button:hover{
+.paginator .page-block button:hover{
 	cursor: pointer;
 	color: #65BAD4;
 }
-.paginator span{
+
+.page-block span{
 	font-size: 12px;
 	color: #666666;
 	
 }
+.options-block{
+	margin-left: 11px;
+}
+.options-block div{
+	display: inline-block;
+}
 
 .record-table .record-content{
-	width: 350px;
+	width: 450px;
 }
 .record-table .record-content div{
 	width: 100%;
@@ -70,6 +77,16 @@ html,body{
 	display: -webkit-flex;
 	flex-wrap: wrap;
 }
+.record-table table td:nth-child(5){
+	width: 65px;
+}
+.record-table table td:nth-child(6){
+	width: 65px;
+}
+.record-table table td:nth-child(7){
+	width: 65px;
+}
+
 
 .withscroll::-webkit-scrollbar {
 	width: 8px;     /*高宽分别对应横竖滚动条的尺寸*/

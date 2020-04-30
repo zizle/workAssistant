@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>投资方案记录查询</title>
-	<link rel="stylesheet" type="text/css" href="css/invest-query.css?v=0.3"/>
+	<link rel="stylesheet" type="text/css" href="css/invest-query.css?v=0.50"/>
 	<link rel="stylesheet" type="text/css" href="css/recordtable.css"/>
 	<link rel="stylesheet" type="text/css" href="css/modifytable.css"/>
 	<link rel="stylesheet" type="text/css" href="css/rightmenu.css"/>
@@ -16,8 +16,26 @@
 	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
 	<div class="cover-div" v-show="modifyingRecord" @click="closeModify"></div>
 	<div class="paginator">
-		<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
-		<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">数据导出</a></button>
+		<div class="options-block">
+			<div>
+				<span>起始日期:</span>
+				<input type="date" format="%yyyy-%MM-%dd" v-model="startDate"/>
+			</div>
+			<div>
+				<span>截止日期:</span>
+				<input type="date" format="%yyyy-%MM-%dd" v-model="endDate"/>
+			</div>
+			<div>
+				<button type="button" @click="getCurrentRecords">查询</button>
+			</div>
+		</div>
+		<div class="page-block">
+			<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
+			<span>查询结果: {{RecordSum}}</span>
+			<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">结果导出</a></button>
+			<span>收益累计: {{sumProfit}}</span>
+		</div>
+
 	</div>
 	<div class="record-table">
 		<table border="" cellspacing="" cellpadding="">
@@ -36,6 +54,7 @@
 				<td>有效期</td>
 				<td>外发情况</td>
 				<td>方案结果</td>
+				<td>评级</td>
 				<td>附件</td>
 			</tr>
 			<tr v-for="(recordItem,index) in currentRecords" @contextmenu.prevent="mouseRightClicked($event, recordItem.id)">
@@ -53,6 +72,7 @@
 				<td>{{ recordItem.expire_time }}</td>
 				<td>{{ recordItem.is_publish }}</td>
 				<td>{{ recordItem.profit }}</td>
+				<td>{{ recordItem.level }}</td>
 				<td v-if="recordItem.annex_url"><a :href="host + recordItem.annex_url">下载</a></td>
 				<td v-else>无</td>
 			</tr>
@@ -133,6 +153,14 @@
 				<td><input type="number" v-model="recordToModify.profit"></td>
 			</tr>
 			<tr>
+				<td>方案评级</td>
+				<td><select v-model="recordToModify.level">
+					<option value="A">A</option>
+					<option value="B">B</option>
+					<option value="C">C</option>
+				</select></td>
+			</tr>
+			<tr>
 				<td>附件</td>
 				<td v-if="recordToModify.annex_url"><a :href="host + recordToModify.annex_url">{{recordToModify.annex}}</a></td>
 				<td v-else>无</td>
@@ -160,5 +188,5 @@
 	</div>
 </div>
 </body>
-<script src="js/invest-query.js?v=0.41" type="text/javascript" charset="utf-8"></script>
+<script src="js/invest-query.js?v=0.50" type="text/javascript" charset="utf-8"></script>
 </html>

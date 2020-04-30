@@ -71,7 +71,7 @@ var vm = new Vue({
 			param.append("worker_id", this.userInfoDict.uid);
 			param.append("org_id", this.userInfoDict.org_id);
 			param.append("work_date", this.currentDate);
-			param.append("upload_time", this.currentDate,);
+			param.append("upload_time", this.currentDate);
 			param.append("org_id", this.userInfoDict.org_id);
 			param.append("author_id", this.userInfoDict.uid);
 			param.append("title", this.articleTitle);

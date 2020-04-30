@@ -262,10 +262,9 @@ class QueryStuffRecordView(MethodView):
 
     def get_investment(self, userid, start_date, end_date, current_page, page_size):
         start_id = current_page * page_size
-        table_headers = ['日期', '姓名', '标题', '品种', '方向', '实建日期', '实建均价', '实建手数', '实出均价', '止损均价', '有效期', '外发', '结果','附件']
+        table_headers = ['日期', '姓名', '标题', '品种', '方向', '实建日期', '实建均价', '实建手数', '实出均价', '止损均价', '有效期', '评级', '结果','备注','附件']
         header_keys = ['custom_time', 'name', 'title', 'variety', 'direction', 'build_time', 'build_price',
-                       'build_hands', 'out_price',
-                       'cutloss_price', 'expire_time', 'is_publish', 'profit', 'annex_url']
+                       'build_hands', 'out_price','cutloss_price', 'expire_time', 'level', 'profit','note', 'annex_url']
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # 准备品种信息
@@ -281,11 +280,16 @@ class QueryStuffRecordView(MethodView):
                               "LIMIT %s,%s;"
             cursor.execute(query_statement, (start_date, end_date, start_id, page_size))
             query_result = cursor.fetchall()
-            total_count_statement = "SELECT COUNT(invstb.id) AS `total` " \
+            total_count_statement = "SELECT COUNT(invstb.id) AS `total`,SUM(invstb.profit) AS `sumprofit` " \
                                     "FROM `investment` AS invstb INNER JOIN `user_info` AS usertb " \
                                     "ON invstb.author_id=usertb.id AND (invstb.custom_time BETWEEN %s AND %s );"
             cursor.execute(total_count_statement, (start_date, end_date))
-            total_count = cursor.fetchone()['total']
+            fetch_one = cursor.fetchone()
+            if fetch_one:
+                total_count = fetch_one['total']
+                sum_porfit = fetch_one['sumprofit']
+            else:
+                total_count = sum_porfit = 0
         else:
             query_statement = "SELECT usertb.name, invstb.* " \
                               "FROM `investment` AS invstb INNER JOIN `user_info` AS usertb " \
@@ -294,10 +298,17 @@ class QueryStuffRecordView(MethodView):
                               "LIMIT %s,%s;"
             cursor.execute(query_statement, (userid, start_date, end_date, start_id, page_size))
             query_result = cursor.fetchall()
-            total_count_statement = "SELECT COUNT(`id`) AS `total` FROM `investment` " \
+            total_count_statement = "SELECT COUNT(`id`) AS `total`, SUM(`profit`) AS `sumprofit` FROM `investment` " \
                                     "WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
             cursor.execute(total_count_statement, (userid, start_date, end_date))
-            total_count = cursor.fetchone()['total']
+            fetch_one = cursor.fetchone()
+            # print(fetch_one)
+            if fetch_one:
+                total_count = fetch_one['total']
+                sum_porfit = fetch_one['sumprofit']
+            else:
+                total_count = sum_porfit = 0
+
         total_page = int((total_count + page_size - 1) / page_size)
         db_connection.close()
         response_data = dict()
@@ -307,11 +318,11 @@ class QueryStuffRecordView(MethodView):
             record_item['build_time'] = record_item['build_time'].strftime('%Y-%m-%d %H:%M')
             record_item['expire_time'] = record_item['expire_time'].strftime('%Y-%m-%d %H:%M')
             record_item['variety'] = variety_dict.get(record_item['variety_id'], '') + str(record_item['contract'])
-            record_item['is_publish'] = "是" if record_item['is_publish'] else "否"
+            # record_item['is_publish'] = "是" if record_item['is_publish'] else "否"
             record_item['build_price'] = int(record_item['build_price'])
             record_item['out_price'] = int(record_item['out_price'])
             record_item['cutloss_price'] = int(record_item['cutloss_price'])
-            record_item['profit'] = int(record_item['profit'])
+            record_item['profit'] = float(record_item['profit'])
 
             records.append(record_item)
         response_data['records'] = records
@@ -320,6 +331,7 @@ class QueryStuffRecordView(MethodView):
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
         response_data['total_count'] = total_count
+        response_data['sum_profit'] = float(sum_porfit) if sum_porfit else 0
         return jsonify(response_data)
 
     def export_investment(self, userid, start_date, end_date):
@@ -373,8 +385,8 @@ class QueryStuffRecordView(MethodView):
 
     def get_investrategy(self, userid, start_date, end_date, current_page, page_size):
         start_id = current_page * page_size
-        table_headers = ['日期', '姓名','策略内容', '品种', '方向', '手数', '策略开仓', '策略平仓', '结果']
-        header_keys = ['custom_time', 'name','content', 'variety', 'direction', 'hands', 'open_position', 'close_position','profit']
+        table_headers = ['日期', '姓名','策略内容', '品种', '方向', '手数', '策略开仓', '策略平仓', '结果','备注']
+        header_keys = ['custom_time', 'name','content', 'variety', 'direction', 'hands', 'open_position', 'close_position','profit','note']
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # 准备品种信息
@@ -390,11 +402,16 @@ class QueryStuffRecordView(MethodView):
                               "LIMIT %s,%s;"
             cursor.execute(query_statement, (start_date, end_date, start_id, page_size))
             query_result = cursor.fetchall()
-            total_count_statement = "SELECT COUNT(sgytb.id) AS `total` " \
+            total_count_statement = "SELECT COUNT(sgytb.id) AS `total`,SUM(sgytb.profit) AS `sumprofit` " \
                                     "FROM `investrategy` AS sgytb INNER JOIN `user_info` AS usertb " \
                                     "ON sgytb.author_id=usertb.id AND (sgytb.custom_time BETWEEN %s AND %s);"
             cursor.execute(total_count_statement, (start_date, end_date))
-            total_count = cursor.fetchone()['total']
+            fetch_one = cursor.fetchone()
+            if fetch_one:
+                total_count = fetch_one['total']
+                sum_porfit = fetch_one['sumprofit']
+            else:
+                total_count = sum_porfit = 0
         else:
             query_statement = "SELECT usertb.name, sgytb.* " \
                               "FROM `investrategy` AS sgytb INNER JOIN `user_info` AS usertb " \
@@ -403,10 +420,16 @@ class QueryStuffRecordView(MethodView):
                               "LIMIT %s,%s;"
             cursor.execute(query_statement, (userid, start_date, end_date, start_id, page_size))
             query_result = cursor.fetchall()
-            total_count_statement = "SELECT COUNT(`id`) AS `total` FROM `investrategy` " \
+            total_count_statement = "SELECT COUNT(`id`) AS `total`, SUM(`profit`) AS `sumprofit` " \
+                                    "FROM `investrategy` " \
                                     "WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
             cursor.execute(total_count_statement, (userid, start_date, end_date))
-            total_count = cursor.fetchone()['total']
+            fetch_one = cursor.fetchone()
+            if fetch_one:
+                total_count = fetch_one['total']
+                sum_porfit = fetch_one['sumprofit']
+            else:
+                total_count = sum_porfit = 0
 
         total_page = int((total_count + page_size - 1) / page_size)
         db_connection.close()
@@ -415,7 +438,7 @@ class QueryStuffRecordView(MethodView):
         for record_item in query_result:
             record_item['custom_time'] = record_item['custom_time'].strftime("%Y-%m-%d")
             record_item['variety'] = variety_dict.get(record_item['variety_id'], '') + str(record_item['contract'])
-            record_item['profit'] = int(record_item['profit'])
+            record_item['profit'] = float(record_item['profit'])
             record_item['open_position'] = float(record_item['open_position'])
             record_item['close_position'] = float(record_item['close_position'])
             records.append(record_item)
@@ -425,6 +448,7 @@ class QueryStuffRecordView(MethodView):
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
         response_data['total_count'] = total_count
+        response_data['sum_profit'] = float(sum_porfit) if sum_porfit else 0
         return jsonify(response_data)
 
     def export_investrategy(self, userid, start_date, end_date):
@@ -565,28 +589,43 @@ class QueryStuffRecordView(MethodView):
 
     def get_short_message(self, userid, start_date, end_date, current_page, page_size):
         start_id = current_page * page_size
-        table_headers = ['日期', '信息内容', '类别', '影响品种', '备注']
-        header_keys = ['custom_time', 'content', 'msg_type', 'effect_variety', 'note']
-        query_statement = "SELECT DATE_FORMAT(`custom_time`,'%%Y-%%m-%%d') AS `custom_time`, " \
-                          "`content`,`msg_type`,`effect_variety`,`note` " \
-                          "FROM `short_message` WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s " \
-                          "LIMIT %s,%s;"
+        table_headers = ['日期','姓名', '信息内容', '类别', '影响品种', '备注']
+        header_keys = ['custom_time','name', 'content', 'msg_type', 'effect_variety', 'note']
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        cursor.execute(query_statement, (userid, start_date, end_date, start_id, page_size))
-        query_result = cursor.fetchall()
-        # 总数
-        total_count_statement = "SELECT COUNT(`id`) AS `total` FROM `short_message` " \
-                                "WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
-        cursor.execute(total_count_statement, (userid, start_date, end_date))
-        total_count = cursor.fetchone()['total']  # 计算总页数
+        if userid == 0:
+            query_statement = "SELECT usertb.name,sotmsg.* " \
+                              "FROM `short_message` AS sotmsg INNER JOIN `user_info` AS usertb " \
+                              "ON sotmsg.author_id=usertb.id AND (sotmsg.custom_time BETWEEN %s AND %s ) " \
+                              "ORDER BY sotmsg.custom_time DESC " \
+                              "LIMIT %s,%s;"
+            cursor.execute(query_statement, (start_date, end_date, start_id, page_size))
+            query_result = cursor.fetchall()
+            total_count_statement = "SELECT COUNT(sotmsg.id) AS `total` " \
+                                    "FROM `short_message` AS sotmsg INNER JOIN `user_info` AS usertb " \
+                                    "ON sotmsg.author_id=usertb.id AND (sotmsg.custom_time BETWEEN %s AND %s );"
+            cursor.execute(total_count_statement, (start_date, end_date))
+            total_count = cursor.fetchone()['total']
+        else:
+            query_statement = "SELECT usertb.name,sotmsg.* " \
+                              "FROM `short_message` AS sotmsg INNER JOIN `user_info` AS usertb " \
+                              "ON sotmsg.author_id=usertb.id AND sotmsg.author_id=%s AND (sotmsg.custom_time BETWEEN %s AND %s ) " \
+                              "ORDER BY sotmsg.custom_time DESC " \
+                              "LIMIT %s,%s;"
+            cursor.execute(query_statement, (userid, start_date, end_date, start_id, page_size))
+            query_result = cursor.fetchall()
+            total_count_statement = "SELECT COUNT(`id`) AS `total` FROM `short_message` " \
+                                    "WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
+            cursor.execute(total_count_statement, (userid, start_date, end_date))
+            total_count = cursor.fetchone()['total']
+
         total_page = int((total_count + page_size - 1) / page_size)
         db_connection.close()
         response_data = dict()
-        # records = list()
-        # for record_item in query_result:
-        #
-        #     records.append(record_item)
+        records = list()
+        for record_item in query_result:
+            record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
+            records.append(record_item)
         response_data['records'] = query_result
         response_data['table_headers'] = table_headers
         response_data['header_keys'] = header_keys
@@ -631,28 +670,43 @@ class QueryStuffRecordView(MethodView):
 
     def get_onduty_message(self, userid, start_date, end_date, current_page, page_size):
         start_id = current_page * page_size
-        table_headers = ['日期', '信息内容']
-        header_keys = ['custom_time', 'content']
-        query_statement = "SELECT DATE_FORMAT(`custom_time`,'%%Y-%%m-%%d') AS `custom_time`, " \
-                          "`content`,`note` " \
-                          "FROM `onduty_message` WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s " \
-                          "LIMIT %s,%s;"
+        table_headers = ['日期', '姓名','信息内容']
+        header_keys = ['custom_time', 'name','content']
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        cursor.execute(query_statement, (userid, start_date, end_date, start_id, page_size))
-        query_result = cursor.fetchall()
-        # 总数
-        total_count_statement = "SELECT COUNT(`id`) AS `total` FROM `onduty_message` " \
-                                "WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
-        cursor.execute(total_count_statement, (userid, start_date, end_date))
-        total_count = cursor.fetchone()['total']  # 计算总页数
+        if userid == 0:
+            query_statement = "SELECT usertb.name, odmsg.* " \
+                              "FROM `onduty_message` AS odmsg INNER JOIN `user_info` AS usertb " \
+                              "WHERE odmsg.author_id=usertb.id AND (odmsg.custom_time BETWEEN %s AND %s) " \
+                              "ORDER BY odmsg.custom_time DESC " \
+                              "LIMIT %s,%s;"
+            cursor.execute(query_statement, (start_date, end_date, start_id, page_size))
+            query_result = cursor.fetchall()
+            total_count_statement = "SELECT COUNT(odmsg.id) AS `total` " \
+                                    "FROM `onduty_message` AS odmsg INNER JOIN `user_info` AS usertb " \
+                                    "WHERE odmsg.author_id=usertb.id AND (odmsg.custom_time BETWEEN %s AND %s);"
+            cursor.execute(total_count_statement,(start_date, end_date))
+            total_count = cursor.fetchone()['total']
+        else:
+            query_statement = "SELECT usertb.name, odmsg.* " \
+                              "FROM `onduty_message` AS odmsg INNER JOIN `user_info` AS usertb " \
+                              "WHERE odmsg.author_id=usertb.id AND odmsg.author_id=%s AND (odmsg.custom_time BETWEEN %s AND %s) " \
+                              "ORDER BY odmsg.custom_time DESC " \
+                              "LIMIT %s,%s;"
+            cursor.execute(query_statement, (userid, start_date, end_date, start_id, page_size))
+            query_result = cursor.fetchall()
+            total_count_statement = "SELECT COUNT(`id`) AS `total` FROM `onduty_message` " \
+                                    "WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
+            cursor.execute(total_count_statement, (userid, start_date, end_date))
+            total_count = cursor.fetchone()['total']
+
         total_page = int((total_count + page_size - 1) / page_size)
         db_connection.close()
         response_data = dict()
-        # records = list()
-        # for record_item in query_result:
-        #
-        #     records.append(record_item)
+        records = list()
+        for record_item in query_result:
+            record_item['custom_time'] = record_item['custom_time'].strftime('%Y-%m-%d')
+            records.append(record_item)
         response_data['records'] = query_result
         response_data['table_headers'] = table_headers
         response_data['header_keys'] = header_keys

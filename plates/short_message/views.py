@@ -27,6 +27,10 @@ class ShortMessageView(MethodView):
             return jsonify("您的登录已过期,请重新登录查看.")
         user_id = user_info['uid']
         try:
+            start_date = params.get('startDate')
+            end_date = params.get('endDate')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            end_date = (end_date + datetime.timedelta(seconds=-1)).strftime('%Y-%m-%d %H:%M:%S')
             current_page = int(params.get('page', 1)) - 1
             page_size = int(params.get('pagesize', 30))
         except Exception:
@@ -36,20 +40,23 @@ class ShortMessageView(MethodView):
         cursor = db_connection.get_cursor()
         # sql内联查询
         inner_join_statement = "SELECT usertb.name,usertb.org_id,smsgtb.id,smsgtb.custom_time,smsgtb.content,smsgtb.msg_type,smsgtb.effect_variety,smsgtb.note " \
-                               "FROM `user_info` AS usertb INNER JOIN `short_message` AS smsgtb ON " \
-                               "usertb.id=%d AND usertb.id=smsgtb.author_id ORDER BY smsgtb.custom_time DESC " \
-                               "limit %d,%d;" % (user_id, start_id, page_size)
-        cursor.execute(inner_join_statement)
+                               "FROM `user_info` AS usertb INNER JOIN `short_message` AS smsgtb " \
+                               "ON usertb.id=%s AND usertb.id=smsgtb.author_id AND (smsgtb.custom_time BETWEEN %s AND %s) " \
+                               "ORDER BY smsgtb.custom_time DESC " \
+                               "limit %s,%s;"
+        cursor.execute(inner_join_statement, (user_id, start_date, end_date, start_id, page_size))
         result_records = cursor.fetchall()
         # print("内连接查短讯通结果", result_records)
 
         # 查询总条数
-        count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `short_message`AS smsgtb ON usertb.id=%s AND usertb.id=smsgtb.author_id;"
-        cursor.execute(count_statement, user_id)
+        count_statement = "SELECT COUNT(smsgtb.id) as total FROM `user_info` AS usertb INNER JOIN `short_message`AS smsgtb " \
+                          "ON usertb.id=%s AND usertb.id=smsgtb.author_id AND (smsgtb.custom_time BETWEEN %s AND %s);"
+        cursor.execute(count_statement, (user_id, start_date, end_date))
         # print("条目记录：", cursor.fetchone()) 打开注释下行将无法解释编译
 
         # 计算总页数
         total_count = cursor.fetchone()['total']
+        db_connection.close()
         total_page = int((total_count + page_size - 1) / page_size)
 
         # print('total_page',total_page)
@@ -63,6 +70,7 @@ class ShortMessageView(MethodView):
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
         response_data['current_count'] = len(result_records)
+        response_data['total_count'] = total_count
 
         return jsonify(response_data)
 
@@ -203,6 +211,7 @@ class RetrieveShortMessageView(MethodView):
             record_item['org_name'] = ORGANIZATIONS.get(int(record_item['org_id']), "未知")
         else:
             record_item = {}
+        db_connection.close()
         return jsonify(record_item)
 
     def put(self, rid):
@@ -269,17 +278,29 @@ class RetrieveShortMessageView(MethodView):
 
 class ShortMessageExportView(MethodView):
     def get(self):
-        utoken = request.args.get('utoken')
+        params = request.args
+        utoken = params.get('utoken')
         user_info = verify_json_web_token(utoken)
         if not user_info:
             return jsonify("登录已过期!刷新网页重新登录."), 400
+
+        try:
+            start_date = params.get('startDate')
+            end_date = params.get('endDate')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            end_date = (end_date + datetime.timedelta(seconds=-1)).strftime('%Y-%m-%d %H:%M:%S')
+        except Exception:
+            return jsonify("参数错误:DATE FORMAT ERROR!")
+
         query_statement = "SELECT usertb.name,usertb.org_id,smsgtb.custom_time,smsgtb.content,smsgtb.msg_type,smsgtb.effect_variety,smsgtb.note " \
                           "FROM `user_info` AS usertb INNER JOIN `short_message` AS smsgtb ON " \
-                          "usertb.id=%s AND usertb.id=smsgtb.author_id ORDER BY smsgtb.custom_time ASC;"
+                          "usertb.id=%s AND usertb.id=smsgtb.author_id AND (smsgtb.custom_time BETWEEN %s AND %s) " \
+                          "ORDER BY smsgtb.custom_time ASC;"
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        cursor.execute(query_statement, user_info['uid'])
+        cursor.execute(query_statement, (user_info['uid'], start_date, end_date))
         records_all = cursor.fetchall()
+        db_connection.close()
         # 生成承载数据的文件
         t = "%.4f" % time.time()
         md5_hash = hashlib.md5()
