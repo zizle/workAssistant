@@ -81,6 +81,16 @@
 				<td class="input-td-checked"><input class="open-close-check" type="checkbox" v-model="isPublish"></td>
 			</tr>
 			<tr>
+				<td>方案评级</td>
+				<td class="input-td">
+					<select v-model="level">
+						<option value="A">A</option>
+						<option value="B">B</option>
+						<option value="C">C</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
 				<td>方案结果</td>
 				<td class="input-td"><input type="number" placeholder="用'+'号和'-'表示盈利或亏损" v-model="profit"></td>
 			</tr>
@@ -101,5 +111,5 @@
 	</div>
 </div>
 </body>
-<script src="js/investment.js?v=0.41" type="text/javascript" charset="utf-8"></script>
+<script src="js/investment.js?v=0.42" type="text/javascript" charset="utf-8"></script>
 </html>

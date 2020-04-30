@@ -1,12 +1,14 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
 import os
-from flask import request,jsonify, current_app, Response
+
+from flask import request, jsonify, current_app, Response
 from flask.views import MethodView
-from utils.psd_handler import user_is_admin
+
 from db import MySQLConnection
-from vlibs import ABNORMAL_WORK
 from settings import BASE_DIR
+from utils.psd_handler import user_is_admin
+from vlibs import ABNORMAL_WORK
 
 
 # 品种视图
@@ -62,6 +64,7 @@ class VarietyView(MethodView):
             db_connection.close()
             return jsonify("系统发生了个错误。"), 400
         else:
+            db_connection.close()
             return self.get()  # 查询所有
 
 
@@ -122,6 +125,7 @@ class BasicModuleView(MethodView):
             db_connection.close()
             return jsonify("系统发生了个错误。"), 400
         else:
+            db_connection.close()
             return self.get()  # 查询所有
 
 

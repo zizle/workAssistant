@@ -13,6 +13,7 @@ var vm = new Vue({
 			tableRecords:[],
 			tableHeaderKeys:[],
 			exportDataUrl:'',
+			sumProfit:0,
 		},
 		mounted:function(){
 			// 截止日期
@@ -96,6 +97,7 @@ var vm = new Vue({
 					localThis.totalCount = resp.data.total_count;
 					localThis.totalPage = resp.data.total_page;
 					localThis.currentPage = resp.data.current_page;
+					localThis.sumProfit = resp.data.sum_profit;
 					
 				})
 				.catch(function(error){

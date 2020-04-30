@@ -41,51 +41,32 @@ html,body{
 }
 .paginator{
 }
-.paginator button{
+
+.paginator .page-block button{
 	height: 20px;
-	line-height: 20xp;
+	line-height: 20px;
 	border: none;
 	margin: 0px 5px;
 	background-color: #EBEBE4;
 	outline: none;
 }
-.paginator button:hover{
+.paginator .page-block button:hover{
 	cursor: pointer;
 	color: #65BAD4;
 }
-.paginator span{
+
+.page-block span{
 	font-size: 12px;
 	color: #666666;
 	
 }
-.record-table{
-	margin: 5px;
+.options-block{
+	margin-left: 11px;
 }
-.record-table table{
-	width: 100%;
-	text-align: center;
-	border-collapse: collapse;
-	border: 1px solid #787878;
-	background-color: #F4F4F4;
-	
-}
-.record-table td{
-	border: 1px solid #787878;
-	font-size: 15px;
-	height: 60px;
-	cursor: default;
+.options-block div{
+	display: inline-block;
 }
 
-
-.record-table .title td{
-	color: #FFFFFF;
-	background-color: #69cfb8;
-	font-size: 16px;
-	font-weight: bold;
-	line-height: 42px;
-	height: 42px;
-	border-bottom: 1px solid #787878;
-}
 
 /* 设置标题行的宽度 */
 .record-table .record-title{

@@ -29,10 +29,14 @@ class AbnormalWorkView(MethodView):
             return jsonify("您的登录已过期,请重新登录查看.")
         user_id = user_info['uid']
         try:
+            start_date = params.get('startDate')
+            end_date = params.get('endDate')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            end_date = (end_date + datetime.timedelta(seconds=-1)).strftime('%Y-%m-%d %H:%M:%S')
             current_page = int(params.get('page', 1)) - 1
             page_size = int(params.get('pagesize', 30))
         except Exception:
-            return jsonify("参数错误:INT TYPE REQUIRED!")
+            return jsonify("参数错误:DATE FORMAT ERROR & INT TYPE REQUIRED!")
         start_id = current_page * page_size
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
@@ -41,23 +45,26 @@ class AbnormalWorkView(MethodView):
                                "abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number," \
                                "abworktb.swiss_coin,abworktb.allowance,abworktb.note,abworktb.annex,abworktb.annex_url " \
                                "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
-                               "usertb.id=%d AND usertb.id=abworktb.author_id ORDER BY abworktb.custom_time DESC " \
-                               "limit %d,%d;" % (user_id, start_id, page_size)
+                               "usertb.id=%s AND usertb.id=abworktb.author_id AND (abworktb.custom_time BETWEEN %s AND %s) " \
+                               "ORDER BY abworktb.custom_time DESC " \
+                               "limit %s,%s;"
 
         # 内联查询另一写法:where子句(INNER JOIN->','(逗号); ON->WHERE)
         # "SELECT usertb.name,abworktb.title FROM `user_info` AS usertb,`abnormal_work`AS abworktb WHERE usertb.id=%s AND usertb.id=abworktb.worker;"
         # 连表查询语句两种方式都可以去除'AS'关键字
 
-        cursor.execute(inner_join_statement)
+        cursor.execute(inner_join_statement,(user_id, start_date, end_date, start_id, page_size))
         abworks = cursor.fetchall()
         # print("内连接查询结果", abworks)
         # 查询总条数
-        inner_join_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `abnormal_work`AS abworktb ON usertb.id=%s AND usertb.id=abworktb.author_id;"
-        cursor.execute(inner_join_statement, user_id)
-        # print("条目记录：", cursor.fetchone()) 打开注释，下行将无法解释编译
-        total_count = cursor.fetchone()['total']  # 计算总页数
-        total_page = int((total_count + page_size - 1) / page_size)
+        inner_join_statement = "SELECT COUNT(abworktb.id) as total FROM `user_info` AS usertb INNER JOIN `abnormal_work`AS abworktb " \
+                               "ON usertb.id=%s AND usertb.id=abworktb.author_id AND (abworktb.custom_time BETWEEN %s AND %s);"
 
+        cursor.execute(inner_join_statement, (user_id, start_date, end_date))
+        total_ = cursor.fetchone()
+        total_count = total_['total']  # 计算总页数
+        db_connection.close()
+        total_page = int((total_count + page_size - 1) / page_size)
         # print('total_page',total_page)
         # 组织数据返回
         response_data = dict()
@@ -72,6 +79,7 @@ class AbnormalWorkView(MethodView):
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
         response_data['current_count'] = len(abworks)
+        response_data['total_count'] = total_count
 
         return jsonify(response_data)
 
@@ -133,14 +141,17 @@ class AbnormalWorkView(MethodView):
                             applicant, tel_number, swiss_coin, allowance, note, partner, filename, annex_url)
                            )
             db_connection.commit()
-            db_connection.close()
+
         except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
             current_app.logger.error("写入非常态工作错误:" + str(e))
             # 保存错误得删除已保存的文件
             if file_path and os.path.exists(file_path):
                 os.remove(file_path)
             return jsonify("参数错误!无法保存。"), 400
         else:
+            db_connection.close()
             return jsonify("保存成功!"), 201
 
 
@@ -245,19 +256,31 @@ class FileHandlerAbnormalWorkView(MethodView):
 # 导出数据到文件
 class ExportAbnormalWorkView(MethodView):
     def get(self):
-        utoken = request.args.get('utoken')
+        params = request.args
+        utoken = params.get('utoken')
         user_info = verify_json_web_token(utoken)
         if not user_info:
             return jsonify("登录已过期!刷新网页重新登录."), 400
+
+        try:
+            start_date = params.get('startDate')
+            end_date = params.get('endDate')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            end_date = (end_date + datetime.timedelta(seconds=-1)).strftime('%Y-%m-%d %H:%M:%S')
+        except Exception:
+            return jsonify("参数错误:DATE FORMAT ERROR!")
+
         # 查询当前用户的非常态工作记录
         query_statement = "SELECT usertb.name,usertb.org_id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
-                          "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
-                          "usertb.id=%s AND usertb.id=abworktb.author_id ORDER BY abworktb.custom_time ASC;"
+                          "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb " \
+                          "ON usertb.id=%s AND usertb.id=abworktb.author_id AND (abworktb.custom_time BETWEEN %s AND %s) " \
+                          "ORDER BY abworktb.custom_time ASC;"
 
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        cursor.execute(query_statement, user_info['uid'])
+        cursor.execute(query_statement, (user_info['uid'], start_date, end_date))
         records_all = cursor.fetchall()
+        db_connection.close()
         # 生成承载数据的文件
         t = "%.4f" % time.time()
         md5_hash = hashlib.md5()
@@ -313,6 +336,7 @@ class RetrieveAbWorkView(MethodView):
         work_item['org_name'] = ORGANIZATIONS.get(int(work_item['org_id']), '')
         work_item['task_type_name'] = ABNORMAL_WORK.get(int(work_item['task_type']), '')
         work_item['work_types'] = ABNORMAL_WORK
+        db_connection.close()
         return jsonify(work_item)
 
     def put(self, work_id):

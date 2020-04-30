@@ -28,30 +28,43 @@ class InvestmentView(MethodView):
             return jsonify("您的登录已过期,请重新登录查看.")
         user_id = user_info['uid']
         try:
+            start_date = params.get('startDate')
+            end_date = params.get('endDate')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            end_date = (end_date + datetime.timedelta(seconds=-1)).strftime('%Y-%m-%d %H:%M:%S')
             current_page = int(params.get('page', 1)) - 1
             page_size = int(params.get('pagesize', 30))
         except Exception:
-            return jsonify("参数错误:INT TYPE REQUIRED!")
+            return jsonify("参数错误:DATE FORMAT ERROR & INT TYPE REQUIRED!")
         start_id = current_page * page_size
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # sql内联查询
         inner_join_statement = "SELECT usertb.name,usertb.org_id,invstb.id,invstb.custom_time,invstb.title,varietytb.name as variety,invstb.contract,invstb.direction,invstb.build_time,invstb.build_price," \
-                               "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit,invstb.annex_url " \
+                               "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit,invstb.annex_url,invstb.note,invstb.level " \
                                "FROM `user_info` AS usertb INNER JOIN `investment` AS invstb INNER JOIN `variety` as varietytb ON " \
-                               "(usertb.id=%d AND usertb.id=invstb.author_id) AND invstb.variety_id=varietytb.id ORDER BY invstb.custom_time DESC " \
-                               "limit %d,%d;" % (user_id, start_id, page_size)
-        cursor.execute(inner_join_statement)
+                               "(usertb.id=%s AND usertb.id=invstb.author_id) AND invstb.variety_id=varietytb.id AND (invstb.custom_time BETWEEN %s AND %s) " \
+                               "ORDER BY invstb.custom_time DESC " \
+                               "limit %s,%s;"
+        cursor.execute(inner_join_statement,(user_id, start_date, end_date,start_id, page_size))
         result_records = cursor.fetchall()
         # print("内连接查询投资自方案结果", result_records)
 
         # 查询总条数
-        count_statement = "SELECT COUNT(*) as total FROM `user_info` AS usertb INNER JOIN `investment`AS invstb ON usertb.id=%s AND usertb.id=invstb.author_id;"
-        cursor.execute(count_statement, user_id)
+        count_statement = "SELECT COUNT(invstb.id) AS total, SUM(invstb.profit) AS `sumprofit` " \
+                          "FROM `user_info` AS usertb INNER JOIN `investment`AS invstb ON " \
+                          "usertb.id=%s AND usertb.id=invstb.author_id AND (invstb.custom_time BETWEEN %s AND %s);"
+        cursor.execute(count_statement, (user_id, start_date, end_date))
         # print("条目记录：", cursor.fetchone()) 打开注释下行将无法解释编译
+        fetch_one = cursor.fetchone()
+        # print(fetch_one)
+        db_connection.close()
+        if fetch_one:
+            total_count = fetch_one['total']
+            sum_porfit = fetch_one['sumprofit']
+        else:
+            total_count = sum_porfit = 0
 
-        # 计算总页数
-        total_count = cursor.fetchone()['total']
         total_page = int((total_count + page_size - 1) / page_size)
 
         # print('total_page',total_page)
@@ -73,6 +86,8 @@ class InvestmentView(MethodView):
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
         response_data['current_count'] = len(result_records)
+        response_data['total_count'] = total_count
+        response_data['sum_profit'] = float(sum_porfit)
 
         return jsonify(response_data)
 
@@ -109,7 +124,8 @@ class InvestmentView(MethodView):
         expire_time = body_data.get('expire_time')
         is_publish = 1 if body_data.get('is_publish', False) else 0
         profit = body_data.get('profit')
-        note = body_data.get('work_note', '')
+        level = body_data.get('level', '')
+        note = body_data.get('note', '')
         # 读取文件
         annex_file = request.files.get('annex_file', None)
         if not annex_file:
@@ -127,8 +143,8 @@ class InvestmentView(MethodView):
         # 存入数据库
         save_invest_statement = "INSERT INTO `investment`" \
                               "(`custom_time`,`author_id`,`title`,`variety_id`,`contract`,`direction`,`build_time`," \
-                              "`build_price`,`build_hands`,`out_price`,`cutloss_price`,`expire_time`,`is_publish`,`profit`,`annex`,`annex_url`)" \
-                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+                              "`build_price`,`build_hands`,`out_price`,`cutloss_price`,`expire_time`,`is_publish`,`profit`,`annex`,`annex_url`,`note`,`level`)" \
+                              "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
         try:
             # 转换类型
             custom_time = datetime.datetime.strptime(write_time, '%Y-%m-%d') if write_time else datetime.datetime.now()
@@ -142,17 +158,20 @@ class InvestmentView(MethodView):
             profit = float(profit) if profit else 0
             cursor.execute(save_invest_statement,
                            (custom_time, author_id, title, variety_id,contract, direction, build_time,
-                            build_price, build_hands, out_price, cutloss_price, expire_time, is_publish, profit, filename,annex_url)
+                            build_price, build_hands, out_price, cutloss_price, expire_time, is_publish, profit, filename,annex_url,note, level)
                            )
             db_connection.commit()
-            db_connection.close()
+
         except Exception as e:
+            db_connection.rollback()
+            db_connection.close()
             current_app.logger.error("写入投在方案记录错误:" + str(e))
             # 保存错误得删除已保存的文件
             if file_path and os.path.exists(file_path):
                 os.remove(file_path)
             return jsonify("参数错误!无法保存。"), 400
         else:
+            db_connection.close()
             return jsonify("保存成功!"), 201
 
 
@@ -161,7 +180,7 @@ class RetrieveInvestmentView(MethodView):
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         select_statement = "SELECT usertb.name,usertb.org_id,invstb.custom_time,invstb.variety_id,invstb.title,invstb.contract,invstb.direction,invstb.build_time,invstb.build_price, " \
-                           "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit,invstb.annex,invstb.annex_url " \
+                           "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit,invstb.annex,invstb.annex_url,invstb.note,invstb.level " \
                            "FROM `user_info` AS usertb INNER JOIN `investment` AS invstb ON " \
                            "invstb.id=%s AND invstb.author_id=usertb.id;"
         cursor.execute(select_statement, rid)
@@ -176,6 +195,7 @@ class RetrieveInvestmentView(MethodView):
         record_item['out_price'] = float(record_item['out_price'])
         record_item['cutloss_price'] = float(record_item['cutloss_price'])
         record_item['profit'] = float(record_item['profit'])
+        db_connection.close()
         return jsonify(record_item)
 
     def put(self, rid):
@@ -200,7 +220,8 @@ class RetrieveInvestmentView(MethodView):
         expire_time = body_data.get('expire_time')
         is_publish = 1 if body_data.get('is_publish', False) else 0
         profit = body_data.get('profit')
-        # note = record_info.get('note', '')
+        note = body_data.get('note', '')
+        level = body_data.get('level', '')
         filename=body_data.get('annex', '')
         annex_url = body_data.get('annex_url', '')
         old_annex_url = annex_url
@@ -217,7 +238,7 @@ class RetrieveInvestmentView(MethodView):
         update_statement = "UPDATE `investment` SET " \
                             "`custom_time`=%s,`title`=%s,`variety_id`=%s,`contract`=%s,`direction`=%s,`build_time`=%s," \
                             "`build_price`=%s,`build_hands`=%s,`out_price`=%s,`cutloss_price`=%s,`expire_time`=%s," \
-                            "`is_publish`=%s,`profit`=%s,`annex`=%s,`annex_url`=%s " \
+                            "`is_publish`=%s,`profit`=%s,`annex`=%s,`annex_url`=%s,`note`=%s,`level`=%s " \
                             "WHERE `id`=%s AND `author_id`=%s;"
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
@@ -239,7 +260,7 @@ class RetrieveInvestmentView(MethodView):
             expire_time = datetime.datetime.strptime(expire_time,expire_time_format) if expire_time else datetime.datetime.now()
             cursor.execute(update_statement,
                            (custom_time, title, variety_id, contract, direction, build_time,
-                            build_price, build_hands, out_price, cutloss_price, expire_time, is_publish, profit,filename, annex_url,
+                            build_price, build_hands, out_price, cutloss_price, expire_time, is_publish, profit,filename, annex_url,note,level,
                             rid, user_id)
                            )
             db_connection.commit()
@@ -292,14 +313,24 @@ class RetrieveInvestmentView(MethodView):
 
 class InvestmentExportView(MethodView):
     def get(self):
-        utoken = request.args.get('utoken')
+        params = request.args
+        utoken = params.get('utoken')
         user_info = verify_json_web_token(utoken)
         if not user_info:
             return jsonify("登录已过期!刷新网页重新登录."), 400
+        try:
+            start_date = params.get('startDate')
+            end_date = params.get('endDate')
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d') + datetime.timedelta(days=1)
+            end_date = (end_date + datetime.timedelta(seconds=-1)).strftime('%Y-%m-%d %H:%M:%S')
+        except Exception:
+            return jsonify("参数错误:DATE FORMAT ERROR!")
+
         query_statement = "SELECT usertb.name,usertb.org_id,invstb.custom_time,invstb.title,invstb.variety_id,invstb.contract,invstb.direction,invstb.build_time,invstb.build_price," \
-                          "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit " \
+                          "invstb.build_hands,invstb.out_price,invstb.cutloss_price,invstb.expire_time,invstb.is_publish,invstb.profit,invstb.note " \
                           "FROM `user_info` AS usertb INNER JOIN `investment` AS invstb ON " \
-                          "usertb.id=%s AND usertb.id=invstb.author_id ORDER BY invstb.custom_time ASC;"
+                          "usertb.id=%s AND usertb.id=invstb.author_id AND (invstb.custom_time BETWEEN %s AND %s) " \
+                          "ORDER BY invstb.custom_time ASC;"
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
         # 查询品种
@@ -307,8 +338,9 @@ class InvestmentExportView(MethodView):
         cursor.execute(query_variety)
         variety_all = cursor.fetchall()
         variety_dict = {variety_item["id"]: variety_item['name'] for variety_item in variety_all}
-        cursor.execute(query_statement, user_info['uid'])
+        cursor.execute(query_statement, (user_info['uid'], start_date, end_date))
         records_all = cursor.fetchall()
+        db_connection.close()
         # 生成承载数据的文件
         t = "%.4f" % time.time()
         md5_hash = hashlib.md5()
@@ -338,11 +370,12 @@ class InvestmentExportView(MethodView):
             row_content.append(record_item['expire_time'].strftime("%Y-%m-%d %H:%M"))
             row_content.append("是" if record_item['is_publish'] else "否")
             row_content.append(float(record_item['profit']))
+            row_content.append(record_item['note'])
             file_records.append(row_content)
         with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
             writer = csv.writer(f, dialect='excel')
             writer.writerow(['日期', '部门小组', '姓名', '标题', '品种', '合约','方向', '实建日期','实建均价','实建手数','实出均价','止损均价',
-                             '有效期','外发情况','方案结果'])
+                             '有效期','外发情况','方案结果','备注'])
             writer.writerows(file_records)
         # 将文件返回
         return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),

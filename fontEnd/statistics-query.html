@@ -66,8 +66,14 @@
 			color: #666666;
 			
 		}
-		.record-table table td:first-child{
-			width: 100px;
+		
+		.record-table table td:nth-child(1){
+			width: 80px;
+			font-size: 13px;
+		}
+		.record-table table td:nth-child(2){
+			width: 80px;
+			font-size: 13px;
 		}
 		.record-table table td:nth-child(3){
 			width: 320px;
@@ -83,7 +89,7 @@
 			<select v-model="workUuid">
 				<option value ="1">非常态工作</option>
 				<option value ="2">专题研究</option>
-				<option value ="3">投资方案撰写</option>
+				<option value ="3">投资方案</option>
 				<option value ="4">投顾策略</option>
 				<option value ="5">文章发表</option>
 				<option value ="6">短讯通</option>
@@ -113,6 +119,7 @@
 		<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
 		<span>查询结果: {{totalCount}}</span>
 		<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">导出结果</a></button>
+		<span v-if="sumProfit">累计盈亏: {{sumProfit}}</span>
 	</div>
 	<div class="record-table">
 		<table border="" cellspacing="" cellpadding="">
