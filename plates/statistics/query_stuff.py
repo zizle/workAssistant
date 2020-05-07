@@ -7,6 +7,7 @@ import hashlib
 import os
 import time
 
+import pandas as pd
 from flask import jsonify, request, send_from_directory
 from flask.views import MethodView
 
@@ -482,17 +483,25 @@ class QueryStuffRecordView(MethodView):
             row_content.append(record_item['hands'])
             row_content.append(float(record_item['open_position']))
             row_content.append(float(record_item['close_position']))
-            row_content.append(record_item['profit'])
+            row_content.append(float(record_item['profit']))
 
             file_records.append(row_content)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = table_headers
         file_folder, md5_str = self.generate_file_path(userid)
-        file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
-        with codecs.open(file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(table_headers)
-            writer.writerows(file_records)
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name="投顾策略记录"
+        )
+        # with codecs.open(file_path, 'w', 'utf_8_sig') as f:
+        #     writer = csv.writer(f, dialect='excel')
+        #     writer.writerow(table_headers)
+        #     writer.writerows(file_records)
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
 
     def get_article_publish(self, userid, start_date, end_date, current_page, page_size):
@@ -658,14 +667,24 @@ class QueryStuffRecordView(MethodView):
             row_content.append(record_item['note'])
 
             file_records.append(row_content)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = table_headers
         file_folder, md5_str = self.generate_file_path(userid)
-        file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
-        with codecs.open(file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(table_headers)
-            writer.writerows(file_records)
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name="短信通记录"
+        )
+        # file_folder, md5_str = self.generate_file_path(userid)
+        # file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+        # with codecs.open(file_path, 'w', 'utf_8_sig') as f:
+        #     writer = csv.writer(f, dialect='excel')
+        #     writer.writerow(table_headers)
+        #     writer.writerows(file_records)
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
 
     def get_onduty_message(self, userid, start_date, end_date, current_page, page_size):

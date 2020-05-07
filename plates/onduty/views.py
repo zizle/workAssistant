@@ -7,6 +7,7 @@ import hashlib
 import os
 import time
 
+import pandas as pd
 import xlrd
 from flask import jsonify, request, current_app, send_from_directory
 from flask.views import MethodView
@@ -177,25 +178,56 @@ class FileHandlerOnDutyMsgView(MethodView):
                     # 转换数据类型
                     try:
                         record_row.append(xlrd.xldate_as_datetime(row_content[0], 0))
-                    except Exception as e:
+                    except Exception:
                         message = "第一列【日期】请使用日期格式上传."
-                        raise ValueError(e)
+                        raise ValueError(message)
                     record_row.append(user_id)
                     record_row.append(str(row_content[1]))
                     record_row.append(str(row_content[2]))
                     ready_to_save.append(record_row)
-            insert_statement = "INSERT INTO `onduty_message`" \
-                               "(`custom_time`,`author_id`,`content`,`note`)" \
-                               "VALUES (%s,%s,%s,%s);"
-            db_connection = MySQLConnection()
-            cursor = db_connection.get_cursor()
-            cursor.executemany(insert_statement, ready_to_save)
-            db_connection.commit()
-            db_connection.close()
+            if len(ready_to_save) == 0:
+                raise ValueError('没有读取到数据.')
+            # 将新的数据转为DataFrame
+            new_df = pd.DataFrame(ready_to_save)
+            new_df.columns = ['custom_time', 'author_id', 'content', 'note']
+            save_list = self.drop_duplicates(new_df, user_id)
+            if len(save_list) > 0:
+                message = "数据保存成功!"
+                insert_statement = "INSERT INTO `onduty_message`" \
+                                   "(`custom_time`,`author_id`,`content`,`note`)" \
+                                   "VALUES (%s,%s,%s,%s);"
+                db_connection = MySQLConnection()
+                cursor = db_connection.get_cursor()
+                cursor.executemany(insert_statement, save_list)
+                db_connection.commit()
+                db_connection.close()
+            else:
+                message = "数据上传成功,没有发现新数据!"
         except Exception as e:
-            return jsonify(message), 400
+            return jsonify(str(e)), 400
         else:
-            return jsonify("数据保存成功!")
+            return jsonify(message)
+
+    @staticmethod
+    def drop_duplicates(new_df, user_id):
+        # 查询旧的数据
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        query_statement = "SELECT `custom_time`,`author_id`,`content`,`note` FROM " \
+                          "`onduty_message` WHERE `author_id`=%s;"
+        cursor.execute(query_statement, user_id)
+        old_df = pd.DataFrame(cursor.fetchall())
+        db_connection.close()
+        old_df['custom_time'] = pd.to_datetime(old_df['custom_time'], format='%Y-%m-%d')
+        new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
+        concat_df = pd.concat([old_df, new_df, old_df])
+        save_df = concat_df.drop_duplicates(subset=['custom_time', 'content'], keep=False, inplace=False)
+        if save_df.empty:
+            return []
+        else:
+            save_df = save_df.copy()
+            save_df['custom_time'] = save_df['custom_time'].apply(lambda x:x.strftime('%Y-%m-%d'))
+            return save_df.values.tolist()
 
 
 class RetrieveOnDutyView(MethodView):
