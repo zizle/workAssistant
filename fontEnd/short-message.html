@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>短讯通记录</title>
-	<link rel="stylesheet" href="css/short-message.css?v=0.3">
+	<link rel="stylesheet" href="css/short-message.css?v=0.51">
 	<link rel="stylesheet" type="text/css" href="css/edittable.css"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
@@ -13,6 +13,7 @@
 <div id="app">
 	<div class="cover-div" v-show="showUploading"><span>数据处理中...</span></div>
 	<div class="page-title"><span>短讯通</span>填报</div>
+	<div class="download-file"><a :href="modelFileUrl">模板下载</a></div>
 	<div class="upload-file"><span>批量上传</span><input type="file" @change="UploadDataFile" @click="clickFileInput"></div>
 	<div class="edit-table">
 		<table border="0" cellspacing="" cellpadding="">
@@ -58,5 +59,5 @@
 	</div>
 </div>
 </body>
-<script src="js/short-message.js?v=0.41" type="text/javascript" charset="utf-8"></script>
+<script src="js/short-message.js?v=0.51" type="text/javascript" charset="utf-8"></script>
 </html>

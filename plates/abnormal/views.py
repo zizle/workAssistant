@@ -1,12 +1,11 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import codecs
-import csv
 import datetime
 import hashlib
 import os
 import time
 
+import pandas as pd
 import xlrd
 from flask import jsonify, current_app, request, send_from_directory
 from flask.views import MethodView
@@ -290,7 +289,7 @@ class ExportAbnormalWorkView(MethodView):
         file_folder = os.path.join(BASE_DIR, 'fileStore/exports/')
         if not os.path.exists(file_folder):
             os.makedirs(file_folder)
-        csv_file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
 
         file_records = list()
         for record_item in records_all:
@@ -308,14 +307,17 @@ class ExportAbnormalWorkView(MethodView):
             row_content.append(int(record_item['allowance']))
             row_content.append(record_item['note'])
             file_records.append(row_content)
-        with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(['日期', '部门小组','姓名', '任务类型',
-                             '主题/标题', '主办方', '申请部门/受用单位', '申请者', '联系电话', '瑞币情况', '收入补贴','备注'])
-            writer.writerows(file_records)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = ['日期', '部门小组','姓名', '任务类型', '主题/标题', '主办方', '申请部门/受用单位', '申请者', '联系电话', '瑞币情况', '收入补贴','备注']
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name='非常态工作记录'
+        )
         # 将文件返回
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
 
 

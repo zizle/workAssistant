@@ -1,12 +1,11 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import codecs
-import csv
 import datetime
 import hashlib
 import os
 import time
 
+import pandas as pd
 import xlrd
 from flask import jsonify, request, current_app, send_from_directory
 from flask.views import MethodView
@@ -210,14 +209,14 @@ class FileHandlerInvestrategyView(MethodView):
                         record_row.append(xlrd.xldate_as_datetime(row_content[0], 0))
                     except Exception as e:
                         message = "第一列【日期】请使用日期格式上传."
-                        raise ValueError(e)
+                        raise ValueError(message)
                     record_row.append(user_id)
                     record_row.append(str(row_content[1]))
                     try:
                         record_row.append(int(variety_dict.get(str(row_content[2]))))  # 品种
                     except Exception as e:
                         message = "系统中没有【" + str(row_content[2]) + "】品种信息."
-                        raise ValueError(e)
+                        raise ValueError(message)
                     try:
                         contract = int(row_content[3])
                     except Exception:
@@ -229,18 +228,50 @@ class FileHandlerInvestrategyView(MethodView):
                     record_row.append(float(row_content[7]) if row_content[7] else 0)
                     record_row.append(float(row_content[8]) if row_content[8] else 0)
                     ready_to_save.append(record_row)
+            if len(ready_to_save) == 0:
+                raise ValueError('没有读取到数据.')
+            new_df = pd.DataFrame(ready_to_save)
+            new_df.columns = ['custom_time', 'author_id', 'content', 'variety_id','contract','direction','hands','open_position','close_position','profit']
+            save_list = self.drop_duplicates(new_df, user_id)
+            if len(save_list) > 0:
+                message = "数据保存成功!"
+                insert_statement = "INSERT INTO `investrategy`" \
+                                   "(`custom_time`,`author_id`,`content`,`variety_id`,`contract`,`direction`,`hands`," \
+                                   "`open_position`,`close_position`,`profit`)" \
+                                   "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+                db_connection = MySQLConnection()
+                cursor = db_connection.get_cursor()
+                cursor.executemany(insert_statement, ready_to_save)
+                db_connection.commit()
+                db_connection.close()
+            else:
+                message = "数据上传成功,没有发现新数据!"
         except Exception as e:
-            return jsonify(message), 400
-        insert_statement = "INSERT INTO `investrategy`" \
-                            "(`custom_time`,`author_id`,`content`,`variety_id`,`contract`,`direction`,`hands`," \
-                            "`open_position`,`close_position`,`profit`)" \
-                            "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+            return jsonify(str(e)), 400
+        else:
+            return jsonify(message)
+
+    @staticmethod
+    def drop_duplicates(new_df, user_id):
+        # 查询旧的数据
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        cursor.executemany(insert_statement, ready_to_save)
-        db_connection.commit()
+        query_statement = "SELECT `custom_time`,`author_id`,`content`,`variety_id`,`contract`,`direction`,`hands`, " \
+                          "`open_position`,`close_position`,`profit` " \
+                          "FROM `investrategy` WHERE `author_id`=%s;"
+        cursor.execute(query_statement, user_id)
+        old_df = pd.DataFrame(cursor.fetchall())
         db_connection.close()
-        return jsonify("数据上传成功!")
+        old_df['custom_time'] = pd.to_datetime(old_df['custom_time'], format='%Y-%m-%d')
+        new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
+        concat_df = pd.concat([old_df, new_df, old_df])
+        save_df = concat_df.drop_duplicates(subset=['custom_time', 'content'], keep=False, inplace=False)
+        if save_df.empty:
+            return []
+        else:
+            save_df = save_df.copy()
+            save_df['custom_time'] = save_df['custom_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
+            return save_df.values.tolist()
 
 
 class RetrieveInvestrategyView(MethodView):
@@ -371,7 +402,7 @@ class InvestrategyExportView(MethodView):
         file_folder = os.path.join(BASE_DIR, 'fileStore/exports/')
         if not os.path.exists(file_folder):
             os.makedirs(file_folder)
-        csv_file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
 
         file_records = list()
         for record_item in records_all:
@@ -389,11 +420,15 @@ class InvestrategyExportView(MethodView):
             row_content.append(float(record_item['profit']))
             row_content.append(record_item['note'])
             file_records.append(row_content)
-        with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(['日期', '部门小组', '姓名', '策略内容', '品种', '合约', '方向', '手数', '策略开仓', '策略平仓', '策略结果','备注'])
-            writer.writerows(file_records)
-        # 将文件返回
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = ['日期', '部门小组', '姓名', '策略内容', '品种', '合约', '方向', '手数', '策略开仓', '策略平仓', '策略结果','备注']
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name='投顾策略记录'
+        )
+
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )

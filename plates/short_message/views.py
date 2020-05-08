@@ -1,12 +1,11 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import codecs
-import csv
 import datetime
 import hashlib
 import os
 import time
 
+import pandas as pd
 import xlrd
 from flask import jsonify, request, current_app, send_from_directory
 from flask.views import MethodView
@@ -163,7 +162,6 @@ class FileHandlerShortMessageView(MethodView):
         try:
             for row in range(nrows):
                 row_content = table_data.row_values(row)
-                print(row_content)
                 if str(row_content[0]).strip() == "start":
                     start_row_in = True
                     continue
@@ -176,25 +174,56 @@ class FileHandlerShortMessageView(MethodView):
                         record_row.append(xlrd.xldate_as_datetime(row_content[0], 0))
                     except Exception as e:
                         message = "第一列【日期】请使用日期格式上传."
-                        raise ValueError(e)
+                        raise ValueError(message)
                     record_row.append(user_id)
                     record_row.append(str(row_content[1]))
                     record_row.append(str(row_content[2]))
                     record_row.append(str(row_content[3]))
                     record_row.append(str(row_content[4]))
                     ready_to_save.append(record_row)
+            if len(ready_to_save) == 0:
+                raise ValueError('没有读取到数据.')
+            new_df = pd.DataFrame(ready_to_save)
+            new_df.columns = ['custom_time', 'author_id', 'content', 'msg_type','effect_variety','note']
+            save_list = self.drop_duplicates(new_df, user_id)
+            # print('保存的数据:', save_list)
+            if len(save_list) > 0:
+                message = "数据保存成功!"
+                insert_statement = "INSERT INTO `short_message`" \
+                                   "(`custom_time`,`author_id`,`content`,`msg_type`,`effect_variety`,`note`)" \
+                                   " VALUES (%s,%s,%s,%s,%s,%s);"
+                db_connection = MySQLConnection()
+                cursor = db_connection.get_cursor()
+                cursor.executemany(insert_statement, ready_to_save)
+                db_connection.commit()
+                db_connection.close()
+            else:
+                message = "数据上传成功,没有发现新数据!"
         except Exception as e:
-            return jsonify(message), 400
+            return jsonify(str(e)), 400
+        else:
+            return jsonify(message)
 
-        insert_statement = "INSERT INTO `short_message`" \
-                           "(`custom_time`,`author_id`,`content`,`msg_type`,`effect_variety`,`note`)" \
-                           " VALUES (%s,%s,%s,%s,%s,%s);"
+    @staticmethod
+    def drop_duplicates(new_df, user_id):
+        # 查询旧的数据
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        cursor.executemany(insert_statement, ready_to_save)
-        db_connection.commit()
+        query_statement = "SELECT `custom_time`,`author_id`,`content`,`msg_type`,`effect_variety`,`note` " \
+                          "FROM `short_message` WHERE `author_id`=%s;"
+        cursor.execute(query_statement, user_id)
+        old_df = pd.DataFrame(cursor.fetchall())
         db_connection.close()
-        return jsonify("上传成功!")
+        old_df['custom_time'] = pd.to_datetime(old_df['custom_time'], format='%Y-%m-%d')
+        new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
+        concat_df = pd.concat([old_df, new_df, old_df])
+        save_df = concat_df.drop_duplicates(subset=['custom_time', 'content'], keep=False, inplace=False)
+        if save_df.empty:
+            return []
+        else:
+            save_df = save_df.copy()
+            save_df['custom_time'] = save_df['custom_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
+            return save_df.values.tolist()
 
 
 class RetrieveShortMessageView(MethodView):
@@ -310,7 +339,7 @@ class ShortMessageExportView(MethodView):
         file_folder = os.path.join(BASE_DIR, 'fileStore/exports/')
         if not os.path.exists(file_folder):
             os.makedirs(file_folder)
-        csv_file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
 
         file_records = list()
         for record_item in records_all:
@@ -323,12 +352,16 @@ class ShortMessageExportView(MethodView):
             row_content.append(record_item['effect_variety'])
             row_content.append(record_item['note'])
             file_records.append(row_content)
-        with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(['日期', '部门小组', '姓名', '信息内容', '类别', '影响品种','备注'])
-            writer.writerows(file_records)
-        # 将文件返回
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = ['日期', '部门小组', '姓名', '信息内容', '类别', '影响品种','备注']
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name='短讯通记录'
+        )
+
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
 

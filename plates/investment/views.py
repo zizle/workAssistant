@@ -1,12 +1,11 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import codecs
-import csv
 import datetime
 import hashlib
 import os
 import time
 
+import pandas as pd
 from flask import jsonify, request, current_app, send_from_directory
 from flask.views import MethodView
 
@@ -350,7 +349,7 @@ class InvestmentExportView(MethodView):
         file_folder = os.path.join(BASE_DIR, 'fileStore/exports/')
         if not os.path.exists(file_folder):
             os.makedirs(file_folder)
-        csv_file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
 
         file_records = list()
         for record_item in records_all:
@@ -372,12 +371,16 @@ class InvestmentExportView(MethodView):
             row_content.append(float(record_item['profit']))
             row_content.append(record_item['note'])
             file_records.append(row_content)
-        with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(['日期', '部门小组', '姓名', '标题', '品种', '合约','方向', '实建日期','实建均价','实建手数','实出均价','止损均价',
-                             '有效期','外发情况','方案结果','备注'])
-            writer.writerows(file_records)
-        # 将文件返回
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = ['日期', '部门小组', '姓名', '标题', '品种', '合约','方向', '实建日期','实建均价','实建手数','实出均价','止损均价',
+                             '有效期','外发情况','方案结果','备注']
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name='投资方案记录'
+        )
+
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
