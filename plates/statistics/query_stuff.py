@@ -1,7 +1,5 @@
 # _*_ coding:utf-8 _*_
 # __Author__： zizle
-import codecs
-import csv
 import datetime
 import hashlib
 import os
@@ -167,14 +165,19 @@ class QueryStuffRecordView(MethodView):
             row_content.append(record_item['note'])
 
             file_records.append(row_content)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = table_headers
         file_folder, md5_str = self.generate_file_path(userid)
-        file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
-        with codecs.open(file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(table_headers)
-            writer.writerows(file_records)
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name="非常态工作记录"
+        )
+
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
 
     def get_monographic(self, userid, start_date, end_date, current_page, page_size):
@@ -245,20 +248,26 @@ class QueryStuffRecordView(MethodView):
             row_content.append(ORGANIZATIONS.get(record_item['org_id'], '未知'))
             row_content.append(record_item['name'])
             row_content.append(record_item['title'])
+            row_content.append(record_item['words'])
             row_content.append("是" if record_item['is_publish'] else "否")
             row_content.append(record_item['level'])
             row_content.append(record_item['score'])
             row_content.append(record_item['note'])
 
             file_records.append(row_content)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = table_headers
         file_folder, md5_str = self.generate_file_path(userid)
-        file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
-        with codecs.open(file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(table_headers)
-            writer.writerows(file_records)
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name="专题研究记录"
+        )
+
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
 
     def get_investment(self, userid, start_date, end_date, current_page, page_size):
@@ -365,23 +374,28 @@ class QueryStuffRecordView(MethodView):
             row_content.append(record_item['contract'])
             row_content.append(record_item['direction'])
             row_content.append(record_item['build_time'].strftime("%Y-%m-%d %H:%M"))
-            row_content.append(record_item['build_price'])
+            row_content.append(float(record_item['build_price']))
             row_content.append(record_item['build_hands'])
-            row_content.append(record_item['out_price'])
-            row_content.append(record_item['cutloss_price'])
+            row_content.append(float(record_item['out_price']))
+            row_content.append(float(record_item['cutloss_price']))
             row_content.append(record_item['expire_time'].strftime("%Y-%m-%d %H:%M"))
             row_content.append("是" if record_item['is_publish'] else "否")
-            row_content.append(record_item['profit'])
+            row_content.append(float(record_item['profit']))
 
             file_records.append(row_content)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = table_headers
         file_folder, md5_str = self.generate_file_path(userid)
-        file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
-        with codecs.open(file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(table_headers)
-            writer.writerows(file_records)
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name="投资方案记录"
+        )
+
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
 
     def get_investrategy(self, userid, start_date, end_date, current_page, page_size):
@@ -496,10 +510,7 @@ class QueryStuffRecordView(MethodView):
             index=False,
             sheet_name="投顾策略记录"
         )
-        # with codecs.open(file_path, 'w', 'utf_8_sig') as f:
-        #     writer = csv.writer(f, dialect='excel')
-        #     writer.writerow(table_headers)
-        #     writer.writerows(file_records)
+
         return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
                                    as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
@@ -562,11 +573,6 @@ class QueryStuffRecordView(MethodView):
 
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        # # 准备品种信息
-        # query_variety = "SELECT `id`,`name` FROM `variety` WHERE `parent_id` IS NOT NULL;"
-        # cursor.execute(query_variety)
-        # variety_all = cursor.fetchall()
-        # variety_dict = {variety_item["id"]: variety_item['name'] for variety_item in variety_all}
         cursor.execute(query_statement, (userid, start_date, end_date))
         query_result = cursor.fetchall()
         db_connection.close()
@@ -586,14 +592,19 @@ class QueryStuffRecordView(MethodView):
             row_content.append(record_item['note'])
 
             file_records.append(row_content)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = table_headers
         file_folder, md5_str = self.generate_file_path(userid)
-        file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
-        with codecs.open(file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(table_headers)
-            writer.writerows(file_records)
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name="文章发表记录"
+        )
+
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
 
     def get_short_message(self, userid, start_date, end_date, current_page, page_size):
@@ -677,12 +688,7 @@ class QueryStuffRecordView(MethodView):
             index=False,
             sheet_name="短信通记录"
         )
-        # file_folder, md5_str = self.generate_file_path(userid)
-        # file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
-        # with codecs.open(file_path, 'w', 'utf_8_sig') as f:
-        #     writer = csv.writer(f, dialect='excel')
-        #     writer.writerow(table_headers)
-        #     writer.writerows(file_records)
+
         return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
                                    as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
@@ -756,17 +762,23 @@ class QueryStuffRecordView(MethodView):
             row_content.append(record_item['note'])
 
             file_records.append(row_content)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = table_headers
         file_folder, md5_str = self.generate_file_path(userid)
-        file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
-        with codecs.open(file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(table_headers)
-            writer.writerows(file_records)
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name="值班信息记录"
+        )
+
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )
 
-    def generate_file_path(self, userid):
+    @staticmethod
+    def generate_file_path(userid):
         # 生成承载数据的文件
         t = "%.4f" % time.time()
         md5_hash = hashlib.md5()

@@ -1,7 +1,5 @@
 # _*_ coding:utf-8 _*_
 # __Author__： zizle
-import codecs
-import csv
 import datetime
 import hashlib
 import os
@@ -336,7 +334,7 @@ class OnDutyMsgExportView(MethodView):
         file_folder = os.path.join(BASE_DIR, 'fileStore/exports/')
         if not os.path.exists(file_folder):
             os.makedirs(file_folder)
-        csv_file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
 
         file_records = list()
         for record_item in records_all:
@@ -347,11 +345,15 @@ class OnDutyMsgExportView(MethodView):
             row_content.append(record_item['content'])
             row_content.append(record_item['note'])
             file_records.append(row_content)
-        with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(['日期', '部门小组', '姓名', '信息内容', '备注'])
-            writer.writerows(file_records)
-        # 将文件返回
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = ['日期', '部门小组', '姓名', '信息内容', '备注']
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name='值班信息记录'
+        )
+
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )

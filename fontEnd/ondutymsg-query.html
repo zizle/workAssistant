@@ -32,7 +32,7 @@
 		<div class="page-block">
 			<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
 			<span>查询结果: {{RecordSum}}</span>
-			<button class="export-data"> <a :href="exportDataUrl" @click="exportRecord">结果导出</a></button>
+			<button class="export-data" v-if="RecordSum"> <a :href="exportDataUrl" @click="exportRecord">结果导出</a></button>
 		</div>
 	</div>
 	<div class="record-table">

@@ -1,7 +1,5 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import codecs
-import csv
 import datetime
 import hashlib
 import os
@@ -404,7 +402,7 @@ class InvestrategyExportView(MethodView):
         file_folder = os.path.join(BASE_DIR, 'fileStore/exports/')
         if not os.path.exists(file_folder):
             os.makedirs(file_folder)
-        csv_file_path = os.path.join(file_folder, '{}.csv'.format(md5_str))
+        file_path = os.path.join(file_folder, '{}.xlsx'.format(md5_str))
 
         file_records = list()
         for record_item in records_all:
@@ -422,11 +420,15 @@ class InvestrategyExportView(MethodView):
             row_content.append(float(record_item['profit']))
             row_content.append(record_item['note'])
             file_records.append(row_content)
-        with codecs.open(csv_file_path, 'w', 'utf_8_sig') as f:
-            writer = csv.writer(f, dialect='excel')
-            writer.writerow(['日期', '部门小组', '姓名', '策略内容', '品种', '合约', '方向', '手数', '策略开仓', '策略平仓', '策略结果','备注'])
-            writer.writerows(file_records)
-        # 将文件返回
-        return send_from_directory(directory=file_folder, filename='{}.csv'.format(md5_str),
-                                   as_attachment=True, attachment_filename='{}.csv'.format(md5_str)
+
+        export_df = pd.DataFrame(file_records)
+        export_df.columns = ['日期', '部门小组', '姓名', '策略内容', '品种', '合约', '方向', '手数', '策略开仓', '策略平仓', '策略结果','备注']
+        export_df.to_excel(
+            excel_writer=file_path,
+            index=False,
+            sheet_name='投顾策略记录'
+        )
+
+        return send_from_directory(directory=file_folder, filename='{}.xlsx'.format(md5_str),
+                                   as_attachment=True, attachment_filename='{}.xlsx'.format(md5_str)
                                    )

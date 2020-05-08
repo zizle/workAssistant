@@ -1,7 +1,7 @@
 var vm = new Vue({
 	el: "#app",
 	data:{
-		modelFileUrl: host + 'short-message/file/',
+		modelFileUrl: host + 'model-tables/',
 		showUploading:false,
 		currentDate: "",
 		userInfoDict:{},
