@@ -6,7 +6,7 @@ var vm = new Vue({
 		currentDate: "",
 		userInfoDict:{},
 		content:"",
-		note:"",		
+		note:"",
 	},
 	mounted:function(){
 		// 日期默认
@@ -34,6 +34,10 @@ var vm = new Vue({
 	},
 	
 	methods:{
+		clearInputAfterPostSuccessfully(){
+			this.content="";
+			this.note="";
+		},
 		// 提交记录
 		submitRecord(){
 			// 判断不能为空或默认的字段
@@ -53,9 +57,11 @@ var vm = new Vue({
 			};
 			// console.log(recordMsg)
 			// 提交数据
+			var localThis = this;
 			axios.post(host + 'onduty-message/',data=recordMsg)
 			.then(function(resp){
 				alert(resp.data);
+				localThis.clearInputAfterPostSuccessfully();
 			})
 			.catch(function(e){
 				alert(e.response.data);

@@ -63,6 +63,25 @@ var vm = new Vue({
 	
 	},
 	methods:{
+		// 提交后清空数据
+		clearInputAfterPostSuccessfully(){
+			this.selectedTaskType=0; // 选择的任务类型
+			this.isPartner=false; // 任务是否是合作完成的标识
+			this.showPartner=false;  // 是否显示键入合作者
+			this.partnerName=""; // 协作者
+			this.workTitle=""; // 主题/标题
+			this.sponser="";//主办方
+			this.applicantOrg=""; //申请部门/受用单
+			this.applicationPerson="";//申请者
+			this.linkNumber=""; // 联系电话
+			this.ruiBiCount=""; // 瑞币情况
+			this.incomeAllowance=""; // 收入补贴
+			this.workNote="";// 备注
+			this.annexFile=""; // 附件
+			var annexEle = document.getElementById('annex');
+			annexEle.outerHTML = annexEle.outerHTML;
+			this.uploadFileProgress=0;
+		},
 		// 附件改变
 		annexChanged(e){
 			this.annexFile=e.target.files[0];
@@ -93,7 +112,7 @@ var vm = new Vue({
 			param.append("applicat_org", this.applicantOrg);
 			param.append("application_person", this.applicationPerson);
 			param.append("link_number", this.linkNumber);
-			param.append("ruibi_count", this.linkNumber);
+			param.append("ruibi_count", this.ruiBiCount);
 			param.append("income_allowance", this.incomeAllowance);
 			param.append("partner_name", this.partnerName);
 			param.append("work_note", this.workNote);
@@ -108,11 +127,14 @@ var vm = new Vue({
 			};
 			
 			// 提交数据
+			var localThis = this;
 			axios.post(host + 'abnormal-work/',param, request_config)
 			.then(function(resp){
 				alert(resp.data);
+				localThis.clearInputAfterPostSuccessfully(); // 清空数据
 			})
 			.catch(function(e){
+				console.log('错误');
 				alert(e.response.data);
 			})
 			
