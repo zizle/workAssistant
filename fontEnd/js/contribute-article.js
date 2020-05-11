@@ -54,12 +54,28 @@ var vm = new Vue({
 			})
 	},
 	methods:{
+		clearInputAfterPostSuccessfully(){
+			this.title="";
+			this.mediaOrg="";
+			this.publishType="";
+			this.words="";
+			this.checker="";
+			this.allowance="";
+			this.note="";
+			this.isPartner=false;
+			this.showPartner=false;
+			this.partnerName='';
+			this.annexFile=""; // 附件
+			var anneEle = document.getElementById('annex');
+			anneEle.outerHTML = anneEle.outerHTML;
+			this.uploadFileProgress=0;
+		},
 		// 附件改变
 		annexChanged(e){
 			this.annexFile=e.target.files[0];
 		},
 		submitRecord(){
-			console.log('提交');
+			//console.log('提交');
 			// 判断不能为空或默认的字段
 			if(
 			!this.userInfoDict.uid || 
@@ -95,23 +111,13 @@ var vm = new Vue({
 					this.uploadFileProgress = completeProgress;
 				}
 			};
-			// var recordMsg = {
-			// 	custom_time:this.currentDate,
-			// 	org_id:this.userInfoDict.org_id,
-			// 	author_id:this.userInfoDict.uid,
-			// 	title: this.title,
-			// 	media_name: this.mediaOrg,
-			// 	rough_type:this.publishType,
-			// 	words: this.words,
-			// 	checker:this.checker,
-			// 	allowance:this.allowance,
-			// 	note:this.note
-			// };
-			// console.log(recordMsg)
+			
 			// 提交数据
+			var localThis = this;
 			axios.post(host + 'article-publish/',param, request_config)
 			.then(function(resp){
 				alert(resp.data);
+				localThis.clearInputAfterPostSuccessfully();
 			})
 			.catch(function(e){
 				alert(e.response.data);

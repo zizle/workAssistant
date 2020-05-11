@@ -49,6 +49,21 @@ var vm = new Vue({
 			})
 	},
 	methods:{
+		clearInputAfterPostSuccessfully(){
+			this.articleTitle="";
+			this.articleWord="";
+			this.isOpened=false;
+			this.articleLevel="";
+			this.articleScore="";
+			this.isPartner=false;
+			this.showPartner=false;
+			this.partnerName="";
+			this.note="";
+			this.annexFile=""; // 附件
+			var annexEle = document.getElementById('annex');
+			annexEle.outerHTML = annexEle.outerHTML;
+			this.uploadFileProgress=0;
+		},
 		// 附件改变
 		annexChanged(e){
 			this.annexFile=e.target.files[0];
@@ -90,23 +105,13 @@ var vm = new Vue({
 					this.uploadFileProgress = completeProgress;
 				}
 			};
-			// var recordMsg = {
-			// 	upload_time:this.currentDate,
-			// 	org_id:this.userInfoDict.org_id,
-			// 	author_id:this.userInfoDict.uid,
-			// 	title:this.articleTitle,
-			// 	words:this.articleWord,
-			// 	is_publish:this.isOpened,
-			// 	level:this.articleLevel,
-			// 	score:this.articleScore,
-			// 	partner_name:this.partnerName,
-			// 	note:this.workNote,
-			// };
-			// console.log(recordMsg)
+			
 			// 提交数据
+			var localThis = this;
 			axios.post(host + 'monographic/',param, request_config)
 			.then(function(resp){
 				alert(resp.data);
+				localThis.clearInputAfterPostSuccessfully();
 			})
 			.catch(function(e){
 				alert(e.response.data);

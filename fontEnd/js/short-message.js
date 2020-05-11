@@ -51,6 +51,13 @@ var vm = new Vue({
 	},
 	
 	methods:{
+		clearInputAfterPostSuccessfullty(){
+			this.content="";
+			this.messageType="";
+			this.effectVariety='';
+			this.note="";
+			this.showVarietyChecks=false;  // 是否显示品种选择框
+		},
 		// 点击品种选框
 		selectVariety(){
 			this.showVarietyChecks = true;
@@ -80,9 +87,11 @@ var vm = new Vue({
 			};
 			// console.log(recordMsg)
 			// 提交数据
+			var localThis = this;
 			axios.post(host + 'short-message/',data=recordMsg)
 			.then(function(resp){
 				alert(resp.data);
+				localThis.clearInputAfterPostSuccessfullty();
 			})
 			.catch(function(e){
 				alert(e.response.data);

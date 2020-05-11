@@ -73,6 +73,27 @@ var vm = new Vue({
 		})
 	},
 	methods:{
+		clearInputAfterPostSuccessfully(){
+			this.articleTitle="";
+			this.variety="";
+			this.contract="";
+			this.direction="";
+			this.buildDateTime= "";
+			this.buildAvgPrice="";
+			this.buildHands="";
+			this.outAvgPrice= "";
+			this.cutLossAvgPrice="";
+			this.expireDateTime="";
+			this.isPublish=false;
+			this.profit="";
+			this.level="";
+			this.note="";
+			this.showContactInput=false; // 是否显示合约编辑框
+			this.annexFile="";// 附件
+			var annexEle = document.getElementById('annex');
+			annexEle.outerHTML = annexEle.outerHTML;
+			this.uploadFileProgress=0;
+		},
 		// 附件改变
 		annexChanged(e){
 			this.annexFile=e.target.files[0];
@@ -119,29 +140,12 @@ var vm = new Vue({
 					this.uploadFileProgress = completeProgress;
 				}
 			};
-			// var recordMsg = {
-			// 	write_time:this.currentDate,
-			// 	org_id:this.userInfoDict.org_id,
-			// 	author_id:this.userInfoDict.uid,
-			// 	title:this.articleTitle,
-			// 	variety:this.variety,
-			// 	contract:this.contract,
-			// 	direction:this.direction,
-			// 	build_date_time: this.buildDateTime,
-			// 	build_price:this.buildAvgPrice,
-			// 	build_hands:this.buildHands,
-			// 	out_price:this.outAvgPrice,
-			// 	cutloss_price:this.cutLossAvgPrice,
-			// 	expire_time:this.expireDateTime,
-			// 	is_publish:this.isPublish,
-			// 	profit:this.profit,
-			// 	note:this.note
-			// };
-			// console.log(recordMsg)
 			// 提交数据
+			var localThis = this;
 			axios.post(host + 'investment/',param, request_config)
 			.then(function(resp){
 				alert(resp.data);
+				localThis.clearInputAfterPostSuccessfully();
 			})
 			.catch(function(e){
 				alert(e.response.data);

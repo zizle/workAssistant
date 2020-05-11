@@ -86,7 +86,7 @@ class InvestmentView(MethodView):
         response_data['total_page'] = total_page
         response_data['current_count'] = len(result_records)
         response_data['total_count'] = total_count
-        response_data['sum_profit'] = float(sum_porfit)
+        response_data['sum_profit'] = float(sum_porfit) if sum_porfit else 0
 
         return jsonify(response_data)
 

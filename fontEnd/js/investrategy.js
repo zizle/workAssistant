@@ -65,8 +65,21 @@ var vm = new Vue({
 		})
 	},
 	methods:{
+		clearInputAfterPostSuccessfully(){		
+			this.uploadFileProgress=0;
+			this.variety="";
+			this.contract="";
+			this.content=""; // 策略内容
+			this.direction="";
+			this.hands="";
+			this.openPosition="";
+			this.closePosition="";
+			this.profit="";
+			this.note="";
+			this.showContactInput=false;  // 是否显示合约编辑框
+		},
 		submitRecord(){
-			console.log('提交')
+			// console.log('提交')
 			// 判断不能为空或默认的字段
 			if(
 			!this.userInfoDict.uid || 
@@ -93,9 +106,11 @@ var vm = new Vue({
 			};
 			// console.log(recordMsg)
 			// 提交数据
+			var localThis = this;
 			axios.post(host + 'investrategy/',data=recordMsg)
 			.then(function(resp){
 				alert(resp.data);
+				localThis.clearInputAfterPostSuccessfully();
 			})
 			.catch(function(e){
 				alert(e.response.data);
