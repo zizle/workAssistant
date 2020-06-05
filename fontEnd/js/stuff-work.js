@@ -34,5 +34,23 @@ var vm = new Vue({
 			// 让主页跳转页面
 			window.parent.postMessage({name:"changeFramePage", changeFramePage: "distribute-work.html", uid:itemid})
 		},
+		// 重置用户密码
+		resetPassword(e){
+			var itemid = e.target.value;  // id
+			if (confirm("确定重置该用户的密码为:123456吗?")){
+				// 请求重置密码
+				axios.post(host + "user/" + itemid + "/",
+						data={utoken: token, password: md5("123456")}
+				)
+				.then(function(resp){
+					alert(resp.data);
+				})
+				.catch(function(error){
+					if (error.response){
+						alert(error.response.data);
+					}
+				})
+			}
+		},
 	}
 })

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>个人中心</title>
+	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<style>
+	html,body{height: 100%;}
+	.menuBar ul{padding-left: 10px;color:#008B8B;cursor:pointer;margin: 0;}
+	.menuBar ul li{display: inline-block; margin-left: 10px;}
+	#app{height: 100%;}
+	#userIframe{width: 100%;min-height: 90%;}
+</style>
+<body>
+<div id="app">
+	<div class="menuBar"><ul><li v-for="(menuItem,index) in userCenterMenus" @click="selectUserCenterMenu">{{menuItem}}</li></ul></div>
+	<iframe src="baseInfo.html" frameborder="no" border="0" marginwidth="0" marginheight="0" scrolling="yes" allowtransparency="yes" id="userIframe"></iframe>
+</div>
+</body>
+<script src="js/user_center.js" type="text/javascript" charset="utf-8"></script>
+</html>

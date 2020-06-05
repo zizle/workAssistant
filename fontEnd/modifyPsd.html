@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>修改密码</title>
+	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/md5.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<style>
+	#app table{width: 60%;margin: 0 auto;}
+	#app table td:first-child{width: 80px;height: 40px;font-size: 18px;text-align: center;text-align: justify;text-justify: distribute-all-lines;text-align-last: justify;}
+</style>
+<body>
+<div id="app">
+	<table>
+		<tr>
+			<td>新密码:</td>
+			<td><input type="password" v-model="newPsd1"></td>
+		</tr>
+		<tr>
+			<td>再次确认:</td>
+			<td><input type="password" v-model="newPsd2"></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td><button @click="modifyPsd">确定修改</button></td>
+		</tr>
+	</table>
+</div>
+</body>
+<script type="text/javascript">
+	var vm = new Vue({
+		el:"#app",
+		data:{newPsd1:'',newPsd2:''},
+		methods:{
+			modifyPsd(){
+				if(!this.newPsd1 || !this.newPsd2)
+				{
+					alert("请输入新密码和再次确认密码!")
+					return;
+				}
+				if (this.newPsd1 != this.newPsd2)
+				{
+					alert("两次输入密码不一致!")
+					return;
+				}
+				axios.post(host + 'usercenter/',
+				data={utoken:token,password:md5(this.newPsd1)})
+				.then(function(resp){
+					localStorage.clear();
+					sessionStorage.clear();
+					alert(resp.data);
+					// 跳转页面
+					console.log(window.parent.parent);
+					window.parent.parent.location='login.html'
+				})
+				.catch(function(error){
+					if (error.response.data){alert(error.response.data);window.parent.parent.location='login.html'}
+				})
+			}
+		}
+	})
+</script>
+</html>

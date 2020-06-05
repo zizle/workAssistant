@@ -95,7 +95,6 @@ class LoginView(MethodView):
             modules_statement = "SELECT `id`,`name` FROM `work_module` WHERE `is_active`=1 AND `parent_id` is NULL ORDER BY `sort`;"
             # 查询子集的语句
             sub_modules_statement = "SELECT `id`,`name`,`page_url` FROM `work_module` WHERE `is_active`=1 AND `parent_id`=%s ORDER BY `sort`;"
-
         else:
             # print('非管理员')
             # 查询主功能
@@ -221,6 +220,22 @@ class UserView(MethodView):
 
 # 单用户视图
 class RetrieveUserView(MethodView):
+    def post(self, user_id):
+        utoken = request.json.get('utoken')
+        operator_user = psd_handler.verify_json_web_token(utoken)
+        if not operator_user or not operator_user['is_admin']:
+            return jsonify("登录已过期或无权限操作!"), 400
+        password = request.json.get('password')
+        new_password = psd_handler.hash_user_password(password)
+        # 设置新密码
+        update_statement = "UPDATE `user_info` SET `password`=%s WHERE `id`=%s;"
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        cursor.execute(update_statement, (new_password, user_id))
+        db_connection.commit()
+        db_connection.close()
+        return jsonify("重置用户密码成功!\n新密码为:123456")
+
     def put(self, user_id):
         utoken = request.json.get('utoken')
         is_active = 1 if request.json.get('is_checked', False) else 0
@@ -342,3 +357,38 @@ class ParserUserTokenView(MethodView):
         return jsonify(user_info)
 
 
+class UserCenterView(MethodView):
+    def get(self):
+        token = request.args.get('utoken')
+        user_info = psd_handler.verify_json_web_token(token)
+        if not user_info:  # 状态保持错误
+            return jsonify('登录已过期.'), 400
+        # 通过id查询用户信息
+        user_id = user_info['uid']
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        query_statement = "SELECT `id`,`name`,`fixed_code`,`join_time`,`phone`,`email`,`org_id` " \
+                          "FROM `user_info` " \
+                          "WHERE `id`=%s;"
+        cursor.execute(query_statement, user_id)
+        user_info = cursor.fetchone()
+        user_info['join_time'] = user_info['join_time'].strftime("%Y-%d-%m %H:%M:%S")
+        user_info['org_name'] = ORGANIZATIONS.get(int(user_info['org_id']), '未知')
+        return jsonify({'message': '查询成功!', 'userinfo': user_info})
+
+    def post(self):
+        body_json = request.json
+        utoken = body_json.get('utoken')
+        password = body_json.get('password')
+        user_info = psd_handler.verify_json_web_token(utoken)
+        if not user_info:
+            return jsonify("登录已过期，重新登录"), 400  # 重定向
+        user_id = user_info['uid']
+        new_password = psd_handler.hash_user_password(password)
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        modify_statement = "UPDATE `user_info` SET `password`=%s WHERE `id`=%s;"
+        cursor.execute(modify_statement, (new_password, user_id))
+        db_connection.commit()
+        db_connection.close()
+        return jsonify("修改密码成功!请重新登录!")  # 重定向
