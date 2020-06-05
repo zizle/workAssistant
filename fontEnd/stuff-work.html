@@ -5,6 +5,7 @@
 	<title>人员设置</title>
 	<link rel="stylesheet" type="text/css" href="css/stuff-wrok.css?v=0.13"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/md5.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
 </head>
@@ -23,6 +24,7 @@
 				<td>最近登录</td>
 				<td>人员状态</td>
 				<td></td>
+				<td></td>
 			</tr>
 			<tr v-for="(item,index) in stuffsArray">
 				<td>{{index + 1}}</td>
@@ -31,13 +33,14 @@
 				<td>{{ item.join_time }}</td>
 				<td>{{ item.update_time }}</td>
 				<td class="stuff-state" :class="item.is_active?'state-pass':''">{{item.is_active?"审核通过":"未审核"}}</td>
+				<td><button v-if="item.id != 1 && item.is_active" :value="item.id" @click="resetPassword">密码重置</button></td>
 				<!-- <td><input v-if="item.id != 1" type="checkbox" class="open-close-check" :value="item.id" @change="userActiveChanged" :checked="item.is_active"></td> -->
 				<!-- <td><input v-if="item.id != 1" type="checkbox" class="open-close-check" :value="item.id" data-action="is_active" @change="checkBoxChanged" :checked="item.is_active"></td> -->
-				<td><button v-if="item.id != 1 && item.is_active" type="button" :value="item.id" @click="workDistribute">工作设置</button></td>
+				<td><button v-if="item.id != 1 && item.is_active" :value="item.id" @click="workDistribute">工作设置</button></td>
 			</tr>
 		</table>
 	</div>
 </div>
 </body>
-<script src="js/stuff-work.js?v=0.41" type="text/javascript" charset="utf-8"></script>
+<script src="js/stuff-work.js?v=0.60" type="text/javascript" charset="utf-8"></script>
 </html>

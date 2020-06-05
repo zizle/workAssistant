@@ -32,7 +32,8 @@ var vm = new Vue({
 			'statistics-contributearticle.html',
 			'statistics-shortmessage.html',
 			'statistics-onduty.html',
-			'statistics-query.html'
+			'statistics-query.html',
+			'user_center.html'
 		],
 		showCover:false,
 		accessModules:[],
