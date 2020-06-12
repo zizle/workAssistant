@@ -22,7 +22,7 @@ html,body{
 	margin-top: -150px;
 	margin-left: -200px;
 	background-color: rgba(200, 200,200, 0.4);
-	border: 3px solid rgba(200, 200, 180.0.2);
+	border: 3px solid rgba(200, 200, 180, 0.2);
 	border-radius: 8px;
 	box-shadow: 2px 2px 2px #777777;
 }
@@ -35,7 +35,7 @@ html,body{
 	margin-top: -150px;
 	margin-left: -200px;
 	background-color: rgba(200, 200,200, 0.4);
-	border: 3px solid rgba(200, 200, 180.0.2);
+	border: 3px solid rgba(200, 200, 180, 0.2);
 	border-radius: 8px;
 	box-shadow: 2px 2px 2px #777777;
 }
@@ -111,6 +111,14 @@ html,body{
 .register-div .register-select{
 	margin-left: 5px;
 }
+.forget-psd{
+	color:rgb(200,100,50);
+	cursor: pointer;
+	font-size: 12px;
+	padding-left: 8px;
+}
+
+
 
 
 

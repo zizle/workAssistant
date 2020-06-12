@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>修改密码</title>
+	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/md5.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<style type="text/css">
+	html,body{
+		margin: 0;
+		padding: 0;
+		width:100%;   
+		height:100%;
+		/* FILTER: progid:DXImageTransform.Microsoft.Gradient(gradientType=0,startColorStr=#006096,endColorStr=#fff); /*IE 6 7 8*/
+		background: -ms-linear-gradient(top, #006096,  #fff);        /* IE 10 */  
+		background:-moz-linear-gradient(top,#006096,#fff);/*火狐*/   
+		background:-webkit-gradient(linear, 0% 0%, 0% 100%,from(#006096), to(#fff));/*谷歌*/   
+		background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#006096), to(#fff));      /* Safari 4-5, Chrome 1-9*/  
+		background: -webkit-linear-gradient(top, #006096, #fff);   /*Safari5.1 Chrome 10+*/  
+		background: -o-linear-gradient(top, #006096, #fff);  /*Opera 11.10+*/  
+	}  
+	.forget-psd{
+		color:rgb(200,100,180);
+		cursor: pointer;
+		padding-left: 5px;
+		font-size: 14px;
+	}
+	.forget-div{
+		position: absolute;
+		width: 400px;
+		height: 300px;
+		left: 50%;
+		top: 40%;
+		margin-top: -150px;
+		margin-left: -200px;
+		border-radius: 8px;
+	}
+	.forget-div .confirm-btn {
+		width: 100%;
+		height: 28px;
+		border: none;
+		background-color: rgb(40, 200, 220);
+		color: rgb(245,245,245);
+		font-size:18px;
+	}
+	.forget-div table{
+		margin: 0 auto;
+		margin-top: 20px;
+		border-collapse: collapse;
+	}
+
+	.forget-div table th{
+		color: #EDEDED;
+		font-size: 22px;
+		padding-bottom: 15px;
+	}
+	.forget-div table input{
+		border: none;
+		background-color: rgba(200,200,200,0.4);
+		outline-style: none;
+		height: 25px;
+		font-size: 16px;
+		margin-left: 5px;
+	}
+	.forget-div .error-msg{
+		height: 12px;
+		line-height: 12px;
+	}
+	.error-msg{
+		font-size:10px;
+		line-height: 11px;
+		height: 11px;
+		color:rgb(250, 10,10);
+	}
+</style>
+<body>
+<div id="app">
+	<!-- 修改密码弹窗 -->
+	<div class="forget-div">
+		<table>
+			<tr>
+				<th colspan="2">修改密码</th>
+			</tr>
+			<tr>
+				<td>姓名:</td>
+				<td><input type="text" v-model="username" @blur="usernameBlur" @focus="usernameFocus"></td>
+			</tr>
+			<tr><td class="error-msg" colspan="2"> {{usernameError}}</td></tr>
+			<tr>
+				<td>新密码:</td>
+				<td><input type="password" v-model="passoword1" @blur="passoword1Blur" @focus="passoword1Focus"></td>
+			</tr>
+			<tr><td class="error-msg" colspan="2">{{passoword1Error}}</td></tr>
+			<tr>
+				<td>确认密码:</td>
+				<td><input type="password" v-model="passoword2" @blur="passoword2Blur" @focus="passoword2Focus"></td>
+				
+			</tr>
+			<tr><td class="error-msg" colspan="2">{{passoword2Error}}</td></tr>
+			<tr>
+				<td>验证码:</td>
+				<td><input type="text" placeholder="请输入邮箱验证码" v-model="emailCode" @blur="emailCodeBlur" @focus="emailCodeFocus"></td>
+				
+			</tr>
+			<tr><td class="error-msg" colspan="2">{{emailCodeError}}</td></tr>
+			<tr>
+				<td colspan="2"> {{ showSendMessage }}<button @click="sendEmailVerfied">{{ showSecondes }}</button></td>
+			</tr>
+			<tr><td class="error-msg" colspan="2">{{resultError}}</td></tr>
+			<tr><td colspan="2"><button class="confirm-btn" @click="emailResetPassword">确定</button></td></tr>
+		</table>
+	</div>
+</div>
+</body>
+<script type="text/javascript">
+var vm = new Vue({
+	el:"#app",
+	data:{
+		sendSeconds:5,
+		showSecondes: "发送",
+		showSendMessage:"点击发送邮箱验证码",
+		rightUsername: false,
+		usernameError : "",
+		username:'',
+		passoword1: '',
+		passoword1Error: '',
+		passoword2: '',
+		passoword2Error:'',
+		emailCode: '',
+		emailCodeError:'',
+		result: false,
+		resultError:'',
+	},
+	mounted:function(){
+		
+	},
+	watch:{
+	},
+	methods:{
+		usernameBlur(){
+			console.log('离开用户输入框');
+			// 请求用户名返回邮箱是否存在
+			var localThis = this;
+			axios.get(host + 'userexist/?username=' + this.username)
+			.then(function(resp){
+				if(resp.data.exist){localThis.rightUsername=true;localThis.usernameError='';};
+			})
+			.catch(function(){
+				localThis.rightUsername=false;localThis.usernameError='网络错误';
+			})
+		},
+		usernameFocus(){
+			console.log("进入用户框");
+			this.rightUsername = false;
+			this.usernameError = '';
+		},
+		passoword1Blur(){
+			if (!this.passoword1){this.passoword1Error='请输入新密码!'}
+		},
+		passoword1Focus(){this.passoword1Error = ''},
+		passoword2Blur(){
+			if (this.passoword1 != this.passoword2){this.passoword2Error='两次输入密码不一致!'}
+		},
+		passoword2Focus(){this.passoword2Error = ''},
+		emailCodeBlur(){if(!this.emailCode){this.emailCodeError = '请输入邮箱验证码.'}},
+		emailCodeFocus(){this.emailCodeError = ''},
+		sendEmailVerfied(){
+			if (!this.rightUsername)
+			{
+				this.usernameError = "请输入正确用户名";
+				return;
+			}
+			var localThis = this;
+			if (localThis.showSecondes == "重发" || localThis.showSecondes == "发送"){
+				// 发送邮件
+				axios.get(host + 'email_psd/?username=' + localThis.username)
+				.then(function(resp){
+					console.log(resp.data.send);
+					if (!resp.data.send){
+						localThis.showSendMessage=resp.data.message + '发送失败!';
+					}
+				})
+				.catch(function(){
+					localThis.showSendMessage = "网络错误,发送失败!";
+				})
+				localThis.sendSeconds = 60;
+				localThis.showSendMessage = "已向您的邮箱中发送验证码";
+				var interval = setInterval(function(){
+					if (localThis.sendSeconds != 0){localThis.sendSeconds -= 1; localThis.showSecondes=localThis.sendSeconds + '秒';}
+					else{localThis.showSecondes="重发";clearInterval(interval);localThis.showSendMessage='点击发送验证码';}
+				},1000)
+			}
+		},
+		emailResetPassword(){
+			if (!this.username||this.passoword1!=this.passoword2|| !this.emailCode){return;}
+			// 重置密码
+			var data = {
+				username:this.username,
+				password: md5(this.passoword2),
+				email_code: this.emailCode,
+			}
+			axios.post(host + 'email_psd/', data=data)
+			.then(function(resp){
+				if (resp.data.ret == true){
+					alert('修改密码成功!请登录.');
+					window.location.href = 'login.html';
+				}
+			})
+			.catch(function(error){
+				if(error.response.data){
+					alert(error.response.data.message);
+				}
+			})
+		},
+	}
+})
+</script>
+</html>

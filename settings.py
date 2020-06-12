@@ -1,7 +1,7 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import os
 import logging
+import os
 
 SECRET_KEY = "c7jgb1k2xzfq*3odq5my-vts^+cv+p7suw+(_5#va%f0=tt5mp"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -22,6 +22,12 @@ DATABASES = {
         'PASSWORD': 'mysql',
         'NAME': 'work_assistant'
     },
+    'redis': {
+        'HOST': 'localhost',
+        'PORT': 6379,
+        'DBINDEX': 0,
+        'PASSWORD': ''
+    },
     'sqlite': {
         'NAME': 'test.db'
     }
@@ -31,3 +37,6 @@ DATABASES = {
 LOGGER_LEVEL = logging.DEBUG
 # jwt的有效时间
 JSON_WEB_TOKEN_EXPIRE = 1728000
+
+EMAIL = 'rdyjwork@163.com'
+EMAILPSD = 'DXLBPVLQTEQKOYEI'

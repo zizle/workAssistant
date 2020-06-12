@@ -216,6 +216,10 @@ var vm = new Vue({
 				//console.log(error);
 			})
 		},
+		// 忘记密码
+		forgetPassword(){
+			window.location.href='forget-psd.html'
+		},
 	}
 	
 })

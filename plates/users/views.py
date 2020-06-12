@@ -2,14 +2,17 @@
 # Author: zizle
 import datetime
 import re
+import smtplib
 import time
+from email.mime.text import MIMEText
 
 import jwt
 from flask import current_app
 from flask import request, jsonify
 from flask.views import MethodView
 
-from db import MySQLConnection
+import settings
+from db import MySQLConnection, RedisConnection
 from settings import SECRET_KEY, JSON_WEB_TOKEN_EXPIRE
 from utils import psd_handler
 from vlibs import ORGANIZATIONS
@@ -392,3 +395,92 @@ class UserCenterView(MethodView):
         db_connection.commit()
         db_connection.close()
         return jsonify("修改密码成功!请重新登录!")  # 重定向
+
+
+class UserExistView(MethodView):
+    def get(self):
+        # 查询用户是否存在
+        username = request.args.get('username', None)
+        if not username:
+            return jsonify({'message':'用户不存在','exist': False})
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        query_statement = "SELECT `id` FROM `user_info` WHERE `name`=%s;"
+        cursor.execute(query_statement, username)
+        exist = cursor.fetchone()
+        db_connection.close()
+        if not exist:
+            exist = 0
+        else:
+            exist = 1
+        return jsonify({'message': '查询成功!', 'exist': exist})
+
+
+class SendEmailVerifyCodeView(MethodView):
+    def get(self):
+        # 向用户邮箱发送验证码
+        username = request.args.get('username', None)
+        if not username:
+            return jsonify({'message': '用户不存在.', 'send': False})
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        query_statement = "SELECT `id`,`email` FROM `user_info` WHERE `name`=%s;"
+        cursor.execute(query_statement, username)
+        exist = cursor.fetchone()
+        db_connection.close()
+        if not exist:
+            return jsonify({'message': '用户不存在.', 'send': False})
+        # 发送验证码
+        user_email = exist['email']
+        # 验证用户的邮箱格式
+        if not re.match(r'^(\w+\.?)*\w+@(?:\w+\.)\w+$', user_email):
+            return jsonify({'message': '预留邮箱格式错误.发送失败.', 'send': False})
+        receivers = [user_email]  # 接收邮件，可设置为你的QQ邮箱或者其他邮箱
+        # 生成验证码
+        code = psd_handler.generate_string_with_time(5)
+        # 将验证码保存到redis
+        redis_connection = RedisConnection()
+        value_key = '{}_email_code'.format(username)
+        redis_connection.set_value(value_key, code, 600)  # 10分钟有效
+        mail_msg = """
+        <p>您正在修改《瑞达期货研究院工作管理系统》的登录密码,如不是本人操作请忽略,并请尽快进入系统修改密码.</p>
+        <p>本次验证码是:</p>
+        <p style='font-size:17px;color:rgb(200,20,20)'>{}<p>
+        """.format(code)
+        message = MIMEText(mail_msg, 'html', 'utf-8')
+        message['From'] = settings.EMAIL
+        message['To'] = receivers[0]
+        message['Subject'] = '<瑞达期货研究院工作管理系统>修改密码邮箱验证码'
+        try:
+            smtpObj = smtplib.SMTP(host='smtp.163.com')
+            smtpObj.login(settings.EMAIL, settings.EMAILPSD)
+            smtpObj.sendmail(settings.EMAIL, receivers, message.as_string())
+            send = True
+        except smtplib.SMTPException as e:
+            current_app.logger.error("发送邮件错误!{}".format(e))
+            send = False
+        return jsonify({'message': '发送成功!', 'send': send})
+
+    def post(self):
+        # 设置新密码
+        body_json = request.json
+        username = body_json.get('username', None)
+        password = body_json.get('password', None)
+        email_code = body_json.get('email_code', None)
+        if not all([username, password, email_code]):
+            return jsonify({'message': '参数不足.', 'ret': False})
+        # 取出redis中的验证码
+        redis_connection = RedisConnection()
+        code = redis_connection.get_value("{}_email_code".format(username))
+        # 对比验证码，设置新密码
+        if code.lower() == email_code.lower():
+            new_psd = psd_handler.hash_user_password(password)
+            update_statement = "UPDATE `user_info` SET `password`=%s WHERE `name`=%s;"
+            db_connection = MySQLConnection()
+            cursor = db_connection.get_cursor()
+            cursor.execute(update_statement, (new_psd, username))
+            db_connection.commit()
+            db_connection.close()
+            return jsonify({'message': '修改成功!', 'ret': True})
+        else:
+            return jsonify({'message': '验证码错误!', 'ret': False})
