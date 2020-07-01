@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8" />
 	<title>研究院工作管理系统</title>
-	<link rel="stylesheet" type="text/css" href="css/login.css?v=0.3"/>
+	<link rel="stylesheet" type="text/css" href="css/login.css?v=0.61"/>
 	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/md5.min.js" type="text/javascript" charset="utf-8"></script>
@@ -36,7 +36,8 @@
 			</tr>
 			<tr><td colspan="2" class="error-msg">{{ loginPsdError }}</td></tr>
 			<tr>
-				<td class="remember-login"><label><input type="checkbox" v-model="rememberToken" value="1" title="有效期为15天">记住我</label><td>
+				<td class="remember-login"><label><input type="checkbox" v-model="rememberToken" value="1" title="有效期为15天">记住我</label></td>
+				<td><span class="forget-psd" @click="forgetPassword">忘记密码</span></td>
 			</tr>
 			<tr><td colspan="2" class="error-msg">{{ loginErrorMsg }}</td></tr>
 			<tr>
@@ -93,5 +94,5 @@
 	</transition>
 </div>
 </body>
-<script src="js/login.js?v=0.41" type="text/javascript" charset="utf-8"></script>
+<script src="js/login.js?v=0.61" type="text/javascript" charset="utf-8"></script>
 </html>

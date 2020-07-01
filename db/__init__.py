@@ -3,13 +3,16 @@
 
 """ 数据库交互 """
 
+import pickle
 # _*_ coding:utf-8 _*_
 # Author: zizle
 import sys
+
+import redis
 from pymysql import connect, converters, FIELD_TYPE
 from pymysql.cursors import DictCursor
-import settings
 
+import settings
 
 converions = converters.conversions
  #全局配置了
@@ -54,3 +57,25 @@ class MySQLConnection(object):
     # 插入返回id
     def insert_id(self):
         return self._db.insert_id()
+
+
+class RedisConnection(object):
+    def __init__(self):
+        redis_params = settings.DATABASES.get('redis')
+        self._connection = redis.StrictRedis(
+            host=redis_params['HOST'],
+            port=redis_params['PORT'],
+            db=redis_params['DBINDEX'],
+            password=redis_params['PASSWORD']
+        )
+
+    def set_value(self, key, value, ex=None):
+        self._connection.set(key, pickle.dumps(value), ex)
+        self._connection.close()
+
+    def get_value(self, key):
+        value = self._connection.get(key)
+        if value is not None:
+            value = pickle.loads(value)
+        self._connection.close()
+        return value

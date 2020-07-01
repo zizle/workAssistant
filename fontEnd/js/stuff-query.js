@@ -90,7 +90,7 @@ var vm = new Vue({
 				'&startDate=' + this.startDate + '&endDate=' + this.endDate+ '&page='+ cPage+'&pagesize=50' + '&utoken=' + token;
 				axios.get(serverUrl)
 				.then(function(resp){
-					console.log(resp.data);
+					// console.log(resp.data);
 					localThis.tableHeaderKeys = resp.data.header_keys;
 					localThis.tableHeaders = resp.data.table_headers;
 					localThis.tableRecords = resp.data.records;

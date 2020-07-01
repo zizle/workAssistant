@@ -291,12 +291,12 @@ class RetrieveInvestmentView(MethodView):
                 annex_file_path = annex_file['annex_url']
             user_id = int(user_info['uid'])
             delete_statement = "DELETE FROM `investment` " \
-                               "WHERE `id`=%d AND `author_id`=%d AND DATEDIFF(NOW(), `create_time`) < 3;" % (
+                               "WHERE `id`=%d AND `author_id`=%d;" % (
                                rid, user_id)
             lines_changed = cursor.execute(delete_statement)
             db_connection.commit()
             if lines_changed <= 0:
-                raise ValueError("较早的记录.已经无法删除了>…<")
+                raise ValueError("删除错误,没有记录被删除>…<")
         except Exception as e:
             db_connection.rollback()
             db_connection.close()

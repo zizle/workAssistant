@@ -3,7 +3,7 @@
 from flask import Blueprint
 
 from .views import RegisterView, OrganizationGroupView, LoginView, UserView, RetrieveUserView, RetrieveUserModuleView, \
-    RetrieveUMView, ParserUserTokenView, UserCenterView
+    RetrieveUMView, ParserUserTokenView, UserCenterView, UserExistView, SendEmailVerifyCodeView
 
 user_blp = Blueprint(name='user', import_name=__name__, url_prefix='')
 
@@ -19,6 +19,8 @@ user_blp.add_url_rule('user/<int:user_id>/module/', view_func=RetrieveUserModule
 user_blp.add_url_rule('user/<int:user_id>/module/<int:module_id>/', view_func=RetrieveUMView.as_view(name='um'))
 user_blp.add_url_rule('user/parse-token/', view_func=ParserUserTokenView.as_view(name='pst'))
 user_blp.add_url_rule('usercenter/', view_func=UserCenterView.as_view(name='usercenter'))
+user_blp.add_url_rule('userexist/', view_func=UserExistView.as_view(name='userexist'))
+user_blp.add_url_rule('email_psd/', view_func=SendEmailVerifyCodeView.as_view(name='sendvcode'))  # 通过邮箱验证码修改密码
 
 
 # 第一个请求之前处理的事情

@@ -13,6 +13,7 @@ var vm = new Vue({
 			'variety-manager.html',
 			'abnormal-work.html',
 			'abw-query.html',
+            'abwork-examine.html',
 			'monographic.html',
 			'mogp-query.html',
 			'investment.html',

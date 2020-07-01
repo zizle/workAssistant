@@ -216,10 +216,14 @@ class FileHandlerOnDutyMsgView(MethodView):
         cursor.execute(query_statement, user_id)
         old_df = pd.DataFrame(cursor.fetchall())
         db_connection.close()
-        old_df['custom_time'] = pd.to_datetime(old_df['custom_time'], format='%Y-%m-%d')
-        new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
-        concat_df = pd.concat([old_df, new_df, old_df])
-        save_df = concat_df.drop_duplicates(subset=['custom_time', 'content'], keep=False, inplace=False)
+        if old_df.empty:
+            new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
+            save_df = new_df.drop_duplicates(subset=['custom_time', 'content'], keep='last', inplace=False)
+        else:
+            old_df['custom_time'] = pd.to_datetime(old_df['custom_time'], format='%Y-%m-%d')
+            new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
+            concat_df = pd.concat([old_df, new_df, old_df])
+            save_df = concat_df.drop_duplicates(subset=['custom_time', 'content'], keep=False, inplace=False)
         if save_df.empty:
             return []
         else:
@@ -285,13 +289,13 @@ class RetrieveOnDutyView(MethodView):
         try:
             user_id = int(user_info['uid'])
             delete_statement = "DELETE FROM `onduty_message` " \
-                               "WHERE `id`=%d AND `author_id`=%d AND DATEDIFF(NOW(), `create_time`) < 3;" % (
+                               "WHERE `id`=%d AND `author_id`=%d;" % (
                                rid, user_id)
             cursor = db_connection.get_cursor()
             lines_changed = cursor.execute(delete_statement)
             db_connection.commit()
             if lines_changed <= 0:
-                raise ValueError("较早的记录.已经无法删除了>…<")
+                raise ValueError("删除错误,没有记录被删除>…<")
         except Exception as e:
             db_connection.rollback()
             db_connection.close()

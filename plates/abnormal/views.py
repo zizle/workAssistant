@@ -42,7 +42,7 @@ class AbnormalWorkView(MethodView):
         # 原生sql内联查询
         inner_join_statement = "SELECT usertb.name,usertb.org_id,abworktb.id,abworktb.custom_time,abworktb.task_type," \
                                "abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number," \
-                               "abworktb.swiss_coin,abworktb.allowance,abworktb.note,abworktb.annex,abworktb.annex_url " \
+                               "abworktb.swiss_coin,abworktb.allowance,abworktb.note,abworktb.annex,abworktb.annex_url,abworktb.is_examined " \
                                "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
                                "usertb.id=%s AND usertb.id=abworktb.author_id AND (abworktb.custom_time BETWEEN %s AND %s) " \
                                "ORDER BY abworktb.custom_time DESC " \
@@ -423,11 +423,11 @@ class RetrieveAbWorkView(MethodView):
             if annex_file:
                 annex_file_path = annex_file['annex_url']
             user_id = int(user_info['uid'])
-            delete_statement = "DELETE FROM `abnormal_work` WHERE `id`=%d AND `author_id`=%d AND DATEDIFF(NOW(), `create_time`) < 3;" % (work_id, user_id)
+            delete_statement = "DELETE FROM `abnormal_work` WHERE `id`=%d AND `author_id`=%d;" % (work_id, user_id)
             lines_changed = cursor.execute(delete_statement)
             db_connection.commit()
             if lines_changed <= 0:
-                raise ValueError("较早的记录.已经无法删除了>…<")
+                raise ValueError("删除错误,没有记录被删除>…<")
         except Exception as e:
             db_connection.rollback()
             db_connection.close()

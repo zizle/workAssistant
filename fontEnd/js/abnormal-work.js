@@ -84,7 +84,9 @@ var vm = new Vue({
 		},
 		// 附件改变
 		annexChanged(e){
+            console.log(this.annexFile);
 			this.annexFile=e.target.files[0];
+            console.log(this.annexFile);
 		},
 		// 提交任务
 		submitWorkRecord(){
