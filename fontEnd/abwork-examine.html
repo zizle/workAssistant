@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>非常态工作审核</title>
+    <link rel="stylesheet" type="text/css" href="css/recordtable.css"/>
+    <script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<style type="text/css">
+html,body{width: 100%;height: 100%;margin: 0px;opacity: 0;animation: page-fade-in 0.7s forwards;background-color: #EBEBE4;}
+@keyframes page-fade-in{from{opacity: 0;}to{opacity: 1;}}
+.page-title{
+    font-size: 18px;
+    height: 32px;
+    line-height: 32px;
+    padding-left: 60px;
+    background: linear-gradient(to right,#7FFFD4,#F0F8FF);
+    color: #444444;
+    box-shadow: 1px 1px 3px #008B8B;
+}
+.page-title span{font-size: 19px;color: #EFEFEF;text-shadow: #000 0 0 3px;}
+.options{margin: 5px;}
+.options .options-block{display: inline-block;margin-right: 20px;}
+.options .page-block button{
+	height: 20px;
+	line-height: 20px;
+	border: none;
+	margin: 0px 5px;
+	background-color: #EBEBE4;
+	outline: none;
+}
+.options .page-block button:hover{
+	cursor: pointer;
+	color: #65BAD4;
+}
+
+.options .page-block span{
+	font-size: 12px;
+	color: #666666;
+}
+.record-table table td:nth-child(5){
+	width: 75px;
+	font-size: 13px;
+}
+.record-table table td:nth-child(6){
+	width: 85px;
+	font-size: 13px;
+}
+.record-table table td:nth-child(7){
+	width: 115px;
+	font-size: 13px;
+}
+.open-close-check{
+	-webkit-appearance: none;
+	cursor: pointer;
+	position: relative;
+	width: 38px;
+	height: 20px;
+	line-height: 20px;
+	background: #F9F9F9;
+	border-radius: 10px;
+	outline: none;
+	vertical-align: middle;
+    background-color: #999999;
+}
+
+/* 设置关闭时滑块的样式 */
+.open-close-check:before{
+	position: absolute;
+	left: 0;
+	content: 'X';
+	color:#FFFFFF;
+	font-size: 5px;
+	background-color: #FF2206;
+	text-align: center;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	box-shadow: 0 0 5px #ddd;
+	transition: all 0.2s linear;
+}
+/* 滑槽和滑块的样式 */
+.open-close-check:checked{
+	background: #18ff0a;
+}
+/* 设置开启时滑块的样式 */
+.open-close-check:checked::before{
+	content: '√';
+	left: 16px;
+	color:#666666;
+	background-color: #7FFFD4;
+	transition: all 0.2s linear;
+}
+</style>
+<body>
+<div id="app">
+    <div class="page-title"><span>非常态工作</span>记录审核</div>
+    <div class="options">
+        <div class="options-block">
+        	<span>记录状态:</span>
+        	<select v-model.number="queryStatus">
+        		<option value ="0">全部</option>
+        		<option value ="1" style="color: #FF2222;">待审核</option>
+        		<option value ="2" style="color: #22FF22;">已通过</option>
+        	</select>
+        </div>
+        <div class="page-block">
+        	<button @click="goToTargetPage('pre')">上一页</button><span>{{currentPage}} / {{totalPage}}</span><button @click="goToTargetPage('next')">下一页</button>
+        	<span>查询结果: {{RecordSum}}</span>
+        </div>
+    </div>
+    <div class="record-table">
+    	<table border="" cellspacing="" cellpadding="">
+    		<tr class="title">
+    			<td>日期</td>
+    			<td>姓名</td>
+    			<td>任务类型</td>
+    			<td>主题/标题</td>
+    			<td>主办方</td>
+    			<td>申请部门/受用单位</td>    			
+    			<td>备注</td>
+    			<td>附件</td>
+                <td>审核</td>
+    		</tr>
+    		<tr v-for="(abworkItem,index) in currentWorks">
+    			<td>{{abworkItem.custom_time}}</td>
+    			<td>{{abworkItem.name}}</td>
+    			<td>{{abworkItem.task_type}}</td>
+    			<td class="record-title"><div><span>{{abworkItem.title}}</span></div></td>
+    			<td>{{abworkItem.sponsor}}</td>
+    			<td class="record-appliedOrg"><div><span>{{abworkItem.applied_org}}</span></div></td>
+    			<td>{{abworkItem.note}}</td>
+    			<td v-if="abworkItem.annex"><a :href="host + abworkItem.annex_url">下载</a></td>
+    			<td v-else>无</td>
+                <td><input type="checkbox" class="open-close-check" :value="abworkItem.id" @change="workStatusChanged" :checked="abworkItem.is_examined"></td>
+    		</tr>
+    	</table>
+    </div>
+</div>
+</body>
+<script type="text/javascript">
+var vm = new Vue({
+    el:"#app",
+    data:{
+        currentPage:1,
+        totalPage:1,
+        queryStatus:0,
+        RecordSum:0,
+        currentWorks:[],
+    },
+    mounted:function(){
+      this.getCurrentOptionsRecords(1);  
+    },
+    watch:{
+      queryStatus(){
+          this.getCurrentOptionsRecords(1);
+      }  
+    },
+    methods:{
+        // 前往页
+        goToTargetPage(flag){
+        	// console.log(flag);
+        	var requirePage = this.currentPage;
+        	// 上一页
+        	if (flag=="pre"){
+        		if (this.currentPage == 1){
+        			console.log('已经是第一页了')
+        			return;
+        		}
+        		requirePage = this.currentPage - 1;
+        		
+        	};
+        	// 下一页
+        	if(flag=="next"){
+        		if (this.currentPage >= this.totalPage){
+        			console.log("已经是最后一页了");
+        			return;
+        		}
+        		requirePage = this.currentPage + 1;
+        	};
+        	this.getCurrentOptionsRecords(requirePage);
+        	
+        },
+        // 获取当前的记录
+        getCurrentOptionsRecords(cPage){
+            this.currentWorks.splice(0);
+            var localThis = this;
+            var url = host + 'abnormal-work/examine/?status=' + this.queryStatus + '&page=' + cPage;
+            // console.log(url);
+            axios.get(url)
+            .then(function(resp){
+                localThis.RecordSum = resp.data.total_count;
+                localThis.currentPage = resp.data.current_page;
+                localThis.totalPage = resp.data.total_page;
+                localThis.currentWorks = resp.data.abworks;
+            })
+            .catch(function(error){
+                console.log(error)
+            })
+        },
+        workStatusChanged(e){
+            var itemid = e.target.value;
+            var checked = 0;
+            if (e.target.checked){
+                checked = 1
+            }
+            var url =  host + 'abnormal-work/examine/?workid=' + itemid + '&checked=' + checked + '&utoken=' + token;
+            axios.post(url)
+            .then(function(resp){
+                console.log(resp)
+            })
+            .catch(function(error){
+                console.log(error)
+            })
+        },
+    }
+})
+</script>
+</html>

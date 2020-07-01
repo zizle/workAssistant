@@ -42,7 +42,7 @@ class AbnormalWorkView(MethodView):
         # 原生sql内联查询
         inner_join_statement = "SELECT usertb.name,usertb.org_id,abworktb.id,abworktb.custom_time,abworktb.task_type," \
                                "abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number," \
-                               "abworktb.swiss_coin,abworktb.allowance,abworktb.note,abworktb.annex,abworktb.annex_url " \
+                               "abworktb.swiss_coin,abworktb.allowance,abworktb.note,abworktb.annex,abworktb.annex_url,abworktb.is_examined " \
                                "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb ON " \
                                "usertb.id=%s AND usertb.id=abworktb.author_id AND (abworktb.custom_time BETWEEN %s AND %s) " \
                                "ORDER BY abworktb.custom_time DESC " \

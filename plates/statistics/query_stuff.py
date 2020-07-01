@@ -92,20 +92,20 @@ class QueryStuffRecordView(MethodView):
         if userid == 0:
             query_statement = "SELECT usertb.name, abwtb.* " \
                               "FROM `abnormal_work` AS abwtb INNER JOIN `user_info` AS usertb " \
-                              "ON abwtb.author_id=usertb.id AND (abwtb.custom_time BETWEEN %s AND %s) " \
+                              "ON abwtb.is_examined=1 AND abwtb.author_id=usertb.id AND (abwtb.custom_time BETWEEN %s AND %s) " \
                               "ORDER BY abwtb.custom_time DESC " \
                               "LIMIT %s,%s;"
             cursor.execute(query_statement, (start_date, end_date, start_id, page_size))
             query_result = cursor.fetchall()
             total_count_statement = "SELECT COUNT(abwtb.id) AS `total` " \
                                     "FROM `abnormal_work` AS abwtb INNER JOIN `user_info` AS usertb " \
-                                    "ON abwtb.author_id=usertb.id AND (abwtb.custom_time BETWEEN %s AND %s);"
+                                    "ON abwtb.is_examined=1 AND abwtb.author_id=usertb.id AND (abwtb.custom_time BETWEEN %s AND %s);"
             cursor.execute(total_count_statement, (start_date, end_date))
             total_count = cursor.fetchone()['total']  # 计算总页数
         else:
             query_statement = "SELECT usertb.name, abwtb.* " \
                               "FROM `abnormal_work` AS abwtb INNER JOIN `user_info` AS usertb " \
-                              "ON abwtb.author_id=usertb.id AND abwtb.author_id=%s AND (abwtb.custom_time BETWEEN %s AND %s) " \
+                              "ON abwtb.is_examined=1 AND abwtb.author_id=usertb.id AND abwtb.author_id=%s AND (abwtb.custom_time BETWEEN %s AND %s) " \
                               "ORDER BY abwtb.custom_time DESC " \
                               "LIMIT %s,%s;"
 
@@ -113,7 +113,7 @@ class QueryStuffRecordView(MethodView):
             query_result = cursor.fetchall()
             # 总数
             total_count_statement = "SELECT COUNT(`id`) AS `total` FROM `abnormal_work` " \
-                                    "WHERE `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
+                                    "WHERE `is_examined`=1 AND  `author_id`=%s AND `custom_time` BETWEEN %s AND %s;"
             cursor.execute(total_count_statement, (userid, start_date, end_date))
             total_count = cursor.fetchone()['total']  # 计算总页数
         total_page = int((total_count + page_size - 1) / page_size)
@@ -133,14 +133,13 @@ class QueryStuffRecordView(MethodView):
         response_data['current_page'] = current_page + 1  # 查询前给减1处理了，加回来
         response_data['total_page'] = total_page
         response_data['total_count'] = total_count
-
         return jsonify(response_data)
 
     def export_abnormal_work(self, userid, start_date, end_date):
         table_headers = ['日期', '部门小组', '姓名', '标题', '类型', '主办方', '申请部门', '申请者', '联系电话', '瑞币', '补贴', '备注']
         query_statement = "SELECT usertb.name,usertb.org_id,abworktb.custom_time,abworktb.task_type,abworktb.title,abworktb.sponsor,abworktb.applied_org,abworktb.applicant,abworktb.tel_number,abworktb.swiss_coin,abworktb.allowance,abworktb.note " \
                           "FROM `user_info` AS usertb INNER JOIN `abnormal_work` AS abworktb " \
-                          "ON (usertb.id=%s AND usertb.id=abworktb.author_id) AND (abworktb.custom_time BETWEEN %s AND %s) " \
+                          "ON (abworktb.is_examined=1 AND usertb.id=%s AND usertb.id=abworktb.author_id) AND (abworktb.custom_time BETWEEN %s AND %s) " \
                           "ORDER BY abworktb.custom_time ASC;"
 
         db_connection = MySQLConnection()

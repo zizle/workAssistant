@@ -2,6 +2,7 @@
 # Author: zizle
 from flask import Blueprint
 
+from .examine import ExamineWorkRecord
 from .views import AbnormalWorkView, FileHandlerAbnormalWorkView, ExportAbnormalWorkView, RetrieveAbWorkView
 
 """
@@ -14,6 +15,7 @@ abnormal_blp.add_url_rule('abnormal-work/<int:work_id>/', view_func=RetrieveAbWo
 # abnormal_blp.add_url_rule('abnormal-work/file/', view_func=FileHandlerAbnormalWorkView.as_view(name="pushf"))
 abnormal_blp.add_url_rule('abnormal-work/export/', view_func=ExportAbnormalWorkView.as_view(name="exportf"))
 
+abnormal_blp.add_url_rule('abnormal-work/examine/', view_func=ExamineWorkRecord.as_view(name="abwexamine"))  # 审核非常态工作
 
 
 

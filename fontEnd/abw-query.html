@@ -52,6 +52,7 @@
 				<td>收入补贴</td>
 				<td>备注</td>
 				<td>附件</td>
+                <td>状态</td>
 			</tr>
 			<tr v-for="(abworkItem,index) in currentWorks" @contextmenu.prevent="mouseRightClicked($event, abworkItem.id)">
 				<td>{{ abworkItem.custom_time}}</td>
@@ -69,6 +70,8 @@
 				
 				<td v-if="abworkItem.annex"><a :href="host + abworkItem.annex_url">下载</a></td>
 				<td v-else>无</td>
+                <td v-if="abworkItem.is_examined" style="color: #22AA66;">通过</td>
+                <td v-else style="color: #FF2222;">待审</td>
 			</tr>
 		</table>
 	</div>

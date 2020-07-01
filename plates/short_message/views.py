@@ -214,10 +214,14 @@ class FileHandlerShortMessageView(MethodView):
         cursor.execute(query_statement, user_id)
         old_df = pd.DataFrame(cursor.fetchall())
         db_connection.close()
-        old_df['custom_time'] = pd.to_datetime(old_df['custom_time'], format='%Y-%m-%d')
-        new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
-        concat_df = pd.concat([old_df, new_df, old_df])
-        save_df = concat_df.drop_duplicates(subset=['custom_time', 'content'], keep=False, inplace=False)
+        if old_df.empty:
+            new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
+            save_df = new_df.drop_duplicates(subset=['custom_time', 'content'], keep='last', inplace=False)
+        else:
+            old_df['custom_time'] = pd.to_datetime(old_df['custom_time'], format='%Y-%m-%d')
+            new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
+            concat_df = pd.concat([old_df, new_df, old_df])
+            save_df = concat_df.drop_duplicates(subset=['custom_time', 'content'], keep=False, inplace=False)
         if save_df.empty:
             return []
         else:
