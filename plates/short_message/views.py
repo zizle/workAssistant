@@ -185,7 +185,7 @@ class FileHandlerShortMessageView(MethodView):
                 raise ValueError('没有读取到数据.')
             new_df = pd.DataFrame(ready_to_save)
             new_df.columns = ['custom_time', 'author_id', 'content', 'msg_type','effect_variety','note']
-            save_list = self.drop_duplicates(new_df, user_id)
+            save_list = self.drop_old_date_record(new_df, user_id)
             # print('保存的数据:', save_list)
             if len(save_list) > 0:
                 message = "数据保存成功!"
@@ -205,7 +205,27 @@ class FileHandlerShortMessageView(MethodView):
             return jsonify(message)
 
     @staticmethod
-    def drop_duplicates(new_df, user_id):
+    def drop_old_date_record(new_df, user_id):
+        """删掉数据库最大时间及之前的数据"""
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        query_statement = "SELECT `id`, MAX(`custom_time`) AS `max_date` FROM `short_message` WHERE `author_id`=%s;"
+        cursor.execute(query_statement, (user_id,))
+        fetch_one = cursor.fetchone()
+        db_connection.close()
+        if new_df.empty:
+            return []
+        new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
+        if fetch_one:  # 有数据就删除已存在的最大日期之前的数据
+            max_date = pd.to_datetime(fetch_one['max_date'], format='%Y-%m-%d')
+            save_df = new_df[max_date <= new_df['custom_time']].copy()  # 截取数据
+        else:
+            save_df = new_df.copy()
+        save_df['custom_time'] = save_df['custom_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
+        return save_df.values.tolist()
+
+    @staticmethod
+    def drop_duplicates(new_df, user_id):  # 遗弃，本方式不好用，出现未知错误
         # 查询旧的数据
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
@@ -216,17 +236,20 @@ class FileHandlerShortMessageView(MethodView):
         db_connection.close()
         if old_df.empty:
             new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
+            new_df['custom_time'] = new_df['custom_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
             save_df = new_df.drop_duplicates(subset=['custom_time', 'content'], keep='last', inplace=False)
         else:
             old_df['custom_time'] = pd.to_datetime(old_df['custom_time'], format='%Y-%m-%d')
+            old_df['custom_time'] = old_df['custom_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
             new_df['custom_time'] = pd.to_datetime(new_df['custom_time'], format='%Y-%m-%d')
+            new_df['custom_time'] = new_df['custom_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
             concat_df = pd.concat([old_df, new_df, old_df])
             save_df = concat_df.drop_duplicates(subset=['custom_time', 'content'], keep=False, inplace=False)
         if save_df.empty:
             return []
         else:
             save_df = save_df.copy()
-            save_df['custom_time'] = save_df['custom_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
+            # save_df['custom_time'] = save_df['custom_time'].apply(lambda x: x.strftime('%Y-%m-%d'))
             return save_df.values.tolist()
 
 
