@@ -38,7 +38,7 @@ var vm = new Vue({
 		],
 		showCover:false,
 		accessModules:[],
-		framePage: "default-indexpage.html",
+		framePage: "default-indexpage.html?v=0.62.1",
 	},
 	mounted:function(){
 		// 请求token登录状态

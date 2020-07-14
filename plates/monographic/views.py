@@ -261,9 +261,9 @@ class RetrieveMonographicView(MethodView):
             annex_url = "fileStore/monographic/" + hash_name  # 数据库路径
             annex_file.save(file_path)
         update_statement = "UPDATE `monographic` SET " \
-                            "`custom_time`=%s,`title`=%s,`words`=%s,`is_publish`=%s,`level`=%s," \
-                            "`score`=%s,`note`=%s,`partner`=%s,`annex`=%s,`annex_url`=%s " \
-                            "WHERE `id`=%s AND `author_id`=%s;"
+                           "`custom_time`=%s,`title`=%s,`words`=%s,`is_publish`=%s,`level`=%s," \
+                           "`score`=%s,`note`=%s,`partner`=%s,`annex`=%s,`annex_url`=%s " \
+                           "WHERE `id`=%s AND `author_id`=%s;"
         db_connection = MySQLConnection()
         try:
             # 转换类型
@@ -271,7 +271,6 @@ class RetrieveMonographicView(MethodView):
             words = int(words) if words else 0
             score = int(score) if score else 0
             is_publish = 1 if is_publish else 0
-
             cursor = db_connection.get_cursor()
             cursor.execute(update_statement,
                            (custom_time, title, words, is_publish, level,
