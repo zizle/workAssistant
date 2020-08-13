@@ -1,10 +1,13 @@
 # _*_ coding:utf-8 _*_
 # Author: zizle
-import jwt
-import time
 import random
+import time
 from hashlib import md5
+
+import jwt
+
 from settings import SECRET_KEY
+
 
 # hash密码
 def hash_user_password(password):
@@ -51,7 +54,6 @@ def verify_json_web_token(token):
             algorithms=['HS256']
         )
     except Exception as e:
-        print(e)
         return {}
     else:
         return data

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>权益记录</title>
+    <link rel="stylesheet" type="text/css" href="css/customer-rights.css">
+	<link rel="stylesheet" type="text/css" href="css/edittable.css"/>
+    <script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<!-- 遮罩层 -->
+	<div class="cover-div" v-show="showCover"></div>
+	<div class="page-title"><span>客户权益</span>记录填写</div>
+	<div class="edit-table">
+		<table border="0" cellspacing="" cellpadding="">
+			<tr>
+				<td class="label-td">日期</td>
+                <td class="input-td"><input type="date" format="%yyyy-%MM-%dd" v-model="currentDate"></td>
+			</tr>
+			<tr>
+				<td class="label-td">部门小组</td>
+                <td class="input-td"><input type="text" readonly="true" :value="userInfoDict.org_name"></td>
+			</tr>
+			<tr>
+				<td class="label-td">姓名</td>
+                <td class="input-td"><input type="text" readonly="true" :value="userInfoDict.name"></td>
+			</tr>
+            <tr>
+                <td>选择客户</td>
+                <td class="input-customer">
+					<select v-model="selectedCustomer" :class="selectedCustomer=='0' ? 'nocustomer' : 'iscustomer'" >
+						<option value ="0">请选择为哪个客户添加记录</option>
+						<option v-for="(item,index) in userCustomers" :value ="item.id">{{item.name}}</option>
+					</select>
+                    <button @click="showAddNew">新增客户</button>
+				</td>
+            </tr>
+            <tr>
+                <td>客户留存</td>
+                <td class="input-td">
+                    <input type="number" placeholder="仅支持数字类型数据" v-model.number="customerRemain">
+                </td>
+            </tr>
+
+            <tr>
+                <td>利息</td>
+                <td class="input-td">
+                    <input type="number" placeholder="仅支持数字类型数据" v-model.number="customerInterest">
+                </td>
+            </tr>
+
+            <tr>
+                <td>客户权益</td>
+                <td class="input-td">
+                    <input type="number" placeholder="仅支持数字类型数据" v-model.number="customerCrights">
+                </td>
+            </tr>
+
+            <tr>
+                <td>备注</td>
+                <td class="input-td">
+                    <input type="text" v-model.number="customerNote">
+                </td>
+            </tr>
+            <tr>
+				<td></td>
+				<td class="submit-td"><button type="submit" class="submit-btn" @click="submitWorkRecord">确认提交</button></td>
+			</tr>
+
+		</table>
+	</div>
+
+    <!-- 新增客户弹窗 -->
+	<div class="new-customer" :class="addNewActive? 'active': ''">
+        <div class="popup-title"><img src="img/edit_ico.png" ><button type="button" @click="closeNewPopup">关闭</button></div>
+		<table border="0" cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="td-label">客户名称</td>
+				<td><input type="text" class="td-input" placeholder="必填项" v-model.trim="newCustomerName"></td>
+			</tr>
+			<tr>
+				<td class="td-label">客户账号</td>
+                <td><input type="text" class="td-input" placeholder="必填项" v-model.trim="newCustomerAccount"></td>
+			</tr>
+            <tr>
+                <td class="td-label">客户备注</td>
+                <td><input type="text" class="td-input" placeholder="支持留空,选填" v-model.trim="newCustomerNote"></td>
+            </tr>
+			<tr>
+				<td colspan="2">
+					<input type="submit" value="确定提交" class="submit-input" @click="submitNewCustomer">
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>
+</body>
+<script>
+var vm = new Vue({
+    el: '#app',
+    data:{
+        currentDate:'',
+        userInfoDict:{},
+        showCover: false,
+        selectedCustomer:0,
+        userCustomers:[],
+        customerRemain: '',
+        customerInterest: '',
+        customerCrights:'',
+        customerNote: '',
+        // new
+        addNewActive: false,
+        newCustomerName:'',
+        newCustomerAccount:'',
+        newCustomerNote: '',
+    },
+    mounted:function () {
+        // 日期默认
+		var time = new Date();
+		var year = time.getFullYear();
+		var month = time.getMonth() + 1;
+		var date = time.getDate();
+		if (month < 10){month = '0' + month;}
+		if (date < 10){(date = '0' + date);}
+
+		this.currentDate = year + '-' + month + '-' + date;
+		// 请求当前用户信息
+		if (!token){
+            window.location.href='login.html'
+        }
+        // 发送token的请求登录状态保持
+        var localThis = this;
+        axios.get(host + 'user/parse-token/?utoken=' + token)
+        .then(function(resp){
+            localThis.userInfoDict = resp.data;
+            //console.log(resp.data);
+        })
+        .catch(function(e){
+        });
+        // 获取当前用户的所有客户
+        this.getMyCustomers();
+
+    },
+    methods:{
+        // 新增客户
+        submitNewCustomer(){
+            if (!this.newCustomerName || !this.newCustomerAccount){
+				alert("请填写客户名称和账号!");
+				return;
+			}
+
+			// 提交
+			var localThis = this;
+            var c_data = {
+				customer_name: this.newCustomerName,
+				customer_account:this.newCustomerAccount,
+                customer_note: this.newCustomerNote,
+				utoken: token,
+			}
+			axios.post(host + 'customer/',c_data)
+			.then(function(resp){
+				// 关闭遮罩
+				localThis.closeNewPopup();
+				localThis.userCustomers = resp.data.customers; // 修改变量
+                alert("添加成功!");
+                localThis.newCustomerName='';
+                localThis.newCustomerAccount='';
+                localThis.newCustomerNote='';
+			})
+			.catch(function(error){
+				alert("添加失败了:" + error.response.data.message);
+			})
+
+        },
+        // 点击新增客户按钮
+        showAddNew(){
+            // 像主页面发送消息,显示左侧遮罩
+			window.parent.postMessage({name: "showCover", showCover: 1});
+			// 显示本页面遮罩
+			this.showCover = true;
+			// 显示弹窗
+			this.addNewActive = true;
+        },
+        // 关闭新增客户弹窗
+        closeNewPopup(){
+            this.addNewActive = false;  // 关闭弹窗
+			this.showCover = false;  // 关闭本页遮罩
+			window.parent.postMessage({name: "showCover", showCover: 0});  // 关闭左遮罩
+
+        },
+        // 请求当前用户的所有客户信息
+        getMyCustomers(){
+            var localThis = this;
+            axios.get(host + 'customer/?user=' + token)
+            .then(function(resp){
+                localThis.userCustomers = resp.data.customers;
+            })
+            .catch(function(e){
+
+            })
+        },
+
+        // 提交某个客户权益记录
+        submitWorkRecord(){
+            var c_data = {
+                custom_time: this.currentDate,
+                customer_id: this.selectedCustomer,
+                remain: this.customerRemain,
+                interest: this.customerRemain,
+                crights: this.customerCrights,
+                note: this.customerNote,
+                utoken: token,
+            };
+            console.log(c_data)
+            axios.post(host+'customer/' + this.selectedCustomer + '/crights/',c_data)
+            .then((resp)=>{
+                alert(resp.data.message)
+            })
+            .catch((error)=>{
+                alert(error.response.data.message)
+            })
+        },
+    }
+
+})
+</script>
+</html>

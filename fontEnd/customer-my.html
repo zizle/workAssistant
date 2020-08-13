@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>我的客户</title>
+    <link rel="stylesheet" type="text/css" href="css/customer-my.css"/>
+    <link rel="stylesheet" type="text/css" href="css/recordtable.css"/>
+	<link rel="stylesheet" type="text/css" href="css/rightmenu.css"/>
+	<link rel="stylesheet" type="text/css" href="css/modifytable.css"/>
+	<script src="js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/settings.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<div id="app">
+	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
+	<div class="cover-div" v-show="modifyingRecord" @click="closeModify"></div>
+	<div class="paginator">
+
+	</div>
+	<div class="record-table">
+		<table border="" cellspacing="" cellpadding="" @click="hideContextMenu">
+			<tr class="title">
+				<td>姓名</td>
+				<td>客户名称</td>
+                <td>创建日期</td>
+				<td>客户账号</td>
+                <td>当前留存</td>
+                <td>当前利息</td>
+                <td>当前权益</td>
+				<td>客户备注</td>
+			</tr>
+			<tr v-for="(recordItem,index) in currentRecords" @contextmenu.prevent="mouseRightClicked($event, recordItem.id)">
+				<td>{{ recordItem.username }}</td>
+                <td>{{ recordItem.name }}</td>
+				<td>{{ recordItem.create_time }}</td>
+				<td>{{ recordItem.account }}</td>
+				<td>{{ recordItem.remain }}</td>
+				<td>{{ recordItem.interest }}</td>
+				<td>{{ recordItem.crights }}</td>
+				<td>{{ recordItem.note }}</td>
+			</tr>
+		</table>
+	</div>
+	<div class="modify-table" v-show="showModifyTable">
+		<div class="modify-title">记录修改<span @click="closeModify">关闭</span></div>
+		<table border="" cellspacing="" cellpadding="">
+            <tr>
+				<td>部门小组</td>
+			<tr>
+				<td>姓名</td>
+			</tr>
+            <tr>
+				<td>创建日期</td>
+			</tr>
+			<tr>
+				<td>客户名称</td>
+			</tr>
+            <tr>
+				<td>客户账号</td>
+			</tr>
+			<tr>
+				<td>备注</td>
+			</tr>
+
+			<tr class="commint-btn">
+				<td colspan="2">
+					<button class="commit" type="button" @click="commitModify">确定修改</button>
+					<button class="cancel" type="button" @click="closeModify">取消退出</button>
+				</td>
+
+			</tr>
+		</table>
+	</div>
+	<div id="contextmenu" v-show="showContextMenu" @contextmenu.prevent>
+		<ul>
+			<li @click="modifyCurrentRecord"><img src="img/edit_ico.png" >编辑</li>
+			<li @click="deleteCurrentRecord"><img src="img/delete.png" >删除</li>
+		</ul>
+	</div>
+</div>
+</body>
+<script>
+var vm = new Vue({
+    el: "#app",
+    data:{
+        showDoloading: false,
+        modifyingRecord:false,
+        showModifyTable: false,
+        showContextMenu: false,
+        currentRecords:[],
+    },
+    mounted: function(){
+        // 获取当前所有客户数据
+        this.getAllMyCustomer();
+        axios.get(host + 'customer/?user=' + token)
+        .then((resp)=>{
+            this.currentRecords = resp.data.customers;
+            this.showDoloading = false;
+        })
+        .catch((error)=>{
+            alert("获取数据失败了!");
+            this.showDoloading = false;
+        })
+
+    },
+    methods:{
+        // 获取当前我的所有客户
+        getAllMyCustomer(){
+            this.showDoloading = true;
+        },
+        closeModify:{},
+        commitModify:{},
+        hideContextMenu:{},
+        mouseRightClicked:{},
+        modifyCurrentRecord:{},
+        deleteCurrentRecord:{}
+    },
+
+})
+</script>
+</html>

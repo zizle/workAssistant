@@ -26,6 +26,8 @@ var vm = new Vue({
 			'shortmsg-query.html',
 			'ondutymsg.html',
 			'ondutymsg-query.html',
+			'customer-rights.html',
+			'customer-my.html',
 			'statistics-abnormalwork.html',
 			'statistics-monographic.html',
 			'statistics-investment.html',

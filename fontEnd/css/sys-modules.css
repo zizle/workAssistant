@@ -128,7 +128,6 @@ html,body{
 .new-module .td-label{
 	height: 45px;
 	line-height: 45px;
-	text-align: center;
 	text-align: justify;
 	text-justify: distribute-all-lines;
 	text-align-last: justify;
