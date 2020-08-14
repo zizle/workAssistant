@@ -122,11 +122,11 @@ var vm = new Vue({
 		var time = new Date();
 		var year = time.getFullYear();
 		var month = time.getMonth() + 1;
-		var date = time.getDate();
+		//var date = time.getDate();
 		if (month < 10){month = '0' + month;}
-		if (date < 10){(date = '0' + date);}
+		//if (date < 10){(date = '0' + date);}
 
-		this.currentDate = year + '-' + month + '-' + date;
+		this.currentDate = year + '-' + month + '-' + 10;
 		// 请求当前用户信息
 		if (!token){
             window.location.href='login.html'
@@ -144,6 +144,20 @@ var vm = new Vue({
         this.getMyCustomers();
 
     },
+    watch:{
+        selectedCustomer(nval,oval){
+            if (nval==0){return};
+            axios.get(host+'customer/' + nval + '/crights/?currentDate=' + this.currentDate)
+                .then((resp)=>{
+                    if(resp.data.is_exists){
+                        if (confirm(resp.data.message)){
+
+                        }else{this.selectedCustomer=0}
+                    }
+                })
+                .catch((error)=>{})
+        }
+    },
     methods:{
         // 新增客户
         submitNewCustomer(){
@@ -151,7 +165,6 @@ var vm = new Vue({
 				alert("请填写客户名称和账号!");
 				return;
 			}
-
 			// 提交
 			var localThis = this;
             var c_data = {
@@ -159,7 +172,7 @@ var vm = new Vue({
 				customer_account:this.newCustomerAccount,
                 customer_note: this.newCustomerNote,
 				utoken: token,
-			}
+			};
 			axios.post(host + 'customer/',c_data)
 			.then(function(resp){
 				// 关闭遮罩
@@ -209,12 +222,11 @@ var vm = new Vue({
                 custom_time: this.currentDate,
                 customer_id: this.selectedCustomer,
                 remain: this.customerRemain,
-                interest: this.customerRemain,
+                interest: this.customerInterest,
                 crights: this.customerCrights,
                 note: this.customerNote,
                 utoken: token,
             };
-            console.log(c_data)
             axios.post(host+'customer/' + this.selectedCustomer + '/crights/',c_data)
             .then((resp)=>{
                 alert(resp.data.message)

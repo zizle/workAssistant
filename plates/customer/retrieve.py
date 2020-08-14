@@ -17,6 +17,9 @@ class CustomerView(MethodView):
     def get(self):
         # 获取某个用户的所有客户信息
         utoken = request.args.get("user", None)
+        query_date = request.args.get("queryDate", None)
+        if not query_date:
+            query_date = datetime.today().strftime("%Y-%m-%d")
         user_info = verify_json_web_token(utoken)
         if not user_info:
             return jsonify({"message": "登录过期了,刷新主页重新登录!"}), 400
@@ -26,40 +29,53 @@ class CustomerView(MethodView):
         if user_info["is_admin"]:  # 管理员获取所有客户名称
             cursor.execute(
                 "SELECT custable.id,usetb.name as username,custable.name,custable.create_time,custable.account,custable.note,"
-                "crightstb.remain,crightstb.interest,crightstb.crights "
+                "crightstb.remain,crightstb.interest,crightstb.crights,crightstb.custom_time "
                 "FROM info_customer AS custable "
                 "INNER JOIN user_info AS usetb "
                 "ON custable.belong_user=usetb.id "
-                "LEFT JOIN (SELECT customer_id,remain,interest,crights FROM customer_rights ORDER BY id DESC limit 999999999) AS crightstb "
+                "LEFT JOIN (SELECT customer_id,remain,interest,crights,custom_time "
+                "FROM customer_rights "
+                "WHERE DATE_FORMAT(custom_time,'%%Y-%%m-%%d')<=%s ORDER BY custom_time DESC limit 999999999) AS crightstb "
                 "ON crightstb.customer_id=custable.id "
-                "GROUP BY custable.id;"
+                "GROUP BY custable.id;",
+                (query_date, )
             )
+            message = "当前为【管理员】客户总权益为 {} 所有客户如下："
         else:
             # 查询当前用户的所有客户,并取得每个客户自己的最近的一条记录值
             cursor.execute(
                 "SELECT custable.id,usetb.name as username,custable.name,custable.create_time,custable.account,custable.note,"
-                "crightstb.remain,crightstb.interest,crightstb.crights "
+                "crightstb.remain,crightstb.interest,crightstb.crights,crightstb.custom_time "
                 "FROM info_customer AS custable "
                 "INNER JOIN user_info AS usetb "
                 "ON custable.belong_user=usetb.id "
-                "LEFT JOIN (SELECT customer_id,remain,interest,crights FROM customer_rights ORDER BY id DESC limit 999999999) AS crightstb "
+                "LEFT JOIN (SELECT customer_id,remain,interest,crights,custom_time "
+                "FROM customer_rights WHERE DATE_FORMAT(custom_time,'%%Y-%%m-%%d')<=%s "
+                "ORDER BY custom_time DESC limit 999999999) AS crightstb "
                 "ON crightstb.customer_id=custable.id "
                 "WHERE usetb.id=%s "
                 "GROUP BY custable.id;",
-                (user_id, )
+                (query_date, user_id)
             )
+            message = "我的客户总权益为: {}"
 
         all_customer = cursor.fetchall()
         db_connection.close()
+        sum_rights = 0
         for customer in all_customer:
             customer["create_time"] = customer['create_time'].strftime("%Y-%m-%d")
+            if customer["custom_time"]:
+                customer["custom_time"] = customer["custom_time"].strftime("%Y-%m-%d")
             if customer["remain"]:
                 customer["remain"] = float(customer["remain"])
             if customer["interest"]:
                 customer["interest"] = float(customer["interest"])
             if customer["crights"]:
                 customer["crights"] = float(customer["crights"])
-        return jsonify({"message": "查询成功!", "customers": all_customer})
+                sum_rights += customer["crights"]
+        sum_rights = round(sum_rights, 2)
+        message = message.format(sum_rights)
+        return jsonify({"message": "查询成功!", "customers": all_customer, "customer_message": message})
 
     def post(self):
         body_json = request.json
@@ -105,6 +121,22 @@ class CustomerView(MethodView):
 
 
 class CustomerCrightsView(MethodView):
+    def get(self, cid):
+        # 查询当前客户某一天是否有数据了
+        current_date = request.args.get("currentDate", None)
+        try:
+            current_date = datetime.strptime(current_date, "%Y-%m-%d").strftime("%Y-%m-%d")
+        except Exception as e:
+            return jsonify({"message": "参数错误"}), 400
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        if self.is_record_exists(cursor, current_date, cid):
+            db_connection.close()
+            return jsonify({"message": "当前客户{}权益记录已存在\n继续添加将会覆盖记录?".format(current_date), "is_exists": True})
+        else:
+            db_connection.close()
+            return jsonify({"message": "当前客户权益记录不存在", "is_exists": False})
+
     def post(self, cid):
         # 新增某客户的权益记录
         body_json = request.json
@@ -120,6 +152,8 @@ class CustomerCrightsView(MethodView):
         crights = body_json.get('crights', 0)
         note = body_json.get('note', '')
         try:
+            if not cid:
+                raise ValueError("请选择客户再添加记录")
             sql_data = {
                 "custom_time": datetime.strptime(custom_time, '%Y-%m-%d'),
                 "customer_id": cid,
@@ -128,16 +162,37 @@ class CustomerCrightsView(MethodView):
                 "crights": float(crights),
                 "note": note,
             }
+            current_ctime = datetime.strptime(custom_time, "%Y-%m-%d").strftime("%Y-%m-%d")
         except Exception as e:
-            return jsonify({"message": "参数错误!"}), 400
+            return jsonify({"message": "参数错误!{}".format(e)}), 400
         db_connection = MySQLConnection()
         cursor = db_connection.get_cursor()
-        cursor.execute(
-            "INSERT INTO customer_rights "
-            "(custom_time, customer_id, remain, interest,crights,note) "
-            "VALUES (%(custom_time)s,%(customer_id)s,%(remain)s,%(interest)s,%(crights)s,%(note)s);",
-            sql_data
-        )
+        if self.is_record_exists(cursor, current_ctime, cid):  # 存在更新信息
+            cursor.execute(
+                "UPDATE customer_rights "
+                "SET remain=%s,interest=%s,crights=%s,note=%s "
+                "WHERE customer_id=%s;",
+                (sql_data["remain"], sql_data["interest"], sql_data["crights"],sql_data["note"], cid)
+            )
+        else:
+            cursor.execute(
+                "INSERT INTO customer_rights "
+                "(custom_time, customer_id, remain, interest,crights,note) "
+                "VALUES (%(custom_time)s,%(customer_id)s,%(remain)s,%(interest)s,%(crights)s,%(note)s);",
+                sql_data
+            )
         db_connection.commit()
         db_connection.close()
         return jsonify({"message": "添加成功!"})
+
+    def is_record_exists(self, cursor, current_date, cid):
+        cursor.execute(
+            "SELECT id, customer_id "
+            "FROM customer_rights "
+            "WHERE DATE_FORMAT(custom_time,'%%Y-%%m-%%d')=%s AND customer_id=%s;",
+            (current_date, cid)
+        )
+        is_exists = cursor.fetchone()
+        if is_exists:
+            return True
+        return False

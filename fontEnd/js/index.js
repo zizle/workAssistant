@@ -36,6 +36,7 @@ var vm = new Vue({
 			'statistics-shortmessage.html',
 			'statistics-onduty.html',
 			'statistics-query.html',
+			'statistics-customer.html',
 			'user_center.html'
 		],
 		showCover:false,

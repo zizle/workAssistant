@@ -16,7 +16,8 @@
 	<div class="cover-div" v-show="showDoloading"><span>数据加载中...</span></div>
 	<div class="cover-div" v-show="modifyingRecord" @click="closeModify"></div>
 	<div class="paginator">
-
+        <div>截至<input type="date" format="%yyyy-%MM-%dd" v-model="queryDate"><button @click="getAllMyCustomer">确定</button></div>
+        <div>{{ sumCustomerMessage }}</div>
 	</div>
 	<div class="record-table">
 		<table border="" cellspacing="" cellpadding="" @click="hideContextMenu">
@@ -25,9 +26,10 @@
 				<td>客户名称</td>
                 <td>创建日期</td>
 				<td>客户账号</td>
-                <td>当前留存</td>
-                <td>当前利息</td>
-                <td>当前权益</td>
+                <td>记录日期</td>
+                <td>留存</td>
+                <td>利息</td>
+                <td>权益</td>
 				<td>客户备注</td>
 			</tr>
 			<tr v-for="(recordItem,index) in currentRecords" @contextmenu.prevent="mouseRightClicked($event, recordItem.id)">
@@ -35,6 +37,7 @@
                 <td>{{ recordItem.name }}</td>
 				<td>{{ recordItem.create_time }}</td>
 				<td>{{ recordItem.account }}</td>
+				<td>{{ recordItem.custom_time }}</td>
 				<td>{{ recordItem.remain }}</td>
 				<td>{{ recordItem.interest }}</td>
 				<td>{{ recordItem.crights }}</td>
@@ -84,30 +87,41 @@
 var vm = new Vue({
     el: "#app",
     data:{
+        queryDate:'',
         showDoloading: false,
         modifyingRecord:false,
         showModifyTable: false,
         showContextMenu: false,
         currentRecords:[],
+        sumCustomerMessage: '', // 客户总权益
     },
     mounted: function(){
+        // 日期默认
+		var time = new Date();
+		var year = time.getFullYear();
+		var month = time.getMonth() + 1;
+		var date = time.getDate();
+		if (month < 10){month = '0' + month;}
+		if (date < 10){(date = '0' + date);}
+
+		this.queryDate = year + '-' + month + '-' + date;
         // 获取当前所有客户数据
         this.getAllMyCustomer();
-        axios.get(host + 'customer/?user=' + token)
-        .then((resp)=>{
-            this.currentRecords = resp.data.customers;
-            this.showDoloading = false;
-        })
-        .catch((error)=>{
-            alert("获取数据失败了!");
-            this.showDoloading = false;
-        })
-
     },
     methods:{
         // 获取当前我的所有客户
         getAllMyCustomer(){
             this.showDoloading = true;
+            axios.get(host + 'customer/?user=' + token + '&queryDate=' + this.queryDate)
+            .then((resp)=>{
+                this.currentRecords = resp.data.customers;
+                this.sumCustomerMessage = resp.data.customer_message;
+                this.showDoloading = false;
+            })
+            .catch((error)=>{
+                alert("获取数据失败了!");
+                this.showDoloading = false;
+            })
         },
         closeModify:{},
         commitModify:{},

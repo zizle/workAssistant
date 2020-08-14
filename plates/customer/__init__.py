@@ -7,8 +7,10 @@
 from flask import Blueprint
 
 from .retrieve import CustomerView, CustomerCrightsView
+from .stastics import CustomerStatistics
 
 customer_blp = Blueprint(name='customer', import_name=__name__, url_prefix='')
 
 customer_blp.add_url_rule('customer/', view_func=CustomerView.as_view(name="customer"))  # 客户视图(创建)
 customer_blp.add_url_rule('customer/<int:cid>/crights/', view_func=CustomerCrightsView.as_view(name="cright"))  # 单个客户视图
+customer_blp.add_url_rule('customer/statistics/', view_func=CustomerStatistics.as_view(name="statistics"))  # 客户统计

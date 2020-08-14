@@ -45,3 +45,6 @@ html,body{
 	width: 85px !important;
 	font-size: 13px;
 }
+.paginator{
+	margin: 5px;
+}
