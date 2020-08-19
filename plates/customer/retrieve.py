@@ -27,35 +27,66 @@ class CustomerView(MethodView):
         cursor = db_connection.get_cursor()
         user_id = user_info["uid"]
         if user_info["is_admin"]:  # 管理员获取所有客户名称
+            # cursor.execute(
+            #     "SELECT custable.id,usetb.name as username,custable.name,crightstb.id as rid,custable.create_time,custable.account,custable.note,"
+            #     "crightstb.remain,crightstb.interest,crightstb.crights,crightstb.custom_time "
+            #     "FROM info_customer AS custable "
+            #     "INNER JOIN user_info AS usetb "
+            #     "ON custable.belong_user=usetb.id "
+            #     "LEFT JOIN (SELECT id,customer_id,remain,interest,crights,custom_time "
+            #     "FROM customer_rights "
+            #     "WHERE DATE_FORMAT(custom_time,'%%Y-%%m-%%d')<=%s ORDER BY custom_time DESC limit 999999999) AS crightstb "
+            #     "ON crightstb.customer_id=custable.id "
+            #     "GROUP BY custable.id;",
+            #     (query_date, )
+            # )
+
             cursor.execute(
-                "SELECT custable.id,usetb.name as username,custable.name,custable.create_time,custable.account,custable.note,"
+                "SELECT * FROM (SELECT custable.id,usetb.name as username,"
+                "custable.name, crightstb.id as rid,custable.create_time,custable.account,custable.note,"
                 "crightstb.remain,crightstb.interest,crightstb.crights,crightstb.custom_time "
                 "FROM info_customer AS custable "
                 "INNER JOIN user_info AS usetb "
                 "ON custable.belong_user=usetb.id "
-                "LEFT JOIN (SELECT customer_id,remain,interest,crights,custom_time "
-                "FROM customer_rights "
-                "WHERE DATE_FORMAT(custom_time,'%%Y-%%m-%%d')<=%s ORDER BY custom_time DESC limit 999999999) AS crightstb "
-                "ON crightstb.customer_id=custable.id "
-                "GROUP BY custable.id;",
-                (query_date, )
+                "LEFT JOIN (SELECT id,create_time,customer_id,remain,interest,crights,custom_time "
+                "FROM customer_rights WHERE DATE_FORMAT(custom_time,'%%Y-%%m-%%d')<=%s "
+                "ORDER BY custom_time DESC limit 999999999) AS crightstb "
+                "ON crightstb.customer_id = custable.id "
+                "ORDER BY crightstb.customer_id, crightstb.custom_time DESC limit 99999999) as ftb "
+                "GROUP BY ftb.id;",
+                (query_date,)
             )
             message = "当前为【管理员】客户总权益为 {} 所有客户如下："
         else:
             # 查询当前用户的所有客户,并取得每个客户自己的最近的一条记录值
+            # cursor.execute(
+            #             #     "SELECT custable.id,usetb.name as username,custable.name, crightstb.id as rid,custable.create_time,custable.account,custable.note,"
+            #             #     "crightstb.remain,crightstb.interest,crightstb.crights,crightstb.custom_time "
+            #             #     "FROM info_customer AS custable "
+            #             #     "INNER JOIN user_info AS usetb "
+            #             #     "ON custable.belong_user=usetb.id AND usetb.id=%s "
+            #             #     "LEFT JOIN (SELECT id,customer_id,remain,interest,crights,custom_time "
+            #             #     "FROM customer_rights WHERE DATE_FORMAT(custom_time,'%%Y-%%m-%%d')<=%s "
+            #             #     "ORDER BY custom_time DESC limit 999999999) AS crightstb "
+            #             #     "ON crightstb.customer_id=custable.id "
+            #             #     "GROUP BY custable.id;",
+            #             #     (user_id, query_date)
+            #             # )
+
             cursor.execute(
-                "SELECT custable.id,usetb.name as username,custable.name,custable.create_time,custable.account,custable.note,"
+                "SELECT * FROM (SELECT custable.id,usetb.name as username,"
+                "custable.name, crightstb.id as rid,custable.create_time,custable.account,custable.note,"
                 "crightstb.remain,crightstb.interest,crightstb.crights,crightstb.custom_time "
                 "FROM info_customer AS custable "
                 "INNER JOIN user_info AS usetb "
-                "ON custable.belong_user=usetb.id "
-                "LEFT JOIN (SELECT customer_id,remain,interest,crights,custom_time "
+                "ON custable.belong_user=usetb.id AND usetb.id=%s "
+                "LEFT JOIN (SELECT id,create_time,customer_id,remain,interest,crights,custom_time "
                 "FROM customer_rights WHERE DATE_FORMAT(custom_time,'%%Y-%%m-%%d')<=%s "
                 "ORDER BY custom_time DESC limit 999999999) AS crightstb "
-                "ON crightstb.customer_id=custable.id "
-                "WHERE usetb.id=%s "
-                "GROUP BY custable.id;",
-                (query_date, user_id)
+                "ON crightstb.customer_id = custable.id "
+                "ORDER BY crightstb.customer_id, crightstb.custom_time DESC limit 99999999) as ftb "
+                "GROUP BY ftb.id;",
+                (user_id, query_date)
             )
             message = "我的客户总权益为: {}"
 
@@ -63,14 +94,15 @@ class CustomerView(MethodView):
         db_connection.close()
         sum_rights = 0
         for customer in all_customer:
-            customer["create_time"] = customer['create_time'].strftime("%Y-%m-%d")
-            if customer["custom_time"]:
+            if customer["create_time"] is not None:
+                customer["create_time"] = customer['create_time'].strftime("%Y-%m-%d")
+            if customer["custom_time"] is not None:
                 customer["custom_time"] = customer["custom_time"].strftime("%Y-%m-%d")
-            if customer["remain"]:
+            if customer["remain"] is not None:
                 customer["remain"] = float(customer["remain"])
-            if customer["interest"]:
+            if customer["interest"] is not None:
                 customer["interest"] = float(customer["interest"])
-            if customer["crights"]:
+            if customer["crights"] is not None:
                 customer["crights"] = float(customer["crights"])
                 sum_rights += customer["crights"]
         sum_rights = round(sum_rights, 2)
@@ -196,3 +228,24 @@ class CustomerCrightsView(MethodView):
         if is_exists:
             return True
         return False
+
+    def delete(self, cid):
+        # 删除客户的权益记录
+        body_json = request.json
+        utoken = body_json.get("utoken", None)
+        user_info = verify_json_web_token(utoken)
+        if not user_info:
+            return jsonify({"message": "登录过期了,刷新主页重新登录后再进行操作."}), 400
+        record_id = body_json.get("record_id", None)
+        if not record_id:
+            return jsonify({"message": "参数错误,删除失败!"}), 400
+        # 进行删除记录
+        db_connection = MySQLConnection()
+        cursor = db_connection.get_cursor()
+        cursor.execute(
+            "DELETE FROM customer_rights WHERE customer_id=%s AND id=%s;",
+            (cid, record_id)
+        )
+        db_connection.commit()
+        db_connection.close()
+        return jsonify({"message": "删除成功!"})

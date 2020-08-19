@@ -100,8 +100,8 @@ class CustomerStatistics(MethodView):
             array_to_calculate_sum.append(line_data_arr)  # 加入准备好的容器
         pd_data_frame = pd.DataFrame(array_to_calculate_sum, columns=stuffs)
         pd_data_frame["合计"] = pd_data_frame.iloc[:, 1:].apply(lambda x: x.sum(), axis=1)  # 各行数据和添加至末尾列
-        pd_data_frame.loc['总计'] = pd_data_frame.iloc[:, 1:].apply(lambda x: x.sum(), axis=0)  # 各列的数据和添加至末尾行
-        pd_data_frame.iloc[pd_data_frame.shape[0] - 1, 0] = '总计'  # 将最后一行第一个值原NAN修改为总计
+        # pd_data_frame.loc['总计'] = pd_data_frame.iloc[:, 1:].apply(lambda x: x.sum(), axis=0)  # 各列的数据和添加至末尾行
+        # pd_data_frame.iloc[pd_data_frame.shape[0] - 1, 0] = '总计'  # 将最后一行第一个值原NAN修改为总计
         finally_result = json.loads(pd_data_frame.to_json(orient='split'))
 
         return jsonify(finally_result)

@@ -31,6 +31,7 @@
                 <td>利息</td>
                 <td>权益</td>
 				<td>客户备注</td>
+                <td></td>
 			</tr>
 			<tr v-for="(recordItem,index) in currentRecords" @contextmenu.prevent="mouseRightClicked($event, recordItem.id)">
 				<td>{{ recordItem.username }}</td>
@@ -42,6 +43,7 @@
 				<td>{{ recordItem.interest }}</td>
 				<td>{{ recordItem.crights }}</td>
 				<td>{{ recordItem.note }}</td>
+                <td><button @click="deleteRightsRecord(recordItem.id,recordItem.rid)">删除</button></td>
 			</tr>
 		</table>
 	</div>
@@ -128,7 +130,25 @@ var vm = new Vue({
         hideContextMenu:{},
         mouseRightClicked:{},
         modifyCurrentRecord:{},
-        deleteCurrentRecord:{}
+        deleteCurrentRecord:{},
+        // 删除权益记录
+        deleteRightsRecord(customId,recordId){
+            if (confirm("删除此条记录不可恢复!\n确定要删除吗?")){
+                console.log(customId + '=>' + recordId);
+                var bodyData = {
+                    utoken: token,
+                    record_id: recordId
+                };
+                axios.delete(host + 'customer/' + customId + '/crights/', {data:bodyData})
+                    .then((resp)=>{
+                        alert(resp.data.message);
+                        this.getAllMyCustomer();
+                    })
+                    .catch((error)=>{
+                        alert(error.response.data.message)
+                    })
+            }
+        },
     },
 
 })

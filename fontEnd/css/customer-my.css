@@ -45,6 +45,16 @@ html,body{
 	width: 85px !important;
 	font-size: 13px;
 }
+.record-table table td:nth-child(10){
+	width: 45px !important;
+}
+.record-table table td:nth-child(10) button{
+	cursor: pointer;
+	color: crimson;
+}
+.record-table td{
+	height: 28px !important;
+}
 .paginator{
 	margin: 5px;
 }
